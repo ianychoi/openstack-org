@@ -166,4 +166,18 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
             array('IsCheckedIn'=> true)
         );
     }
+
+    public function getCMSFields()
+    {
+
+        $f = new FieldList
+        (
+            $rootTab = new TabSet("Root", $tabMain = new Tab('Main'))
+        );
+        $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
+        $f->addFieldsToTab('Root.Main', new CheckboxField('SharedContactInfo', 'Allow Shared Contact Info'));
+        //$f->addFieldsToTab('Root.Main', new ListboxField('MemberID', 'Member', Member::get()->map('ID', 'Email')));
+
+        return $f;
+    }
 }

@@ -48,6 +48,7 @@ final class Summit extends DataObject implements ISummit
         'Types'         => 'SummitType',
         'EventTypes'    => 'SummitEventType',
         'Events'        => 'SummitEvent',
+        'Attendees'     => 'SummitAttendee',
     );
 
     private static $summary_fields = array
@@ -486,6 +487,13 @@ final class Summit extends DataObject implements ISummit
         $config = GridFieldConfig_RecordEditor::create();
         $gridField = new GridField('Events', 'Events', $this->Events(), $config);
         $f->addFieldToTab('Root.Events', $gridField);
+
+        // attendees
+
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $gridField = new GridField('Attendees', 'Attendees', $this->Attendees(), $config);
+        $f->addFieldToTab('Root.Attendees', $gridField);
 
         return $f;
     }

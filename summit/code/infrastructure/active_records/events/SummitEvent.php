@@ -58,7 +58,8 @@ class SummitEvent extends DataObject implements ISummitEvent
         'Title',
         'StartDate',
         'EndDate',
-
+        'Location.Name',
+        'Type.Type',
     );
 
     /**
@@ -265,7 +266,7 @@ class SummitEvent extends DataObject implements ISummitEvent
             (
                 'TypeID',
                 'Event Type',
-                SummitEventType::get()->map('ID', 'Type')
+                SummitEventType::get()->filter('SummitID', $_REQUEST['SummitID'])->map('ID', 'Type')
             )
         );
 
@@ -279,6 +280,8 @@ class SummitEvent extends DataObject implements ISummitEvent
             $config = new GridFieldConfig_RelationEditor(10);
             $config->removeComponentsByType('GridFieldEditButton');
             $config->removeComponentsByType('GridFieldAddNewButton');
+            $completer = $config->getComponentByType('GridFieldAddExistingAutocompleter');
+            $completer->setSearchList(SummitType::get()->filter('SummitID', $_REQUEST['SummitID']));
             $summit_types = new GridField('AllowedSummitTypes', 'Summit Types', $this->AllowedSummitTypes(), $config);
             $f->addFieldToTab('Root.Main', $summit_types);
 
