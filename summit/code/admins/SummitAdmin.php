@@ -3,13 +3,12 @@
 class SummitAdmin extends ModelAdmin
 {
 
-	private static $url_segment = 'summits';
+    private static $url_segment = 'summits';
 
+    private static $managed_models = array
+    (
+        'Summit'
+    );
 
-	private static $managed_models = array (
-		'Summit'
-	);
-
-
-	private static $menu_title = 'Summits';
+    private static $menu_title = 'Summits';
 }

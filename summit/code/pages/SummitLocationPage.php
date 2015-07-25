@@ -28,8 +28,8 @@ class SummitLocationPage extends SummitPage {
         'AboutTheCityBackgroundImage' => 'BetterImage'
     );
     
-	private static $has_many = array (
-		'Locations' => 'SummitLocation'
+	private static $has_many = array
+    (
 	);    
     
     public function getCMSFields() {
@@ -53,12 +53,6 @@ class SummitLocationPage extends SummitPage {
         if($this->ID) {
                         
             // Summit Question Categories
-            $LocationFields = singleton('SummitLocation')->getCMSFields();
-            $config = GridFieldConfig_RelationEditor::create();
-            $config->getComponentByType('GridFieldDetailForm')->setFields($LocationFields);
-            $config->addComponent(new GridFieldSortableRows('Order'));            
-            $gridField = new GridField('Locations', 'Locations', $this->Locations(), $config);
-            $fields->addFieldToTab('Root.MapLocations',$gridField);
 
             $fields->addFieldsToTab('Root.Main', $venue_back = new UploadField('VenueBackgroundImage', 'Venue Background Image'));
             $venue_back->setFolderName('summits/locations');

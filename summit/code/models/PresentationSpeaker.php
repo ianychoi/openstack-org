@@ -39,9 +39,10 @@ implements IPresentationSpeaker
     );
 
 
-    private static $belongs_many_many = array (
+    private static $belongs_many_many = array
+    (
         'SchedPresentations' => 'SchedPresentation',
-        'Presentations' => 'Presentation',
+        'Presentations'      => 'Presentation',
     );
 
 
@@ -94,7 +95,6 @@ implements IPresentationSpeaker
         return $this->linkTo($presentationID, 'delete?t='.SecurityToken::inst()->getValue());
     }
 
-
     /**
      * Gets a link to the speaker's review page, as seen in the email. Auto authenticates.
      * @param Int $presentationID
@@ -108,17 +108,7 @@ implements IPresentationSpeaker
     }
 
 
-    /**
-     * Determines if the user can edit this speaker
-     * 
-     * @return  boolean
-     */
-    public function canEdit($member = null) {
-        return $this->Presentation()->canEdit($member);
-    }
-
-
-    public function getCMSFields() {
+     public function getCMSFields() {
         return FieldList::create(TabSet::create("Root"))
             ->text('FirstName',"Speaker's first name")
             ->text('LastName', "Speaker's last name")

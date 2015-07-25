@@ -1,7 +1,7 @@
 <?php
 
 
-class Presentation extends DataObject
+class Presentation extends SummitEvent implements IPresentation
 {
 
     /**
@@ -30,93 +30,75 @@ class Presentation extends DataObject
     const PHASE_COMPLETE = 3;
 
 
-    private static $db = array (
-        'Title' => 'Text',
-        'Level' => "Enum('Beginner,Intermediate,Advanced')",
-        'Status' => 'Varchar',
-        'OtherTopic' => 'Varchar',
-        'Description' => 'HTMLText',
+    private static $db = array
+    (
+        'Level'            => "Enum('Beginner,Intermediate,Advanced')",
+        'Status'           => 'Varchar',
+        'OtherTopic'       => 'Varchar',
         'ShortDescription' => 'HTMLText',
-        'Progress' => 'Int',
-        'Views' => 'Int',
-        'BeenEmailed' => 'Boolean'
+        'Progress'         => 'Int',
+        'Views'            => 'Int',
+        'BeenEmailed'      => 'Boolean'
     );
 
 
-    private static $has_many = array (
-        'Votes' => 'PresentationVote',
-        'Comments' => 'SummitPresentationComment'
+    private static $has_many = array
+    (
+        'Votes'     => 'PresentationVote',
+        'Comments'  => 'SummitPresentationComment',
+        'Materials' => 'PresentationMaterial',
     );
 
 
-    private static $many_many = array (
+    private static $many_many = array
+    (
         'Speakers' => 'PresentationSpeaker',        
-        'Tags' => 'Tag',
-        'Topics' => 'PresentationTopic'
+        'Tags'     => 'Tag',
+        'Topics'   => 'PresentationTopic'
     );
 
+    static $many_many_extraFields = array(
+        'Speakers' => array
+        (
+            'IsCheckedIn' => "Boolean",
+        ),
+    );
 
-    private static $has_one = array (
-        'Creator' => 'Member',
+    private static $has_one = array
+    (
+        'Creator'  => 'Member',
         'Category' => 'PresentationCategory',
-        'Summit' => 'Summit'        
     );
     
-    private static $summary_fields = array(
+    private static $summary_fields = array
+    (
         'Created',
         'Title',
         'Level'
-    );    
+    );
 
-    public function getCMSFields() {
-        return FieldList::create(TabSet::create('Root'))
-            ->text('Title')
-            ->dropdown('Level','Level', $this->dbObject('Level')->enumValues())
-            ->dropdown('CategoryID','Category', PresentationCategory::get()->map('ID','Title'))
-            ->dropdown('Status','Status')
-                ->configure()
-                    ->setSource(array_combine(
-                        $this->config()->status_options,
-                        $this->config()->status_options
-                    ))
-                ->end()
-            ->listbox('Topics','Topics', PresentationTopic::get()->map('ID','Title')->toArray())
-                ->configure()
-                    ->setMultiple(true)
-                ->end()
-            ->tag('Tags', 'Tags', Tag::get(), $this->Tags() )
-            ->text('OtherTopic','Other topic')
-            ->htmlEditor('Description')
-            ->htmlEditor('ShortDescription')
-            ->tab('Preview')
-                ->literal('preview', sprintf(
-                    '<iframe width="%s" height="%s" frameborder="0" src="%s"></iframe>',
-                    '100%',
-                    '400',
-                    Director::absoluteBaseURL().$this->PreviewLink()
-                ))
-
-            ;
-
+    public function getTypeName()
+    {
+        return 'Presentation';
     }
-
 
     /**
      * Gets a link to the presentation
      * 
      * @return  string
      */
-    public function Link() {
+    public function Link()
+    {
         return PresentationPage::get()->first()->Link('show/'.$this->ID);
     }
-
 
     /**
      * Gets a link to edit this presentation
      * 
      * @return  string
      */
-    public function EditLink() {
+    public function EditLink()
+    {
         if($page = PresentationPage::get()->first()) {
             return Controller::join_links($page->Link(),'manage', $this->ID, 'summary');
         }
@@ -159,7 +141,8 @@ class Presentation extends DataObject
     }
 
 
-    public function PreviewHTML() {
+    public function PreviewHTML()
+    {
         $template = new SSViewer('PresentationPreview');
 
         return $template->process(ArrayData::create(array(
@@ -173,7 +156,8 @@ class Presentation extends DataObject
      *
      * @return  boolean
      */
-    public function canEdit($member = null) {
+    public function canEdit($member = null)
+    {
         if(Permission::check('ADMIN')) return true;
 
         return  
@@ -186,7 +170,8 @@ class Presentation extends DataObject
      *
      * @return boolean
      */
-    public function canAssign($member = null) {
+    public function canAssign($member = null)
+    {
 
         return true;
 
@@ -247,7 +232,8 @@ class Presentation extends DataObject
      * Gets the vote on this presentation by the current user
      * @return int
      */
-    public function getUserVote() {
+    public function getUserVote()
+    {
         return $this->Votes()->filter(array(
             'MemberID' => Member::currentUserID()
         ))->first();
@@ -261,18 +247,21 @@ class Presentation extends DataObject
      *  
      * @return boolean
      */
-    public function isNew() {
+    public function isNew()
+    {
         return $this->Progress == self::PHASE_NEW;
     }
 
-    public function creatorIsSpeaker() {
+    public function creatorIsSpeaker()
+    {
         $c = $this->Speakers()->filter(array(
             'MemberID' => $this->CreatorID
         ));
         if ($c->count()) return true;
     }
 
-    public function creatorBeenEmailed() {
+    public function creatorBeenEmailed()
+    {
         return $this->BeenEmailed;
     }
 
@@ -336,5 +325,58 @@ class Presentation extends DataObject
 
     }
 
+    public function getCMSFields()
+    {
+        $f = parent::getCMSFields();
+        $f->removeByName('TypeID');
+        $f->htmlEditor('ShortDescription')
+        ->dropdown('Level','Level', $this->dbObject('Level')->enumValues())
+        ->dropdown('CategoryID','Category', PresentationCategory::get()->map('ID','Title'))
+        ->dropdown('Status','Status')
+        ->configure()
+        ->setSource(array_combine(
+            $this->config()->status_options,
+            $this->config()->status_options
+        ))
+        ->end()
+        ->listbox('Topics','Topics', PresentationTopic::get()->map('ID','Title')->toArray())
+        ->configure()
+        ->setMultiple(true)
+        ->end()
+        ->tag('Tags', 'Tags', Tag::get(), $this->Tags() )
+        ->text('OtherTopic','Other topic')
+        ->tab('Preview')
+        ->literal('preview', sprintf(
+            '<iframe width="%s" height="%s" frameborder="0" src="%s"></iframe>',
+            '100%',
+            '400',
+            Director::absoluteBaseURL().$this->PreviewLink()
+        ));
 
+        // speakers
+        $config = new GridFieldConfig_RelationEditor(10);
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $speakers = new GridField('Speakers', 'Speakers', $this->Speakers(), $config);
+        $f->addFieldToTab('Root.Speakers', $speakers);
+
+        // materials
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $multi_class_selector = new GridFieldAddNewMultiClass();
+        $multi_class_selector->setClasses
+        (
+            array
+            (
+                'PresentationVideo'  => 'Video',
+                'PresentationSlide'  => 'Slide',
+            )
+        );
+        $config->addComponent($multi_class_selector);
+        $config->addComponent($sort = new GridFieldSortableRows('Order'));
+        $gridField = new GridField('Materials', 'Materials', $this->Materials(), $config);
+        $f->addFieldToTab('Root.Materials', $gridField);
+
+        return $f;
+    }
 }
