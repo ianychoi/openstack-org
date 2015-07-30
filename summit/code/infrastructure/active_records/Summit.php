@@ -270,15 +270,6 @@ final class Summit extends DataObject implements ISummit
         return $this->getField('SelectionEndDate');
     }
 
-    /**
-     * @return ISummitLocation
-     */
-    public function getMainLocation()
-    {
-        $query = new QueryObject(new SummitMainLocation);
-        $query->addAndCondition(QueryCriteria::equal('ClassName','SummitMainLocation'));
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Locations', $query)->first();
-    }
 
     /**
      * @return ISummitType[]
@@ -463,7 +454,6 @@ final class Summit extends DataObject implements ISummit
               'SummitVenue'        => 'Venue',
               'SummitHotel'        => 'Hotel',
               'SummitAirport'      => 'Airport',
-              'SummitMainLocation' => 'Main Location',
             )
         );
         $config->addComponent($multi_class_selector);

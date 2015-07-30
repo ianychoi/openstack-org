@@ -65,11 +65,6 @@ interface ISummit extends IEntity
     public function getSelectionEndDate();
 
     /**
-     * @return ISummitLocation
-     */
-    public function getMainLocation();
-
-    /**
      * @return ISummitType[]
      */
     public function getTypes();

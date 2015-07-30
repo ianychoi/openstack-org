@@ -23,4 +23,5 @@ interface ISummitLocation extends IEntity
      * @return string
      */
     public function getDescription();
+
 }

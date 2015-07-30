@@ -35,7 +35,8 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
 
     private static $many_many = array
     (
-        'Schedule' => 'SummitEvent'
+        'Schedule'         => 'SummitEvent',
+        'MembershipLevels' => 'SummitType'
     );
 
     static $many_many_extraFields = array(
@@ -53,6 +54,9 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
 
     private static $summary_fields = array
     (
+        "Member.Email" => 'Member',
+        'TicketBoughtDate' => 'Ticket Bought Date',
+        'SummitHallCheckedIn' => "Is Checked In"
     );
 
     private static $searchable_fields = array
@@ -174,10 +178,37 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
         (
             $rootTab = new TabSet("Root", $tabMain = new Tab('Main'))
         );
-        $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
-        $f->addFieldsToTab('Root.Main', new CheckboxField('SharedContactInfo', 'Allow Shared Contact Info'));
-        //$f->addFieldsToTab('Root.Main', new ListboxField('MemberID', 'Member', Member::get()->map('ID', 'Email')));
 
+        $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
+        $f->addFieldsToTab('Root.Main', new CheckboxField('SharedContactInfo', 'Allow Shared Contact Info?'));
+        $f->addFieldsToTab('Root.Main', new CheckboxField('SummitHallCheckedIn', 'Is SummitHall checked In?'));
+        $f->addFieldsToTab('Root.Main', $checked_in_date = new DatetimeField('SummitHallCheckedInDate', 'SummitHall checked In Date'));
+        $checked_in_date->getDateField()->setConfig('showcalendar', true);
+        $checked_in_date->setConfig('dateformat', 'dd/MM/yyyy');
+        $f->addFieldsToTab('Root.Main', $ticket_bought_date = new DatetimeField('TicketBoughtDate', 'Ticket Bought Date'));
+        $ticket_bought_date->getDateField()->setConfig('showcalendar', true);
+        $ticket_bought_date->setConfig('dateformat', 'dd/MM/yyyy');
+        $f->addFieldsToTab('Root.Main', new MemberAutoCompleteField('Member', 'Member'));
+
+        if($this->ID > 0)
+        {
+            // schedule
+            $config = GridFieldConfig_RelationEditor::create();
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $detailFormFields = new FieldList();
+            $detailFormFields->push( new CheckBoxField(
+                'ManyMany[IsCheckedIn]',
+                'Is Checked In?'
+            ));
+            $config->getComponentByType('GridFieldDetailForm')->setFields($detailFormFields);
+            $gridField = new GridField('Schedule', 'Schedule', $this->Schedule(), $config);
+            $f->addFieldToTab('Root.Schedule', $gridField);
+            // membership level
+            $config = GridFieldConfig_RelationEditor::create();
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $gridField = new GridField('MembershipLevels', 'Membership Levels', $this->MembershipLevels(), $config);
+            $f->addFieldToTab('Root.Membership Levels', $gridField);
+        }
         return $f;
     }
 }

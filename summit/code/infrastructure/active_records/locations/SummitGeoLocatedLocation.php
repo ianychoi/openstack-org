@@ -49,12 +49,22 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
     private static $searchable_fields = array
     (
     );
+
     /**
      * @return string
      */
     public function getAddress()
     {
-       return $this->getField('Address');
+       $address = $this->Address1;
+       if(!empty($this->Address2))
+           $address .= ', '.$this->Address2;
+        if(!empty($this->City))
+            $address .= ', '.$this->City;
+        if(!empty($this->State))
+            $address .= ', '.$this->State;
+        if(!empty($this->Country))
+            $address .= ', '.$this->Country;
+       return $address;
     }
 
     /**

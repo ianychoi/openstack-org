@@ -104,11 +104,11 @@ $(document).ready(function () {
 
     // Add the markers and infowindows to the map
     for (var i = 0; i < locations.length; i++) {
-        var type = locations[i][4];
-        if(type =='Airport'){
+        var type = locations[i].type;
+        if(type =='SummitAirport'){
             iconCounter = 1;
         }
-        else if(type == 'Venue'){
+        else if(type == 'SummitVenue'){
             iconCounter = 0;
         }
         else {
@@ -118,17 +118,17 @@ $(document).ready(function () {
         }
 
         marker = new google.maps.Marker({
-            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+            position: new google.maps.LatLng(locations[i].lat, locations[i].lng),
             map: map,
             icon : icons[iconCounter],
             shadow: shadow
         });
-        location_markers[locations[i][3]] = i;
+        location_markers[locations[i].id] = i;
         markers.push(marker);
 
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
             return function() {
-                infowindow.setContent(locations[i][0]);
+                infowindow.setContent(locations[i].name + '<p>'+locations[i].address+'</p>'+locations[i].url);
                 infowindow.open(map, marker);
             }
         })(marker, i));

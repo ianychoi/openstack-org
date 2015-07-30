@@ -43,9 +43,6 @@ Presentation:
     - accepted
     - not accepted
     - accepted as an alternate
-SchedPresentation:
-  extensions:
-    - Sluggable
 BootstrapMemberLoginForm:
   extensions:
     - BootstrapLoginFormExtension

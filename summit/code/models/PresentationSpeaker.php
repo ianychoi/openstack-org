@@ -29,8 +29,15 @@ implements IPresentationSpeaker
         'RegistrationRequest' => 'SpeakerRegistrationRequest',
     );
 
+    private static $searchable_fields = array
+    (
+        'Member.Email',
+        'FirstName',
+        'LastName'
+    );
 
-    private static $indexes = array (
+    private static $indexes = array
+    (
         //'EmailAddress' => true
     );
 
@@ -38,13 +45,10 @@ implements IPresentationSpeaker
         'MemberID' => 0,
     );
 
-
     private static $belongs_many_many = array
     (
-        'SchedPresentations' => 'SchedPresentation',
         'Presentations'      => 'Presentation',
     );
-
 
     /**
      * Gets a readable label for the speaker
@@ -54,7 +58,6 @@ implements IPresentationSpeaker
     public function getName() {
         return "{$this->FirstName} {$this->LastName}";
     }
-
 
     /**
      * Helper method to link to this speaker, given an action
@@ -75,7 +78,6 @@ implements IPresentationSpeaker
         }
     }
 
-
     /**
      * Gets a link to edit this record
      * 
@@ -84,7 +86,6 @@ implements IPresentationSpeaker
     public function EditLink($presentationID) {
         return $this->linkTo($presentationID, 'edit');
     }
-
 
     /**
      * Gets a link to delete this presentation
@@ -109,14 +110,26 @@ implements IPresentationSpeaker
 
 
      public function getCMSFields() {
-        return FieldList::create(TabSet::create("Root"))
+        $fields =  FieldList::create(TabSet::create("Root"))
             ->text('FirstName',"Speaker's first name")
             ->text('LastName', "Speaker's last name")
             ->text('Title', "Speaker's title")
             ->tinyMCEEditor('Bio',"Speaker's Bio")
             ->text('IRCHandle','IRC Handle (optional)')
             ->text('TwitterHandle','Twitter Handle (optional)')
-            ->imageUpload('Photo','Upload a speaker photo');
+            ->imageUpload('Photo','Upload a speaker photo')
+            ->memberAutoComplete('Member', 'Member');
+
+         if($this->ID > 0)
+         {
+             // presentations
+             $config = GridFieldConfig_RelationEditor::create();
+             $config->removeComponentsByType('GridFieldAddNewButton');
+             $gridField = new GridField('Presentations', 'Presentations', $this->Presentations(), $config);
+             $fields->addFieldToTab('Root.Presentations', $gridField);
+         }
+
+         return $fields;
     }
 
     public function AllPresentations() {
@@ -124,7 +137,6 @@ implements IPresentationSpeaker
             'Status' => 'Received'
         ));    
     }
-
 
     public function MyPresentations() {
         return Summit::get_active()->Presentations()->filter(array(

@@ -139,6 +139,12 @@ SQL;
 
             DB::query($SQL);
 
+            $SQL = <<<SQL
+ update Presentation set SummitID = 5;
+SQL;
+
+            DB::query($SQL);
+
             $migration = new Migration();
             $migration->Name = $this->title;
             $migration->Description = $this->description;

@@ -3,16 +3,17 @@
 /**
  * Class SummitLocationPage
  */
-class SummitLocationPage extends SummitPage {
+class SummitLocationPage extends SummitPage
+{
 
-    private static $db = array (
+    private static $db = array(
         'VisaInformation' => 'HTMLText',
-        'CityIntro'      => 'HTMLText',
+        'CityIntro' => 'HTMLText',
         'LocationsTextHeader' => 'HTMLText',
         'OtherLocations' => 'HTMLText',
         'GettingAround' => 'HTMLText',
         'AboutTheCity' => 'HTMLText',
-        'Locals'       => 'HTMLText',
+        'Locals' => 'HTMLText',
         'TravelSupport' => 'HTMLText',
         'AboutTheCityBackgroundImageHero' => 'Text',
         'AboutTheCityBackgroundImageHeroSource' => 'Text',
@@ -21,67 +22,73 @@ class SummitLocationPage extends SummitPage {
         'VenueTitleText' => 'Text',
         'AirportsTitle' => 'Text',
         'AirportsSubTitle' => 'Text',
-     );
+    );
 
     private static $has_one = array(
         'VenueBackgroundImage' => 'BetterImage',
         'AboutTheCityBackgroundImage' => 'BetterImage'
     );
-    
-	private static $has_many = array
-    (
-	);    
-    
-    public function getCMSFields() {
+
+    private static $has_many = array
+    ();
+
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
-                
+
         $fields->addFieldToTab('Root.Main', new HTMLEditorField('VisaInformation', 'Visa Information'));
-        $fields->addFieldToTab('Root.Main', new HTMLEditorField('TravelSupport','Travel Support'));
-        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('CityIntro','City Intro'));
-        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('AboutTheCity','About The City'));
-        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('Locals','In The Words Of The Locals'));
-        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('GettingAround','Getting Around'));
+        $fields->addFieldToTab('Root.Main', new HTMLEditorField('TravelSupport', 'Travel Support'));
+        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('CityIntro', 'City Intro'));
+        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('AboutTheCity', 'About The City'));
+        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('Locals', 'In The Words Of The Locals'));
+        $fields->addFieldToTab('Root.CityInfo', new HTMLEditorField('GettingAround', 'Getting Around'));
 
-        $fields->addFieldsToTab('Root.CityInfo',new TextField('HostCityLat', 'City Latitude (Map Center)'));
-        $fields->addFieldsToTab('Root.CityInfo',new TextField('HostCityLng', 'City Longitude (Map Center)'));
+        $fields->addFieldsToTab('Root.CityInfo', new TextField('HostCityLat', 'City Latitude (Map Center)'));
+        $fields->addFieldsToTab('Root.CityInfo', new TextField('HostCityLng', 'City Longitude (Map Center)'));
 
-        $fields->addFieldToTab('Root.MapLocations', new HTMLEditorField('LocationsTextHeader','Intro Text'));
-        $fields->addFieldToTab('Root.MapLocations', new HTMLEditorField('OtherLocations','Other Locations'));
+        $fields->addFieldToTab('Root.MapLocations', new HTMLEditorField('LocationsTextHeader', 'Intro Text'));
+        $fields->addFieldToTab('Root.MapLocations', new HTMLEditorField('OtherLocations', 'Other Locations'));
 
 
+        if ($this->ID) {
 
-        if($this->ID) {
-                        
             // Summit Question Categories
 
-            $fields->addFieldsToTab('Root.Main', $venue_back = new UploadField('VenueBackgroundImage', 'Venue Background Image'));
+            $fields->addFieldsToTab('Root.Main',
+                $venue_back = new UploadField('VenueBackgroundImage', 'Venue Background Image'));
             $venue_back->setFolderName('summits/locations');
             $venue_back->setAllowedMaxFileNumber(1);
             $venue_back->setAllowedFileCategories('image');
 
-            $fields->addFieldsToTab('Root.Main',new TextField('VenueBackgroundImageHero', 'Venue Background Image Author'));
-            $fields->addFieldsToTab('Root.Main',new TextField('VenueBackgroundImageHeroSource', 'Venue Background Image Author Url'));
+            $fields->addFieldsToTab('Root.Main',
+                new TextField('VenueBackgroundImageHero', 'Venue Background Image Author'));
+            $fields->addFieldsToTab('Root.Main',
+                new TextField('VenueBackgroundImageHeroSource', 'Venue Background Image Author Url'));
 
-            $fields->addFieldsToTab('Root.CityInfo', $about_back = new UploadField('AboutTheCityBackgroundImage', 'About The City Background Image'));
+            $fields->addFieldsToTab('Root.CityInfo',
+                $about_back = new UploadField('AboutTheCityBackgroundImage', 'About The City Background Image'));
             $about_back->setFolderName('summits/location/about');
             $about_back->setAllowedMaxFileNumber(1);
             $about_back->setAllowedFileCategories('image');
 
-            $fields->addFieldsToTab('Root.CityInfo',new TextField('AboutTheCityBackgroundImageHero', 'About The City Background Image Author'));
-            $fields->addFieldsToTab('Root.CityInfo',new TextField('AboutTheCityBackgroundImageHeroSource', 'About The City Background Image Author Source Url'));
+            $fields->addFieldsToTab('Root.CityInfo',
+                new TextField('AboutTheCityBackgroundImageHero', 'About The City Background Image Author'));
+            $fields->addFieldsToTab('Root.CityInfo', new TextField('AboutTheCityBackgroundImageHeroSource',
+                'About The City Background Image Author Source Url'));
         }
 
         $fields->addFieldToTab('Root.Main', new TextField('VenueTitleText', 'Venue Title Text'));
         $fields->addFieldToTab('Root.Main', new TextField('AirportsTitle', 'Airports Title'));
         $fields->addFieldToTab('Root.Main', new TextField('AirportsSubTitle', 'Airports SubTitle'));
 
-        return $fields;    
+        return $fields;
 
     }
 
-    public function getCityIntro(){
+    public function getCityIntro()
+    {
         $res = $this->getField('CityIntro');
-        if(empty($res) && $this->SummitID == 4)
+        if (empty($res) && $this->SummitID == 4) {
             $res = '<blockquote>
 					<strong>You’re gorgeous, baby, you’re sophisticated, you live well...</strong>
 					Vancouver is Manhattan with mountains. It’s a liquid city, a tomorrow city, equal parts India, China, England, France and the Pacific Northwest. It’s the cool North American sibling.
@@ -90,47 +97,65 @@ class SummitLocationPage extends SummitPage {
 					<img src="/summit/images/nytimes.png">
 					<p>New York Times on Vancouver</p>
 				</div>';
+        }
+
         return $res;
     }
 
-    public function VenueBackgroundImageUrl(){
-        if($this->VenueBackgroundImage()->exists()){
+    public function VenueBackgroundImageUrl()
+    {
+        if ($this->VenueBackgroundImage()->exists()) {
             return $this->VenueBackgroundImage()->getURL();
         }
+
         return '/summit/images/venue-bkgd.jpg';
     }
 
-    public function getVenueTitleText(){
+    public function getVenueTitleText()
+    {
         $text = $this->getField('VenueTitleText');
-        if(empty($text)) $text ='The Venue';
+        if (empty($text)) {
+            $text = 'The Venue';
+        }
+
         return $text;
     }
 
-    public function getVenueBackgroundImageHero(){
+    public function getVenueBackgroundImageHero()
+    {
         $res = $this->getField('VenueBackgroundImageHero');
-        if(empty($res))
+        if (empty($res)) {
             return 'Photo by Nick Sinclair';
+        }
+
         return $res;
     }
 
-    public function getVenueBackgroundImageHeroSource(){
+    public function getVenueBackgroundImageHeroSource()
+    {
         $res = $this->getField('VenueBackgroundImageHeroSource');
-        if(empty($res))
+        if (empty($res)) {
             return 'https://flic.kr/p/8rYHEd';
+        }
+
         return $res;
     }
 
-    public function getLocationsTextHeader(){
+    public function getLocationsTextHeader()
+    {
         $res = $this->getField('LocationsTextHeader');
-        if(empty($res) && $this->SummitID == 4)
+        if (empty($res) && $this->SummitID == 4) {
             $res = '<p>We\'ve negotiated discount rates with six hotels adjacent to the Vancouver Convention Centre (Summit
                 venue). Please move quickly to reserve a room before they sell out!</p>';
+        }
+
         return $res;
     }
 
-    public function getOtherLocations(){
+    public function getOtherLocations()
+    {
         $res = $this->getField('OtherLocations');
-        if(empty($res) && $this->SummitID == 4)
+        if (empty($res) && $this->SummitID == 4) {
             $res = ' <p>
                 If you plan to bring your family with you to Vancouver or if you would like to have more space than a
                 hotel room offers then you may want to rent an apartment or condo during your stay. The following sites
@@ -151,13 +176,16 @@ class SummitLocationPage extends SummitPage {
                 </div>
             </div>
             ';
+        }
+
         return $res;
     }
 
-    public function getGettingAround(){
+    public function getGettingAround()
+    {
         $res = $this->getField('GettingAround');
-        if(empty($res) && $this->SummitID == 4)
-            $res=  '  <div class="row">
+        if (empty($res) && $this->SummitID == 4) {
+            $res = '  <div class="row">
             <div class="col-lg-8 col-lg-push-2">
                 <h1>Getting Around In Vancouver</h1>
 
@@ -192,19 +220,25 @@ class SummitLocationPage extends SummitPage {
                 </div>
             </div>
         </div>';
+        }
+
         return $res;
     }
 
-    public function getAboutTheCity(){
+    public function getAboutTheCity()
+    {
         $res = $this->getField('AboutTheCity');
-        if(empty($res) && $this->SummitID == 4)
+        if (empty($res) && $this->SummitID == 4) {
             $res = '<p>Mountains, ocean, culture, nightlife all rolled into one beautiful city...</p><h1>Thank you Vancouver!</h1>';
+        }
+
         return $res;
     }
 
-    public function getLocals(){
+    public function getLocals()
+    {
         $res = $this->getField('Locals');
-        if(empty($res) && $this->SummitID == 4)
+        if (empty($res) && $this->SummitID == 4) {
             $res = '<div class="row">
             <div class="col-lg-8 col-lg-push-2">
                 <h1>In The Words Of The Locals</h1>
@@ -274,43 +308,59 @@ class SummitLocationPage extends SummitPage {
                 </p>
             </div>
         </div>';
+        }
+
         return $res;
     }
 
-    public function getAboutTheCityBackgroundImageUrl(){
-        if($this->AboutTheCityBackgroundImage()->exists()){
+    public function getAboutTheCityBackgroundImageUrl()
+    {
+        if ($this->AboutTheCityBackgroundImage()->exists()) {
             return $this->AboutTheCityBackgroundImage()->getURL();
         }
+
         return '/summit/images/vancouver-bkgd-orange.jpg';
     }
 
-    public function getAboutTheCityBackgroundImageHero(){
+    public function getAboutTheCityBackgroundImageHero()
+    {
         $res = $this->getField('AboutTheCityBackgroundImageHero');
-        if(empty($res))
-        return 'Photo by Magnus Larsson';
+        if (empty($res)) {
+            return 'Photo by Magnus Larsson';
+        }
+
         return $res;
     }
 
-    public function getAboutTheCityBackgroundImageHeroSource(){
+    public function getAboutTheCityBackgroundImageHeroSource()
+    {
         $res = $this->getField('AboutTheCityBackgroundImageHeroSource');
-        if(empty($res))
-        return 'https://flic.kr/p/adaKoH';
+        if (empty($res)) {
+            return 'https://flic.kr/p/adaKoH';
+        }
+
         return $res;
     }
 
 }
 
 
-class SummitLocationPage_Controller extends SummitPage_Controller {
+class SummitLocationPage_Controller extends SummitPage_Controller
+{
 
-    public function init() {
-        
+    public function init()
+    {
+
         $this->top_section = 'full';
 
         $lat = $this->HostCityLat;
-        if(empty($lat)) $lat = '49.287141';
-        $lng= $this->HostCityLng;
-        if(empty($lng)) $lng = '-123.116976';
+        if (empty($lat)) {
+            $lat = '49.287141';
+        }
+        $lng = $this->HostCityLng;
+        if (empty($lng)) {
+            $lng = '-123.116976';
+        }
         Requirements::customScript("
         var settings = {
              host_city_lat: {$lat},
@@ -319,75 +369,73 @@ class SummitLocationPage_Controller extends SummitPage_Controller {
         ");
 
         parent::init();
-                            
+
         Requirements::javascript('https://maps.googleapis.com/maps/api/js?v=3.exp');
 
-		Requirements::javascript("summit/javascript/host-city.js");
+        Requirements::javascript("summit/javascript/host-city.js");
         Requirements::customScript($this->MapScript());
-        
-	}
-    
-    public function Hotels() {
-        $getVars = $this->request->getVars();
-        if(isset($getVars['showHidden'])) {
-            $hotels = $this->Locations()->filter(array('Type' => 'Hotel'))->sort('Order');
-        } else {
-            $hotels = $this->Locations()->filter(array('Type' => 'Hotel','DisplayOnSite' => TRUE))->sort('Order');
-        }
-        return $hotels;
+
     }
-    
+
+    public function Hotels()
+    {
+        $summit = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();
+        $hotels = $summit->getHotels();
+        return new ArrayList($hotels);
+    }
+
     public function Airports() {
-        return $this->Locations()->filter(array('Type' => 'Airport'))->sort('Order');
+        $summit   = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();
+        $airports = $summit->getAirports();
+        return new ArrayList($airports);
     }
 
-    public function Venue() {
-        return $this->Locations()->filter(array('Type' => 'Venue'))->sort('Order')->first();
+    public function Venues() {
+        $summit = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();
+        $venues = $summit->getVenues();
+        return new ArrayList($venues);
     }
-    
-    public function MapScript() {
-        
-        $MapScript = "
-            // Google Maps
-            // Define locations: HTML content for the info window, latitude, longitude
-            var locations = [";
-        
-        // Loop Through All The Locations and add them to the array
 
-        $getVars = $this->request->getVars();
-        if(isset($getVars['showHidden'])) {
-            $Locations = $this->Locations()->sort('Order');
-        } else {
-            $Locations = $this->Locations()->filter('DisplayOnSite',TRUE)->sort('Order');
-        }
-        
-        foreach ($Locations as $Location) {
-            
-            if($Location->BookingLink) {
-                $Link = $Location->BookingLink;
+    public function MapScript()
+    {
+
+        $summit = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();
+        $locations = $summit->Locations()->sort('Order');
+
+        $map_locations = array();
+        foreach ($locations as $location) {
+
+            if ($location instanceof ISummitHotel) {
+                $Link = $location->getBookingLink();
+                if ($location->isSoldOut()) {
+                    $BookingBlock = '<p class="sold-out-hotel">SOLD OUT</p>';
+                } else {
+                    $BookingBlock = "<br><a href=\"{$Link}\" target=\"_blank\" alt=\"Visit Website\">Visit Website</a></p>";
+                }
             } else {
-                $Link = $Location->Website;
-            }
-            
-            if($Location->IsSoldOut) {
-                $BookingBlock = '<p class="sold-out-hotel">SOLD OUT</p>';
-            } else {
+                $Link = $location->getWebsiteUrl();
                 $BookingBlock = "<br><a href=\"{$Link}\" target=\"_blank\" alt=\"Visit Website\">Visit Website</a></p>";
             }
 
-            $lat = empty($Location->Latitude)? 0 : $Location->Latitude;
-            $lng = empty($Location->Longitude)? 0 : $Location->Longitude;
-            $description = empty($Location->Description)? "" : "<span>".$Location->Description."</span>";
-            $MapScript = $MapScript . "['<h5>".$Location->Name."</h5>".$description."<p>". str_replace('\r\n','',$Location->Address).$BookingBlock."', ".$lat.", ".$lng.",".$Location->ID.",'".$Location->Type."'],";
-        }
-        $MapScript = rtrim($MapScript, ',');
-    
-        $MapScript = $MapScript .
-           "];";
-        
-        return $MapScript;
-    
-    }
 
-	
+            $lat = $location->getLat();
+            $lng = $location->getLng();
+            $description = empty($location->getDescription()) ? "" : "<span>" . $location->getDescription() . "</span>";
+
+
+            array_push($map_locations, array(
+                'name'        => '<h5>' . $location->getName() . '</h5>',
+                'description' => $description,
+                'url' => $BookingBlock,
+                'lat' => $lat,
+                'lng' => $lng,
+                'id' => $location->ID,
+                'type' => $location->ClassName,
+                'address' => $location->getAddress()
+            ));
+
+        }
+
+        return sprintf('var locations = %s', json_encode($map_locations));
+    }
 }

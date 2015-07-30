@@ -227,6 +227,8 @@ class SummitEvent extends DataObject implements ISummitEvent
     public function getCMSFields()
     {
 
+        $summit_id = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+
         $f = new FieldList
         (
             $rootTab = new TabSet("Root", $tabMain = new Tab('Main'))
@@ -252,7 +254,7 @@ class SummitEvent extends DataObject implements ISummitEvent
                 'LocationID',
                 'Location',
                 SummitAbstractLocation::get()
-                    ->filter('SummitID', $_REQUEST['SummitID'] )
+                    ->filter('SummitID', $summit_id )
                     ->filter('ClassName', array('SummitVenue', 'SummitVenueRoom') )->map('ID', 'Name')
             )
         );
@@ -266,7 +268,7 @@ class SummitEvent extends DataObject implements ISummitEvent
             (
                 'TypeID',
                 'Event Type',
-                SummitEventType::get()->filter('SummitID', $_REQUEST['SummitID'])->map('ID', 'Type')
+                SummitEventType::get()->filter('SummitID', $summit_id)->map('ID', 'Type')
             )
         );
 
@@ -276,12 +278,13 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         if($this->ID > 0)
         {
+
             // summits types
             $config = new GridFieldConfig_RelationEditor(10);
             $config->removeComponentsByType('GridFieldEditButton');
             $config->removeComponentsByType('GridFieldAddNewButton');
             $completer = $config->getComponentByType('GridFieldAddExistingAutocompleter');
-            $completer->setSearchList(SummitType::get()->filter('SummitID', $_REQUEST['SummitID']));
+            $completer->setSearchList(SummitType::get()->filter('SummitID', $summit_id));
             $summit_types = new GridField('AllowedSummitTypes', 'Summit Types', $this->AllowedSummitTypes(), $config);
             $f->addFieldToTab('Root.Main', $summit_types);
 

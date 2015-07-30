@@ -7,7 +7,9 @@ class SummitAdmin extends ModelAdmin
 
     private static $managed_models = array
     (
-        'Summit'
+        'Summit',
+        'PresentationTopic',
+        'PresentationSpeaker',
     );
 
     private static $menu_title = 'Summits';

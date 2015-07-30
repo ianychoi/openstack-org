@@ -13,20 +13,20 @@
     <div class="container">
         <ul class="city-nav-list">
             <li>
-                <a href="$Top.Link#venue">
+                <a href="#venue">
                     <i class="fa fa-map-marker"></i>
                     Venue
                 </a>
             </li>
             <li>
-                <a href="$Top.Link#hotels">
+                <a href="#hotels">
                     <i class="fa fa-h-square"></i>
                     Hotels &amp; Airport
                 </a>
             </li>
             <% if GettingAround  %>
             <li>
-                <a href="$Top.Link#getting-around">
+                <a href="#getting-around">
                     <i class="fa fa-road"></i>
                     Getting Around
                 </a>
@@ -34,7 +34,7 @@
             <% end_if %>
             <% if TravelSupport  %>
                 <li>
-                    <a href="$Top.Link#travel-support">
+                    <a href="#travel-support">
                         <i class="fa fa-globe"></i>
                         Travel Support Program
                     </a>
@@ -42,7 +42,7 @@
             <% end_if %>
             <% if VisaInformation  %>
             <li>
-                <a href="$Top.Link#visa">
+                <a href="#visa">
                     <i class="fa fa-plane"></i>
                     Visa Info
                 </a>
@@ -50,7 +50,7 @@
             <% end_if %>
             <% if Locals  %>
             <li>
-                <a href="$Top.Link#locals">
+                <a href="#locals">
                     <i class="fa fa-heart"></i>
                     Locals
                 </a>
@@ -59,7 +59,7 @@
         </ul>
     </div>
 </div>
-<% with $Venue %>
+<% loop $Venues %>
     <div id="venue">
         <div class="venue-row" style="background: rgba(0, 0, 0, 0) url('{$Top.VenueBackgroundImageUrl}') no-repeat scroll left top / cover ;">
             <div class="container">
@@ -74,7 +74,7 @@
             <i class="fa fa-info-circle"></i>
         </a>
     </div>
-<% end_with %>
+<% end_loop %>
 <div class="white hotels-row" id="hotels">
 <div class="venue-map" id="map-canvas"></div>
 <div class="container">
@@ -111,10 +111,10 @@
                         <a href="{$BookingLink}" target="_blank" alt="Visit Bookings Site"><i class="fa fa-home"></i>
                             Bookings</a>
                     <% else %>
-                        <a href="{$Website}"><i class="fa fa-home"></i> Website</a>
+                        <a href="{$WebsiteUrl}"><i class="fa fa-home"></i> Website</a>
                     <% end_if %>
                 <% end_if %>
-            </p>q
+            </p>
         </div>
         <% if Last() %>
         </div>
@@ -138,7 +138,7 @@
 
         <% loop Airports %>
 
-                <div class="col-sm-4 col-sm-push-2 hotel-block">
+                <div class="col-sm-4 col-sm-push-2 airport-block">
                     <h3>$Name</h3>
                     <p>
                         $Address
@@ -146,7 +146,7 @@
                     <p>
                         <a class="marker-link" href="$Top.Link#map-canvas" data-location-id="{$ID}" alt="View On Map"><i
                                 class="fa fa-map-marker"></i> Map</a>
-                        <a href="{$Website}" target="_blank" alt="Visit Website"><i class="fa fa-home"></i> Website</a>
+                        <a href="{$WebsiteUrl}" target="_blank" alt="Visit Website"><i class="fa fa-home"></i> Website</a>
                     </p>
                 </div>
 
