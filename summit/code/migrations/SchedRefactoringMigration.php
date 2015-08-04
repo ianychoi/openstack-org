@@ -27,6 +27,12 @@ final class SchedRefactoringMigration extends MigrationTask
         if (!$migration) {
 
             $SQL = <<<SQL
+ update Presentation set SummitID = 5;
+SQL;
+
+            DB::query($SQL);
+
+            $SQL = <<<SQL
 INSERT INTO SummitEvent
 (ID, Created, LastEdited, ClassName, Title, Description, SummitID)
 SELECT ID, Created, LastEdited, ClassName, Title, Description, SummitID FROM Presentation;
@@ -139,11 +145,7 @@ SQL;
 
             DB::query($SQL);
 
-            $SQL = <<<SQL
- update Presentation set SummitID = 5;
-SQL;
 
-            DB::query($SQL);
 
             $migration = new Migration();
             $migration->Name = $this->title;

@@ -475,6 +475,17 @@ final class Summit extends DataObject implements ISummit
         // events
 
         $config = GridFieldConfig_RecordEditor::create();
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $multi_class_selector = new GridFieldAddNewMultiClass();
+        $multi_class_selector->setClasses
+        (
+            array
+            (
+                'SummitEvent'         => 'Event',
+                'Presentation'        => 'Presentation',
+            )
+        );
+        $config->addComponent($multi_class_selector);
         $gridField = new GridField('Events', 'Events', $this->Events(), $config);
         $f->addFieldToTab('Root.Events', $gridField);
 
