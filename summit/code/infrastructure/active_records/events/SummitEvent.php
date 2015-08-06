@@ -16,10 +16,12 @@ class SummitEvent extends DataObject implements ISummitEvent
 {
     private static $db = array
     (
-        'Title'       => 'Text',
-        'Description' => 'HTMLText',
-        'StartDate'   => 'SS_Datetime',
-        'EndDate'     => 'SS_Datetime',
+        'Title'        => 'Text',
+        'Description'  => 'HTMLText',
+        'StartDate'    => 'SS_Datetime',
+        'EndDate'      => 'SS_Datetime',
+        'Approved'     => 'Boolean',
+        'ApprovedDate' => 'SS_Datetime',
     );
 
     private static $has_many = array
@@ -236,6 +238,7 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         $f->addFieldToTab('Root.Main', new TextField('Title','Title'));
         $f->addFieldToTab('Root.Main', new HtmlEditorField('Description','Description'));
+        $f->addFieldToTab('Root.Main', new CheckboxField('Approved','Is Approved?'));
         $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
 
         $f->addFieldToTab('Root.Main',$date = new DatetimeField('StartDate', 'Start Date'));
@@ -302,5 +305,21 @@ class SummitEvent extends DataObject implements ISummitEvent
             $f->addFieldToTab('Root.Feedback', $sponsors);
         }
         return $f;
+    }
+
+    /**
+     * @return void
+     */
+    public function approve()
+    {
+        if($this->Approved)
+            throw new Exception('Already Approved Summit Event');
+        $this->Approved = true;
+        $this->ApprovedDate = MySQLDatabase56::nowRfc2822();
+    }
+
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
     }
 }

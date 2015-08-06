@@ -8,35 +8,82 @@
         <div class="page-header">
             <h1>$Summit.Title<small></small></h1>
         </div>
+        <a href="#" class="btn btn-primary btn-sm active" role="button">+ Add Event</a>
         <table class="table">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Attendance</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+            </tr>
+            </thead>
             <tbody>
-                <% loop Events %>
                 <tr>
                     <td>
-                        $Title
+                        1
                     </td>
                     <td>
-                        $StartDate
+                        Working Group Session: Community App Catalog
                     </td>
                     <td>
-                        $EndDate
+                        May 20 - 11:50am
                     </td>
                     <td>
-                        $LocationName
+                        May 20 - 12:30am
                     </td>
                     <td>
-                        $TypeName
+                        Community
                     </td>
                     <td>
-                        <a href="$Top.Link/{$SummitID}/events/{$ID}}" class="btn btn-primary btn-sm active" role="button">Control Panel</a>
+                        Room 116/117
+                    </td>
+                    <td>
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-users fa-stack-1x "></i></span>0
+                    </td>
+                    <td>
+                        <a href="$Top.Link/{$Summit.ID}/events/1" class="btn btn-primary btn-sm active" role="button">Control Panel</a>
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger active btn-sm">Delete</button>
                     </td>
                 </tr>
-                <% end_loop %>
+                <tr>
+                    <td>
+                        2
+                    </td>
+                    <td>
+                        Working Group Session: Community App Catalog
+                    </td>
+                    <td>
+                        May 20 - 11:50am
+                    </td>
+                    <td>
+                        May 20 - 12:30am
+                    </td>
+                    <td>
+                        Community
+                    </td>
+                    <td>
+                        Room 116/117
+                    </td>
+                    <td>
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-users fa-stack-1x "></i></span>10
+                    </td>
+                    <td>
+                        <a href="$Top.Link/{$Summit.ID}/events/2" class="btn btn-primary btn-sm active" role="button">Edit</a>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger active btn-sm">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
         </table>
-
         <nav>
             <ul class="pagination">
                 <li class="disabled">

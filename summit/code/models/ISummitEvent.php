@@ -108,4 +108,9 @@ interface ISummitEvent extends IEntity
      * @return void
      */
     public function clearAllFeedback();
+
+    /**
+     * @return void
+     */
+    public function approve();
 }

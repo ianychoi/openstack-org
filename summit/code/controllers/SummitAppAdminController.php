@@ -73,7 +73,8 @@ class SummitAppAdminController extends Page_Controller
         Requirements::css('summit/css/simple-sidebar.css');
         Requirements::javascript('summit/javascript/simple-sidebar.js');
 
-        $events = $summit->Events();
+        $events = $summit->Events()->filter('Approved', true);
+
         return $this->getViewer('events')->process
         (
             $this->customise

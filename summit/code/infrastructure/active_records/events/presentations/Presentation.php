@@ -32,13 +32,20 @@ class Presentation extends SummitEvent implements IPresentation
 
     private static $db = array
     (
-        'Level'            => "Enum('Beginner,Intermediate,Advanced')",
-        'Status'           => 'Varchar',
-        'OtherTopic'       => 'Varchar',
-        'ShortDescription' => 'HTMLText',
-        'Progress'         => 'Int',
-        'Views'            => 'Int',
-        'BeenEmailed'      => 'Boolean'
+        'Level'                => "Enum('Beginner,Intermediate,Advanced')",
+        'Status'               => 'Varchar',
+        'OtherTopic'           => 'Varchar',
+        'ShortDescription'     => 'HTMLText',
+        'Progress'             => 'Int',
+        'Views'                => 'Int',
+        'BeenEmailed'          => 'Boolean',
+        'TrackChairStatus'     => "Enum('Approved,Alternate,Unselected', 'Unselected')",
+        'TrackChairGivenOrder' => 'Int'
+    );
+
+    private static $defaults = array
+    (
+        'TrackChairGivenOrder' => 0
     );
 
 
@@ -438,5 +445,15 @@ class Presentation extends SummitEvent implements IPresentation
         $f->addFieldToTab('Root.Materials', $gridField);
 
         return $f;
+    }
+
+    /**
+     * @return void
+     */
+    public function approve()
+    {
+        parent::approve();
+
+        // check SummitSelectedPresentationList to select the TrackChair Status
     }
 }
