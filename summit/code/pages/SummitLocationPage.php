@@ -22,7 +22,8 @@ class SummitLocationPage extends SummitPage
         'VenueTitleText' => 'Text',
         'AirportsTitle' => 'Text',
         'AirportsSubTitle' => 'Text',
-    );
+        'CampusGraphic' => 'Text',
+     );
 
     private static $has_one = array(
         'VenueBackgroundImage' => 'BetterImage',
@@ -80,6 +81,8 @@ class SummitLocationPage extends SummitPage
         $fields->addFieldToTab('Root.Main', new TextField('VenueTitleText', 'Venue Title Text'));
         $fields->addFieldToTab('Root.Main', new TextField('AirportsTitle', 'Airports Title'));
         $fields->addFieldToTab('Root.Main', new TextField('AirportsSubTitle', 'Airports SubTitle'));
+        $fields->addFieldToTab('Root.Main', new TextField('CampusGraphic', 'URL of image of campus graphic'));
+
 
         return $fields;
 
@@ -348,9 +351,14 @@ class SummitLocationPage extends SummitPage
 class SummitLocationPage_Controller extends SummitPage_Controller
 {
 
-    public function init()
-    {
 
+    private static $allowed_actions = array (
+        'details'
+    );
+
+
+    public function init() {
+        
         $this->top_section = 'full';
 
         $lat = $this->HostCityLat;
@@ -374,7 +382,6 @@ class SummitLocationPage_Controller extends SummitPage_Controller
 
         Requirements::javascript("summit/javascript/host-city.js");
         Requirements::customScript($this->MapScript());
-
     }
 
     public function Hotels()
@@ -382,7 +389,19 @@ class SummitLocationPage_Controller extends SummitPage_Controller
         $summit = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();
         $hotels = $summit->getHotels();
         return new ArrayList($hotels);
+
+	}
+
+    public function details(SS_HTTPRequest $r) {
+        $location = SummitLocation::get()->byID((int) $r->param('ID'));
+
+        if(!$location) return $this->httpError(404);
+
+        return array (
+            'Location' => $location
+        );
     }
+
 
     public function Airports() {
         $summit   = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();

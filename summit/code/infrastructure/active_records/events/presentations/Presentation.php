@@ -170,10 +170,8 @@ class Presentation extends SummitEvent implements IPresentation
      *
      * @return boolean
      */
-    public function canAssign($member = null)
-    {
 
-        return true;
+    public function canAssign() {
 
         // see if they have either of the appropiate permissions
         if(!(Permission::check('TRACK-CHAIR') || Permission::check('ADMIN'))) return false;
@@ -240,6 +238,33 @@ class Presentation extends SummitEvent implements IPresentation
     }
 
 
+    public function CalcTotalPoints() {
+        $sqlQuery = new SQLQuery( 
+           "SUM(Vote)", 
+           "PresentationVote",
+           "PresentationID = ".$this->ID
+        ); 
+        return $sqlQuery->execute()->value();
+    }
+
+    public function CalcVoteCount() {
+        $sqlQuery = new SQLQuery( 
+           "COUNT(ID)",
+           "PresentationVote",
+           "PresentationID = ".$this->ID 
+        ); 
+        return $sqlQuery->execute()->value();
+    }    
+
+    public function CalcVoteAverage() {
+        $sqlQuery = new SQLQuery( 
+           "AVG(Vote)",
+           "PresentationVote",
+           "PresentationID = ".$this->ID
+        ); 
+        return round($sqlQuery->execute()->value(), 2);
+    }
+
     /**
      * Determines if the presentation is "new." Since presentations are
      * optimistically written to the database, a simple isInDB() check
@@ -295,18 +320,52 @@ class Presentation extends SummitEvent implements IPresentation
 
             $MySelections = SummitSelectedPresentationList::getMemberList($this->CategoryID);
 
+
             // See if the presentation has already been assigned
             $AlreadyAssigned = $MySelections->SummitSelectedPresentations('PresentationID = ' . $this->ID);
+            
 
             if ($AlreadyAssigned->count() == 0) {
+
+                // Find the higest order value assigned up to this point
+                $HighestOrderInList =  $MySelections
+                                            ->SummitSelectedPresentations()
+                                            ->sort('Order DESC')
+                                            ->first()
+                                            ->Order;
+
                 $SelectedPresentation = new SummitSelectedPresentation();
                 $SelectedPresentation->SummitSelectedPresentationListID = $MySelections->ID;
                 $SelectedPresentation->PresentationID = $this->ID;
                 $SelectedPresentation->MemberID = Member::currentUser()->ID;
+                // Place at bottom of list
+                $SelectedPresentation->Order = $HighestOrderInList + 1;
                 $SelectedPresentation->write();
             }
         }
     }
+
+    /**
+     * Used by the track chair app to allow chairs to remove a presentation from a personal list.
+     **/
+
+    public function removeFromIndividualList() {
+
+
+        // Check permissions of user on talk
+        if ($this->CanAssign()) {
+
+            $MySelections = SummitSelectedPresentationList::getMemberList($this->CategoryID);
+
+            // See if the presentation has already been assigned
+            $AlreadyAssigned = $MySelections->SummitSelectedPresentations('PresentationID = ' . $this->ID)->first();
+
+            if ($AlreadyAssigned->exists()) {
+                $AlreadyAssigned->delete();
+            }
+        }
+    }
+
 
     /**
      * Used by the track chair app see if the presentaiton has been selected by currently logged in member.
@@ -316,10 +375,11 @@ class Presentation extends SummitEvent implements IPresentation
 
         $memID = Member::currentUserID();
 
-        // return "PresentationID = {$this->ID} and MemberID = {$memID}";
 
         $selected = SummitSelectedPresentation::get()
-            ->where("PresentationID={$this->ID} and MemberID={$memID}");
+            ->leftJoin("SummitSelectedPresentationList", "SummitSelectedPresentationList.ID = SummitSelectedPresentation.SummitSelectedPresentationListID")        
+            ->where("PresentationID={$this->ID} and SummitSelectedPresentation.MemberID={$memID} 
+                     AND ListType='Individual'");
 
         if ($selected->count()) return true;
 

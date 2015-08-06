@@ -27,6 +27,7 @@ final class SangriaPageExportDataExtension extends Extension
     {
         Config::inst()->update(get_class($this), 'allowed_actions', array(
             'ExportDataUsersByRole',
+            'exportCLAUsers',
             'exportConditionrs',
             'exportGerritUsers',
             'ExportDataGerritUsers',
@@ -44,6 +45,7 @@ final class SangriaPageExportDataExtension extends Extension
 
         Config::inst()->update(get_class($this->owner), 'allowed_actions', array(
             'ExportDataUsersByRole',
+            'exportCLAUsers',
             'exportConditionrs',
             'exportGerritUsers',
             'ExportDataGerritUsers',
@@ -60,7 +62,7 @@ final class SangriaPageExportDataExtension extends Extension
         ));
     }
 
-    function onAfterInit() {
+    public function onAfterInit() {
         Requirements::javascript(Director::protocol() . "ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js");
         Requirements::javascript(Director::protocol() . "ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/additional-methods.min.js");
         Requirements::css(THIRDPARTY_DIR . '/jquery-ui-themes/smoothness/jquery-ui.css');
@@ -73,6 +75,36 @@ final class SangriaPageExportDataExtension extends Extension
     {
         $this->Title = 'Export Users By Role';
         return $this->owner->getViewer('ExportUsersByRole')->process($this->owner);
+    }
+
+    function exportCLAUsers()
+    {
+        $params = $this->owner->getRequest()->getVars();
+        $fields = $params['fields'];
+        $ext = $params['ext'];
+
+        if (!isset($params['fields']) || empty($params['fields']))
+            return $this->owner->httpError('412', 'missing required param fields');
+        if (!isset($params['ext']) || empty($params['ext']))
+            return $this->owner->httpError('412', 'missing required param ext');
+        if (!count($fields)) {
+            return $this->httpError('412', 'missing required param fields');
+        }
+
+        $query = new SQLQuery();
+        $query->setFrom('Member');
+        $query->addLeftJoin('Group_Members', 'Group_Members.MemberID = Member.ID');
+        $query->addLeftJoin('Group', 'Group.ID = Group_Members.GroupID');
+        $query->addWhere('Member.GerritID IS NOT NULL');
+        $fields['Groups'] = "GROUP_CONCAT(Group.Code, ' | ')";
+        $query->setSelect($fields);
+        $query->addGroupBy('Member.ID');
+        $query->addOrderBy(array('Member.Surname','Member.FirstName'));
+
+        $result = $query->execute();
+        $filename = "MembersByRole-" . date('Ymd') . "." . $ext;
+        $delimiter = ($ext == 'xls') ? "\t" : "," ;
+        return CSVExporter::getInstance()->export($filename, $result, $delimiter);
     }
 
     function ExportDataGerritUsers()

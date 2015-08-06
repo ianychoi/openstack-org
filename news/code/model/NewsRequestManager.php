@@ -69,32 +69,32 @@ final class NewsRequestManager {
 	 * @param array $data
 	 * @return INews
 	 */
-	public function postNews(array $data){
-		$validator_factory    = $this->validator_factory;
-		$factory              = $this->factory;
-		$repository           = $this->news_repository ;
+    public function postNews(array $data){
+        $validator_factory    = $this->validator_factory;
+        $factory              = $this->factory;
+        $repository           = $this->news_repository ;
         $submitter_repository = $this->submitter_repository;
-		$upload_service       = $this->upload_service;
+        $upload_service       = $this->upload_service;
 
-		return $this->tx_manager->transaction(function() use($data, $repository, $submitter_repository, $factory, $validator_factory, $upload_service){
-			$validator = $validator_factory->buildValidatorForNews($data);
-			if ($validator->fails()) {
-					throw new EntityValidationException($validator->messages());
-			}
+        return $this->tx_manager->transaction(function() use($data, $repository, $submitter_repository, $factory, $validator_factory, $upload_service){
+            $validator = $validator_factory->buildValidatorForNews($data);
+            if ($validator->fails()) {
+                throw new EntityValidationException($validator->messages());
+            }
 
             $submitter = $submitter_repository->getSubmitterByEmail($data['submitter_email']);
             if (!$submitter) {
                 $submitter = $factory->buildNewsSubmitter($data);
             }
 
-			$news = $factory->buildNews(
-				$factory->buildNewsMainInfo($data),
-				$data['tags'],
+            $news = $factory->buildNews(
+                $factory->buildNewsMainInfo($data),
+                $data['tags'],
                 $submitter,
-				$upload_service
-			);
+                $upload_service
+            );
 
-			$repository->add($news);
+            $repository->add($news);
 
             //send email
             $email = EmailFactory::getInstance()->buildEmail(NEWS_SUBMISSION_EMAIL_FROM,
@@ -108,8 +108,8 @@ final class NewsRequestManager {
             ));
 
             $email->send();
-		});
-	}
+        });
+    }
 
 	/**
 	 * @param array $data

@@ -33,6 +33,9 @@ Summit:
 SummitTrackChair:
   extensions:
     - JSONable
+SummitCategoryChange:
+  extensions:
+    - JSONable    
 Presentation:
   extensions:
     - Sluggable
