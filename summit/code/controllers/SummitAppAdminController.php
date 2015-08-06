@@ -24,11 +24,13 @@ class SummitAppAdminController extends Page_Controller
 
     private static $allowed_actions = array(
         'directory',
-        'editor',
+        'dashboard',
+        'events',
     );
 
     private static $url_handlers = array (
-        '$SummitID!/editor' => 'editor',
+        '$SummitID!/dashboard' => 'dashboard',
+        '$SummitID!/events' => 'events',
     );
 
     /**
@@ -62,7 +64,7 @@ class SummitAppAdminController extends Page_Controller
         );
     }
 
-    public function editor(SS_HTTPRequest $request)
+    public function events(SS_HTTPRequest $request)
     {
         $summit_id = intval($request->param('SummitID'));
 
@@ -70,7 +72,30 @@ class SummitAppAdminController extends Page_Controller
 
         Requirements::css('summit/css/simple-sidebar.css');
         Requirements::javascript('summit/javascript/simple-sidebar.js');
-        return $this->getViewer('editor')->process
+
+        $events = $summit->Events();
+        return $this->getViewer('events')->process
+        (
+            $this->customise
+            (
+                array
+                (
+                    'Summit' => $summit,
+                    'Events' => $events
+                )
+            )
+        );
+    }
+
+    public function dashboard(SS_HTTPRequest $request)
+    {
+        $summit_id = intval($request->param('SummitID'));
+
+        $summit = Summit::get()->byID($summit_id);
+
+        Requirements::css('summit/css/simple-sidebar.css');
+        Requirements::javascript('summit/javascript/simple-sidebar.js');
+        return $this->getViewer('dashboard')->process
         (
             $this->customise
             (

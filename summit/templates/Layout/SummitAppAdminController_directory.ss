@@ -38,7 +38,7 @@
                         $SummitEndDate
                     </td>
                     <td>
-                        <a href="$Top.Link/{$ID}/editor" class="btn btn-primary btn-sm active" role="button">Control Panel</a>
+                        <a href="$Top.Link/{$ID}/dashboard" class="btn btn-primary btn-sm active" role="button">Control Panel</a>
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger active btn-sm">Delete</button>
