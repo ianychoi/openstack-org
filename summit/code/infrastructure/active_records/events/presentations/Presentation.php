@@ -39,8 +39,6 @@ class Presentation extends SummitEvent implements IPresentation
         'Progress'             => 'Int',
         'Views'                => 'Int',
         'BeenEmailed'          => 'Boolean',
-        'TrackChairStatus'     => "Enum('Approved,Alternate,Unselected', 'Unselected')",
-        'TrackChairGivenOrder' => 'Int'
     );
 
     private static $defaults = array
@@ -450,9 +448,9 @@ class Presentation extends SummitEvent implements IPresentation
     /**
      * @return void
      */
-    public function approve()
+    public function publish()
     {
-        parent::approve();
+        parent::publish();
 
         // check SummitSelectedPresentationList to select the TrackChair Status
     }

@@ -112,5 +112,5 @@ interface ISummitEvent extends IEntity
     /**
      * @return void
      */
-    public function approve();
+    public function publish();
 }

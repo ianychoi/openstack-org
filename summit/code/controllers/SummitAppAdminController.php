@@ -25,12 +25,20 @@ class SummitAppAdminController extends Page_Controller
     private static $allowed_actions = array(
         'directory',
         'dashboard',
-        'events',
+        'publishedEvents',
+        'pendingEvents',
+        'editEvent',
+        'presentationLists',
+        'editPresentationList',
     );
 
     private static $url_handlers = array (
         '$SummitID!/dashboard' => 'dashboard',
-        '$SummitID!/events' => 'events',
+        '$SummitID!/events/published' => 'publishedEvents',
+        '$SummitID!/events/unpublished' => 'pendingEvents',
+        '$SummitID!/events/presentation-lists/$PresentationListId!'  => 'editPresentationList',
+        '$SummitID!/events/presentation-lists'  => 'presentationLists',
+        '$SummitID!/events/$EventID!'  => 'editEvent',
     );
 
     /**
@@ -64,7 +72,7 @@ class SummitAppAdminController extends Page_Controller
         );
     }
 
-    public function events(SS_HTTPRequest $request)
+    public function publishedEvents(SS_HTTPRequest $request)
     {
         $summit_id = intval($request->param('SummitID'));
 
@@ -73,9 +81,9 @@ class SummitAppAdminController extends Page_Controller
         Requirements::css('summit/css/simple-sidebar.css');
         Requirements::javascript('summit/javascript/simple-sidebar.js');
 
-        $events = $summit->Events()->filter('Approved', true);
+        $events = $summit->Events()->filter('Published', true);
 
-        return $this->getViewer('events')->process
+        return $this->getViewer('publishedEvents')->process
         (
             $this->customise
             (
@@ -87,6 +95,76 @@ class SummitAppAdminController extends Page_Controller
             )
         );
     }
+
+    public function pendingEvents(SS_HTTPRequest $request)
+    {
+        $summit_id = intval($request->param('SummitID'));
+
+        $summit = Summit::get()->byID($summit_id);
+
+        Requirements::css('summit/css/simple-sidebar.css');
+        Requirements::javascript('summit/javascript/simple-sidebar.js');
+
+        $events = $summit->Events()->filter('Published', false);
+
+        return $this->getViewer('pendingEvents')->process
+        (
+            $this->customise
+            (
+                array
+                (
+                    'Summit' => $summit,
+                    'Events' => $events
+                )
+            )
+        );
+    }
+
+    public function presentationLists(SS_HTTPRequest $request)
+    {
+        $summit_id = intval($request->param('SummitID'));
+
+        $summit = Summit::get()->byID($summit_id);
+
+        Requirements::css('summit/css/simple-sidebar.css');
+        Requirements::javascript('summit/javascript/simple-sidebar.js');
+
+        $events = $summit->Events()->filter('Published', false);
+
+        return $this->getViewer('presentationLists')->process
+        (
+            $this->customise
+            (
+                array
+                (
+                    'Summit' => $summit,
+                )
+            )
+        );
+    }
+
+    public function editPresentationList(SS_HTTPRequest $request)
+    {
+        $summit_id = intval($request->param('SummitID'));
+
+        $summit = Summit::get()->byID($summit_id);
+
+        Requirements::css('summit/css/simple-sidebar.css');
+        Requirements::javascript('summit/javascript/simple-sidebar.js');
+
+
+        return $this->getViewer('editPresentationList')->process
+        (
+            $this->customise
+            (
+                array
+                (
+                    'Summit' => $summit,
+                )
+            )
+        );
+    }
+
 
     public function dashboard(SS_HTTPRequest $request)
     {
@@ -103,6 +181,27 @@ class SummitAppAdminController extends Page_Controller
                 array
                 (
                     'Summit' => $summit
+                )
+            )
+        );
+    }
+
+    public function editEvent(SS_HTTPRequest $request)
+    {
+        $summit_id = intval($request->param('SummitID'));
+        $summit = Summit::get()->byID($summit_id);
+        $event_id = intval($request->param('EventID'));
+
+        Requirements::css('summit/css/simple-sidebar.css');
+        Requirements::javascript('summit/javascript/simple-sidebar.js');
+        return $this->getViewer('EditEvent')->process
+        (
+            $this->customise
+            (
+                array
+                (
+                    'Summit' => $summit,
+                    'Event' => null
                 )
             )
         );

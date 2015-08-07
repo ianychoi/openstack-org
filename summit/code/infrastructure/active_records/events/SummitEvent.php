@@ -20,8 +20,8 @@ class SummitEvent extends DataObject implements ISummitEvent
         'Description'  => 'HTMLText',
         'StartDate'    => 'SS_Datetime',
         'EndDate'      => 'SS_Datetime',
-        'Approved'     => 'Boolean',
-        'ApprovedDate' => 'SS_Datetime',
+        'Published'     => 'Boolean',
+        'PublishedDate' => 'SS_Datetime',
     );
 
     private static $has_many = array
@@ -310,12 +310,12 @@ class SummitEvent extends DataObject implements ISummitEvent
     /**
      * @return void
      */
-    public function approve()
+    public function publish()
     {
-        if($this->Approved)
-            throw new Exception('Already Approved Summit Event');
-        $this->Approved = true;
-        $this->ApprovedDate = MySQLDatabase56::nowRfc2822();
+        if($this->Published)
+            throw new Exception('Already published Summit Event');
+        $this->Published = true;
+        $this->PublishedDate = MySQLDatabase56::nowRfc2822();
     }
 
     protected function onBeforeWrite()

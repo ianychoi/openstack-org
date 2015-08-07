@@ -105,7 +105,7 @@
 
 @media(min-width:768px) {
     #wrapper {
-        padding-left: 250px;
+        /*padding-left: 250px;*/
     }
     .fixed-brand{
         width: 250px;
@@ -127,7 +127,6 @@
     #wrapper.toggled-2 #sidebar-wrapper:hover {
         width: 250px;
     }
-
 
     #page-content-wrapper {
         padding: 20px;
@@ -153,4 +152,30 @@
         -o-transition: all 0.5s ease;
         transition: all 0.5s ease;
     }
+}
+
+
+.left-inner-addon {
+    position: relative;
+}
+.left-inner-addon input {
+    padding-left: 30px;
+}
+.left-inner-addon span {
+    position: absolute;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+
+.right-inner-addon {
+    position: relative;
+}
+.right-inner-addon input {
+    padding-right: 30px;
+}
+.right-inner-addon span {
+    position: absolute;
+    right: 0px;
+    padding: 10px 12px;
+    pointer-events: none;
 }

@@ -15,12 +15,12 @@ class SummitSelectedPresentationList extends DataObject {
 
 	static $db = array(
 		'Name' => 'Text',
-    'ListType' => "Enum('Individual,Group','Individual')"
+        'ListType' => "Enum('Individual,Group','Individual')"
 	);
 	
 	static $has_one = array(
 		'Category' => 'PresentationCategory',
-    'Member' => 'Member'
+        'Member' => 'Member'
 	);
 
 	static $has_many = array(

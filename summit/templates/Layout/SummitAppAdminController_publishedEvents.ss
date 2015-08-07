@@ -5,6 +5,12 @@
     </div><!-- /#sidebar-wrapper -->
     <!-- Page Content -->
     <div id="page-content-wrapper">
+        <ol class="breadcrumb">
+            <li><a href="$Top.Link">Home</a></li>
+            <li><a href="$Top.Link/{$Summit.ID}/dashboard">$Summit.Name</a></li>
+            <li class="active">Published Events</li>
+        </ol>
+
         <div class="page-header">
             <h1>$Summit.Title<small></small></h1>
         </div>
@@ -29,7 +35,7 @@
                         1
                     </td>
                     <td>
-                        Working Group Session: Community App Catalog
+                        <a href="$Top.Link/{$Summit.ID}/events/2" >Working Group Session: Community App Catalog</a>
                     </td>
                     <td>
                         May 20 - 11:50am
@@ -38,7 +44,7 @@
                         May 20 - 12:30am
                     </td>
                     <td>
-                        Community
+                        Presentation
                     </td>
                     <td>
                         Room 116/117
@@ -47,7 +53,7 @@
                         <span class="fa-stack fa-lg pull-left"><i class="fa fa-users fa-stack-1x "></i></span>0
                     </td>
                     <td>
-                        <a href="$Top.Link/{$Summit.ID}/events/1" class="btn btn-primary btn-sm active" role="button">Control Panel</a>
+                        <a href="$Top.Link/{$Summit.ID}/events/1" class="btn btn-primary btn-sm active" role="button">Edit</a>
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger active btn-sm">Delete</button>
@@ -58,7 +64,7 @@
                         2
                     </td>
                     <td>
-                        Working Group Session: Community App Catalog
+                        <a href="$Top.Link/{$Summit.ID}/events/2" >Working Group Session: Community App Catalog</a>
                     </td>
                     <td>
                         May 20 - 11:50am
@@ -67,7 +73,7 @@
                         May 20 - 12:30am
                     </td>
                     <td>
-                        Community
+                        Presentation
                     </td>
                     <td>
                         Room 116/117
@@ -105,3 +111,4 @@
         </nav>
     </div>
     <!-- /#page-content-wrapper -->
+</div>
