@@ -105,7 +105,7 @@
 
 @media(min-width:768px) {
     #wrapper {
-        /*padding-left: 250px;*/
+        padding-left: 250px;
     }
     .fixed-brand{
         width: 250px;
