@@ -14,7 +14,6 @@
         <div class="page-header">
             <h1>$Summit.Title<small></small></h1>
         </div>
-        <a href="#" class="btn btn-primary btn-sm active" role="button">+ Add Event</a>
         <table class="table">
             <thead>
             <tr>
@@ -25,6 +24,7 @@
                 <th>Type</th>
                 <th>Location</th>
                 <th>Attendance</th>
+                <th>&nbsp;</th>
                 <th>&nbsp;</th>
                 <th>&nbsp;</th>
             </tr>
@@ -53,7 +53,10 @@
                         <span class="fa-stack fa-lg pull-left"><i class="fa fa-users fa-stack-1x "></i></span>0
                     </td>
                     <td>
-                        <a href="$Top.Link/{$Summit.ID}/events/1" class="btn btn-primary btn-sm active" role="button">Edit</a>
+                        <a href="$Top.Link/{$Summit.ID}/events/1" class="btn btn-default btn-sm active" role="button">Edit</a>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger active btn-sm">Unpublish</button>
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger active btn-sm">Delete</button>
@@ -82,7 +85,10 @@
                         <span class="fa-stack fa-lg pull-left"><i class="fa fa-users fa-stack-1x "></i></span>10
                     </td>
                     <td>
-                        <a href="$Top.Link/{$Summit.ID}/events/2" class="btn btn-primary btn-sm active" role="button">Edit</a>
+                        <a href="$Top.Link/{$Summit.ID}/events/2" class="btn btn-default btn-sm active" role="button">Edit</a>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger active btn-sm">Unpublish</button>
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger active btn-sm">Delete</button>

@@ -17,7 +17,6 @@
 
         <label for="filter">Event Type</label>
         <div class="btn-group">
-
             <button id="filter" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 All<span class="caret"></span>
             </button>
@@ -29,8 +28,9 @@
                 <li><a href="#">Presentations</a></li>
             </ul>
         </div>
-        <a href="#" class="btn btn-primary btn-sm active pull-right" role="button">+ Add Event</a>
-
+        <button type="button" class="btn btn-primary active btn-sm pull-right" data-toggle="modal" data-target="#modal-add-event">
+            + Add Event
+        </button>
         <table class="table">
             <thead>
             <tr>
@@ -136,7 +136,7 @@
                 </li>
             </ul>
         </nav>
-        <!-- Modal -->
+        <!-- Modal Publish -->
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -202,6 +202,109 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary">Publish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal Add -->
+        <div class="modal fade" id="modal-add-event" tabindex="-1" role="dialog" aria-labelledby="modal-add-event-label">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="modal-add-event-label">Add New Event</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="event-type">Event Type</label>
+                                <div class="btn-group" id="event-type">
+                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">--Event Type --<span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#">Summit Party</a></li>
+                                        <li><a href="#">Sponsored Demo</a></li>
+                                        <li><a href="#">Expo</a></li>
+                                        <li><a href="#">Presentation</a></li>
+                                        <li><a href="#">Lunch</a></li>
+                                        <li><a href="#">Break</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" class="form-control" id="title">
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="sponsors">Sponsors</label>
+                                <select id="sponsors" multiple="" style="width:350px;" data-placeholder="Sponsors">
+                                    <option value="1">Solinea</option>
+                                    <option value="2">Rackspace</option>
+                                    <option value="3">HP</option>
+                                    <option value="3">IBM</option>
+                                    <option value="3">Kio Networks</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location</label>
+
+                                <div class="btn-group">
+                                    <button id="location" type="button" class="btn btn-default dropdown-toggle"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Location <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#">Room#1 @ Venue #1</a></li>
+                                        <li><a href="#">Room#2 @ Venue #1</a></li>
+                                        <li><a href="#">Room#3 @ Venue #1</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-lg-3">
+                                        <div class="left-inner-addon">
+                                            <span class="glyphicon glyphicon glyphicon-calendar"
+                                                  aria-hidden="true"></span>
+                                            <input type="text" class="form-control" placeholder="Start Date"
+                                                   id="start-date"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <div class="left-inner-addon ">
+                                            <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                            <input type="text" class="form-control" placeholder="Start Time"
+                                                   id="start-time"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <div class="left-inner-addon">
+                                            <span class="glyphicon glyphicon glyphicon-calendar"
+                                                  aria-hidden="true"></span>
+                                            <input type="text" class="form-control" placeholder="End Date"
+                                                   id="end-date"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <div class="left-inner-addon ">
+                                            <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                            <input type="text" class="form-control" placeholder="End Time"
+                                                   id="end-time"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save</button>
                     </div>
                 </div>
             </div>

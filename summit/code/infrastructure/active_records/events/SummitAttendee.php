@@ -50,6 +50,7 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
     (
         'Member' => 'Member',
         'Summit' => 'Summit',
+        'Ticket' => 'SummitTicketType',
     );
 
     private static $summary_fields = array

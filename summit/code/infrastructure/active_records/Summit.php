@@ -32,6 +32,8 @@ final class Summit extends DataObject implements ISummit
         'Link'                        => 'Varchar',
         'RegistrationLink'            => 'Text',
         'ComingSoonBtnText'           => 'Text',
+        // https://www.eventbrite.com
+        'ExternalEventId'             => 'Text',
     );
 
     private static $has_one = array
@@ -49,6 +51,7 @@ final class Summit extends DataObject implements ISummit
         'EventTypes'    => 'SummitEventType',
         'Events'        => 'SummitEvent',
         'Attendees'     => 'SummitAttendee',
+        'SummitTicketTypes' => 'SummitTicketType',
     );
 
     private static $summary_fields = array
