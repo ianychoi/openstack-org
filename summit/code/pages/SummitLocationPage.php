@@ -23,6 +23,8 @@ class SummitLocationPage extends SummitPage
         'AirportsTitle' => 'Text',
         'AirportsSubTitle' => 'Text',
         'CampusGraphic' => 'Text',
+        'VenueBackgroundImageHero' => 'varchar(255)',
+        'VenueBackgroundImageHeroSource' => 'varchar(510)'
      );
 
     private static $has_one = array(
@@ -378,10 +380,10 @@ class SummitLocationPage_Controller extends SummitPage_Controller
 
         parent::init();
 
-        Requirements::javascript('https://maps.googleapis.com/maps/api/js?v=3.exp');
-
+        if(!$this->CampusGraphic) Requirements::javascript('https://maps.googleapis.com/maps/api/js?v=3.exp');
         Requirements::javascript("summit/javascript/host-city.js");
-        Requirements::customScript($this->MapScript());
+        if(!$this->CampusGraphic) Requirements::javascript("summit/javascript/host-city-map.js");
+        if(!$this->CampusGraphic) Requirements::customScript($this->MapScript());
     }
 
     public function Hotels()
@@ -390,7 +392,7 @@ class SummitLocationPage_Controller extends SummitPage_Controller
         $hotels = $summit->getHotels();
         return new ArrayList($hotels);
 
-	}
+    }
 
     public function details(SS_HTTPRequest $r) {
         $location = SummitLocation::get()->byID((int) $r->param('ID'));

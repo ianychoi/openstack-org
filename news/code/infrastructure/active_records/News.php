@@ -39,6 +39,8 @@ final class News extends DataObject implements INews
         'Approved' => 'Boolean',
         'IsLandscape' => 'Boolean',
         'Archived' => 'Boolean',
+        'Restored' => 'Boolean',
+        'Deleted' => 'Boolean'
     );
 
     private static $defaults = array
@@ -107,9 +109,14 @@ final class News extends DataObject implements INews
         $tags = explode(',', $tags);
 
         foreach ($tags as $tag_name) {
-            $tag = new Tag();
-            $tag->Tag = $tag_name;
-            $tag->write();
+            $tag = Tag::get("Tag","Tag = '".$tag_name."'")->first();
+
+            if (!$tag) {
+                $tag = new Tag();
+                $tag->Tag = $tag_name;
+                $tag->write();
+            }
+
             $this->addTag($tag);
         }
     }
@@ -214,24 +221,26 @@ final class News extends DataObject implements INews
 
     public function registerSection($section)
     {
-        $slider = $featured = $approved = $archived = 0;
+        $slider = $featured = $archived = 0;
         if ($section == 'slider') {
             $slider = 1;
-            $approved = 1;
+            $this->Approved = 1;
         } elseif ($section == 'featured') {
             $featured = 1;
-            $approved = 1;
+            $this->Approved = 1;
         } elseif ($section == 'recent') {
-            $approved = 1;
+            $this->Approved = 1;
         } elseif ($section == 'archive') {
             $archived = 1;
         }
 
+        $this->Archived = $archived;
         $this->Featured = $featured;
         $this->Slider = $slider;
-        $this->Approved = $approved;
-        $this->Archived = $archived;
+    }
 
+    public function registerRestored($restored) {
+        $this->Restored = $restored;
     }
 
     public function registerRank($rank)
@@ -303,6 +312,10 @@ final class News extends DataObject implements INews
         }
 
         return $text;
+    }
+
+    public function deleteArticle() {
+        $this->Deleted = true;
     }
 
 

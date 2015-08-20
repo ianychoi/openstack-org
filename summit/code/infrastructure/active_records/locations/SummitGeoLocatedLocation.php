@@ -26,7 +26,9 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
         'WebSiteUrl'    => 'Text',
         'Lng'           => 'Decimal',
         'Lat'           => 'Decimal',
-        'DisplayOnSite' => 'Boolean'
+        'DisplayOnSite' => 'Boolean',
+        'DetailsPage' => 'Boolean',
+        'LocationMessage' => 'Text',
     );
 
     private static $has_many = array
@@ -160,7 +162,9 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
         $f = parent::getCMSFields();
         $f->addFieldToTab('Root.Main', new TextField('WebSiteUrl','WebSite Url'));
         $f->addFieldToTab('Root.Main', new CheckboxField('DisplayOnSite','Should Display On Site'));
-
+        $f->addFieldToTab('Root.Main', new TextField('LocationMessage','Message to display for this location'));
+        $f->addFieldToTab('Root.Main', new CheckboxField('DetailsPage','Send people to a details page first?'));
+        
         $f->addFieldsToTab("Root.Location", array(
             // Create hidden latitude field
             HiddenField::create("Lat"),
@@ -189,6 +193,8 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
                 ),
             ))
         ));
+
+
         return $f;
     }
 }

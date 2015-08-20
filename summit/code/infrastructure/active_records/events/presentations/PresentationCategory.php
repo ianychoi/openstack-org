@@ -6,7 +6,7 @@ class PresentationCategory extends DataObject
 
 	private static $db = array (
 		'Title' => 'Varchar',
-        'Description' => 'Text',
+    'Description' => 'Text',
 		'SessionCount' => 'Int',
 		'AlternateCount' => 'Int',
 		'VotingVisible' => 'Boolean',
@@ -74,7 +74,7 @@ class PresentationCategory extends DataObject
               $MemberList->write();
           }
 
-          if($MemberList->exists()) return $MemberList;
+          if($MemberList) return $MemberList;
 
 
     }
@@ -88,7 +88,7 @@ class PresentationCategory extends DataObject
           ))->first();
 
           // if a group selection list doesn't exist for this category, create it
-          if (!$GroupList->exists()) {
+          if (!$GroupList) {
               $GroupList = new SummitSelectedPresentationList();
               $GroupList->ListType = 'Group';
               $GroupList->CategoryID = $this->ID;

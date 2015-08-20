@@ -103,6 +103,24 @@ class Page extends SiteTree
         return $template->process(new ArrayData($customise));
     }
 
+    public static function IconShortCodeHandler($arguments, $caption = null, $parser = null)
+    {
+
+        $customise = array();
+        /*** SET DEFAULTS ***/
+        $customise['type'] = 'fa-check';
+
+        //overide the defaults with the arguments supplied
+        $customise = array_merge($customise, $arguments);
+
+        //get our Sched template
+        $template = new SSViewer('Icon');
+
+        //return the customized template
+        return $template->process(new ArrayData($customise));
+
+    }    
+
 
     function requireDefaultRecords()
     {
@@ -208,6 +226,7 @@ class Page_Controller extends ContentController
     private static $allowed_actions = array(
         'logout',
         'FeedbackForm',
+        'getNavigationMenu'
     );
 
 
@@ -254,6 +273,7 @@ class Page_Controller extends ContentController
             "themes/openstack/css/bootstrap.min.css",
             'themes/openstack/css/font-awesome.min.css',
             "themes/openstack/css/combined.css",
+            "themes/openstack/css/navigation_menu.css",
             "themes/openstack/css/dropdown.css",
         );
 
@@ -448,6 +468,19 @@ class Page_Controller extends ContentController
                 $response->addHeader('ETag', $etag);
         }
 
+        return $response;
+    }
+
+    // this returns the navigation menu as a jsonp response, it is used to feed this menu to other sites as docs.openstack.org
+    // the script calling this function is in themes/openstack/javascript/menu-widget.js
+    public function getNavigationMenu() {
+        $menu_html = $this->renderWith('Navigation_menu',array('WidgetCall'=>true))->getValue();
+        $data = array('html'=>$menu_html);
+        $jsonp = "jsonCallback(".json_encode($data).")";
+        $response = new SS_HTTPResponse();
+        $response->setStatusCode(200);
+        $response->addHeader('Content-Type', 'application/javascript');
+        $response->setBody($jsonp);
         return $response;
     }
 }

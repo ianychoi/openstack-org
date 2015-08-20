@@ -27,7 +27,8 @@ Object::add_extension('SiteConfig', 'Translatable');
 Translatable::set_allowed_locales(array(
 	'en_US',
 	'de_DE',
-	'es_ES'
+	'es_ES',
+    'ja_JP'
 ));
 
 //Turn on Silverstripe Translation
@@ -59,6 +60,7 @@ Config::inst()->update('Email', 'admin_email', $email_from);
 //Register Shortcodes
 ShortcodeParser::get()->register('Sched',array('Page','SchedShortCodeHandler'));
 ShortcodeParser::get()->register('outlink',array('Page','ExternalLinkShortCodeHandler'));
+ShortcodeParser::get()->register('icon',array('Page','IconShortCodeHandler'));
 
 //cache configuration
 /*

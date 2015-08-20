@@ -6,7 +6,7 @@ var Sortable = require('sortablejs')
 	<div class="col-lg-3">
 		<h3>{ opts.listname }</h3>
 		<div if={!opts.selections && opts.listtype != 'Group'}><i>This person has not made any selections yet.</i></div>
-		<div if={!opts.selections && opts.listtype == 'Group'}><i>There are no group selections yet. Drag one into here to create one.</i></div>
+		<div if={!opts.selections && opts.listtype == 'Group'}><i>There are no team selections yet. Drag one into here to create one.</i></div>
 
 		<ul id="{ opts.listid }" class="list-group {empty: !opts.selections}">
 			<li each="{ item, i in opts.selections }" 
@@ -15,8 +15,17 @@ var Sortable = require('sortablejs')
 				data-order="{ item.order }"
 				onclick="{ loadPresentation }" 
 				>
-					{ item.title }
+					<span class="pull-left slot-number" if="{ i < soltsAvailble }">{i+1}</span>
+					<span class="pull-left slot-number" if="{ i >= soltsAvailble }">A</span>
+					<div class="item-title">{ item.title }
+					<span if="{ i >= soltsAvailble }">(Alternate)</span>
+					</div>
+			</li>
 		</ul>
+		<p if="{ selections.length > 0 }">{selections.length} of { slots } selected.
+			<span if="{ (selections.length - soltsAvailble) > 0 }" >{selections.length - soltsAvailble } Alternates.</span>
+			<span if="{ !((selections.length - soltsAvailble) > 0) }" >No alternates yet.</span>
+		</p>
 	</div>
 
 	<style>
@@ -64,6 +73,14 @@ var Sortable = require('sortablejs')
 		    animation: slide 0.2s forwards;
 		}
 
+		.slot-number {
+			display: block;
+		}
+
+		.item-title {
+			margin-left: 20px;
+		}
+
 		@-webkit-keyframes slide {
 		    100% { right: 0; }
 		}
@@ -81,7 +98,6 @@ var Sortable = require('sortablejs')
 		var api = self.parent.parent.opts.api
 
 		self.soltsAvailble = opts.slots
-
 
 		sendUpdatedSort(new_sort) {
 			api.trigger('save-sort-order', self.opts.selectionlist, new_sort)
@@ -115,7 +131,21 @@ var Sortable = require('sortablejs')
 				var sortable = Sortable.create(simpleList,{
 					group: { name: "selection-list-group", pull: "clone", put: true },
 					onUpdate: function(evt){
-						console.log(evt)
+
+						if(!self.opts.mine && !(self.opts.listtype == 'Group')) {
+
+							// This is horribly ugly and will be replaced with an API call instead
+							self.parent.parent.parent.toasts.push(
+								{
+								  text: 'Oops! You can\'t sort another chair\'s list .',
+								  timeout: 4000
+								}
+							)
+							api.trigger('sort-order-saved')
+							self.parent.parent.parent.update()
+							return						
+						}
+
 						if (evt.newIndex >= self.soltsAvailble) {
 							evt.item.className = "list-group-item alternate"
 						} else {
@@ -163,6 +193,7 @@ var Sortable = require('sortablejs')
 			self.update()
 
 		})
+
 
 		loadPresentation(e) {
 			self.parent.parent.parent.clearSearch()

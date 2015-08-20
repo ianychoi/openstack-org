@@ -25,6 +25,8 @@ class BrandingPage extends Page
 
 		return $fields;
 	}
+
+
 }
 
 class BrandingPage_Controller extends Page_Controller
@@ -34,7 +36,7 @@ class BrandingPage_Controller extends Page_Controller
 	{
 		parent::init();
 
-		Requirements::javascript("http://assets.zendesk.com/external/zenbox/v2.5/zenbox.js");
+        Requirements::javascript("http://assets.zendesk.com/external/zenbox/v2.5/zenbox.js");
 		Requirements::css("http://assets.zendesk.com/external/zenbox/v2.5/zenbox.css");
 		Requirements::customScript('
 					 if (typeof(Zenbox) !== "undefined") {

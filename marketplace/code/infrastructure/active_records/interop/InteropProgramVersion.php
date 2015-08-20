@@ -21,9 +21,14 @@ class InteropProgramVersion extends DataObject implements IInteropProgramVersion
         'Name'  => 'Varchar',
     );
 
-    private static $has_many = array(
+    private static $many_many = array(
         'Capabilities'       => 'InteropCapability',
         'DesignatedSections' => 'InteropDesignatedSection',
+    );
+
+    public static $many_many_extraFields = array(
+        'Capabilities' => array('Order' => 'Int'),
+        'DesignatedSections' => array('Order' => 'Int')
     );
 
     function getCMSFields()
@@ -33,11 +38,27 @@ class InteropProgramVersion extends DataObject implements IInteropProgramVersion
         if($this->ID){
             $config = GridFieldConfig_RelationEditor::create();
             $config->addComponent(new GridFieldSortableRows('Order'));
+
+            $data_columns = $config->getComponentByType('GridFieldDataColumns');
+            $data_columns->setDisplayFields(array(
+                'Name' => 'Name',
+                'Type.Name'=> 'Type',
+                'Status' => 'Status'
+            ));
+
             $gridField = new GridField('Capabilities', 'Capabilities', $this->Capabilities(), $config);
             $fields->add($gridField);
 
             $config = GridFieldConfig_RelationEditor::create();
             $config->addComponent(new GridFieldSortableRows('Order'));
+
+            $data_columns = $config->getComponentByType('GridFieldDataColumns');
+            $data_columns->setDisplayFields(array(
+                'Name' => 'Name',
+                'Guidance' => 'Guidance',
+                'Status' => 'Status'
+            ));
+
             $gridField = new GridField('DesignatedSections', 'Designated Sections', $this->DesignatedSections(), $config);
             $fields->add($gridField);
         }
@@ -69,21 +90,21 @@ class InteropProgramVersion extends DataObject implements IInteropProgramVersion
        $this->setField('Name', $version_name);
     }
 
-    public function getCapabilitiesByType($program_type) {
+    public function getCapabilitiesByProgramType($program_type) {
         if ($program_type) {
             $program_type = InteropProgramType::get('InteropProgramType')->filter('Name',$program_type);
-            return $this->Capabilities()->filter('ProgramID', $program_type->First()->ID);
+            return $this->Capabilities()->filter('Program.ID', $program_type->First()->ID)->sort('Order');
         } else {
-            return $this->Capabilities();
+            return $this->Capabilities()->sort('Order');
         }
     }
 
-    public function getDesignatedSectionsByType($program_type) {
+    public function getDesignatedSectionsByProgramType($program_type) {
         if ($program_type) {
             $program_type = InteropProgramType::get('InteropProgramType')->filter('Name',$program_type);
-            return $this->DesignatedSections()->filter('ProgramID', $program_type->First()->ID);
+            return $this->DesignatedSections()->filter('Program.ID', $program_type->First()->ID)->sort('Order');
         } else {
-            return $this->DesignatedSections();
+            return $this->DesignatedSections()->sort('Order');
         }
     }
 

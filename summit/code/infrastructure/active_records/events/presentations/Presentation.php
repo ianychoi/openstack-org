@@ -47,10 +47,10 @@ class Presentation extends SummitEvent implements IPresentation
     );
 
 
-    private static $has_many = array
-    (
-        'Votes'     => 'PresentationVote',
-        'Comments'  => 'SummitPresentationComment',
+    private static $has_many = array (
+        'Votes' => 'PresentationVote',
+        'Comments' => 'SummitPresentationComment',
+        'ChangeRequests' => 'SummitCategoryChange',
         'Materials' => 'PresentationMaterial',
     );
 
@@ -179,7 +179,7 @@ class Presentation extends SummitEvent implements IPresentation
     public function canAssign() {
 
         // see if they have either of the appropiate permissions
-        if(!(Permission::check('TRACK-CHAIR') || Permission::check('ADMIN'))) return false;
+        if(!Permission::check('TRACK_CHAIR')) return false;
 
         // see if they are a chair of this particular track
         $IsTrackChair = $this->Category()->TrackChairs('MemberID = '.Member::currentUser()->ID);
@@ -372,6 +372,74 @@ class Presentation extends SummitEvent implements IPresentation
     }
 
 
+   /**
+     * Used by the track chair app to allow chairs to add a presentation to a group list.
+     **/
+
+    public function assignToGroupList() {
+
+
+        // Check permissions of user on talk
+        if ($this->CanAssign()) {
+
+            $GroupList = SummitSelectedPresentationList::get()
+                ->filter(array(
+                        'CategoryID' => $this->CategoryID,
+                        'ListType' => 'Group'
+                  ))
+                ->first();
+
+            // See if the presentation has already been assigned
+            $AlreadyAssigned = $GroupList->SummitSelectedPresentations('PresentationID = ' . $this->ID);
+            
+
+            if ($AlreadyAssigned->count() == 0) {
+
+                // Find the higest order value assigned up to this point
+                $HighestOrderInList =  $GroupList
+                                            ->SummitSelectedPresentations()
+                                            ->sort('Order DESC')
+                                            ->first()
+                                            ->Order;
+
+                $SelectedPresentation = new SummitSelectedPresentation();
+                $SelectedPresentation->SummitSelectedPresentationListID = $GroupList->ID;
+                $SelectedPresentation->PresentationID = $this->ID;
+                $SelectedPresentation->MemberID = Member::currentUser()->ID;
+                // Place at bottom of list
+                $SelectedPresentation->Order = $HighestOrderInList + 1;
+                $SelectedPresentation->write();
+            }
+        }
+    }
+
+    /**
+     * Used by the track chair app to allow chairs to remove a presentation from a group list.
+     **/
+
+    public function removeFromGroupList() {
+
+
+        // Check permissions of user on talk
+        if ($this->CanAssign()) {
+
+            $GroupList = SummitSelectedPresentationList::get()
+                ->filter(array(
+                        'CategoryID' => $this->CategoryID,
+                        'ListType' => 'Group'
+                  ))
+                ->first();
+
+
+            // See if the presentation has already been assigned
+            $AlreadyAssigned = $GroupList->SummitSelectedPresentations('PresentationID = ' . $this->ID)->first();
+
+            if ($AlreadyAssigned->exists()) {
+                $AlreadyAssigned->delete();
+            }
+        }
+    }
+
     /**
      * Used by the track chair app see if the presentaiton has been selected by currently logged in member.
      **/
@@ -390,33 +458,34 @@ class Presentation extends SummitEvent implements IPresentation
 
     }
 
+
     public function getCMSFields()
     {
         $f = parent::getCMSFields();
         $f->removeByName('TypeID');
         $f->htmlEditor('ShortDescription')
-        ->dropdown('Level','Level', $this->dbObject('Level')->enumValues())
-        ->dropdown('CategoryID','Category', PresentationCategory::get()->map('ID','Title'))
-        ->dropdown('Status','Status')
-        ->configure()
-        ->setSource(array_combine(
-            $this->config()->status_options,
-            $this->config()->status_options
-        ))
-        ->end()
-        ->listbox('Topics','Topics', PresentationTopic::get()->map('ID','Title')->toArray())
-        ->configure()
-        ->setMultiple(true)
-        ->end()
-        ->tag('Tags', 'Tags', Tag::get(), $this->Tags() )
-        ->text('OtherTopic','Other topic')
-        ->tab('Preview')
-        ->literal('preview', sprintf(
-            '<iframe width="%s" height="%s" frameborder="0" src="%s"></iframe>',
-            '100%',
-            '400',
-            Director::absoluteBaseURL().$this->PreviewLink()
-        ));
+            ->dropdown('Level', 'Level', $this->dbObject('Level')->enumValues())
+            ->dropdown('CategoryID', 'Category', PresentationCategory::get()->map('ID', 'Title'))
+            ->dropdown('Status', 'Status')
+            ->configure()
+            ->setSource(array_combine(
+                $this->config()->status_options,
+                $this->config()->status_options
+            ))
+            ->end()
+            ->listbox('Topics', 'Topics', PresentationTopic::get()->map('ID', 'Title')->toArray())
+            ->configure()
+            ->setMultiple(true)
+            ->end()
+            ->tag('Tags', 'Tags', Tag::get(), $this->Tags())
+            ->text('OtherTopic', 'Other topic')
+            ->tab('Preview')
+            ->literal('preview', sprintf(
+                '<iframe width="%s" height="%s" frameborder="0" src="%s"></iframe>',
+                '100%',
+                '400',
+                Director::absoluteBaseURL() . $this->PreviewLink()
+            ));
 
         // speakers
         $config = new GridFieldConfig_RelationEditor(10);
@@ -433,8 +502,8 @@ class Presentation extends SummitEvent implements IPresentation
         (
             array
             (
-                'PresentationVideo'  => 'Video',
-                'PresentationSlide'  => 'Slide',
+                'PresentationVideo' => 'Video',
+                'PresentationSlide' => 'Slide',
             )
         );
         $config->addComponent($multi_class_selector);
@@ -443,6 +512,78 @@ class Presentation extends SummitEvent implements IPresentation
         $f->addFieldToTab('Root.Materials', $gridField);
 
         return $f;
+    }
+
+    /**
+     * Used by the track chair app see if the presentaiton has been selected by the group.
+     **/
+
+    public function isGroupSelected() {
+
+        $memID = Member::currentUserID();
+
+
+        $selected = SummitSelectedPresentation::get()
+            ->leftJoin("SummitSelectedPresentationList", "SummitSelectedPresentationList.ID = SummitSelectedPresentation.SummitSelectedPresentationListID")        
+            ->where("PresentationID={$this->ID} AND ListType='Group'");
+
+        if ($selected->count()) return true;
+
+    }
+
+    /**
+     * Used by the track chair app see if the presentaiton has been selected by anyone at all.
+     * TODO: refactor to combine with isSelected() by passing optional memberID
+     **/
+
+    public function isSelectedByAnyone() {
+
+        $selected = SummitSelectedPresentation::get()
+            ->where("PresentationID={$this->ID}");
+
+        if ($selected->count()) return true;
+
+    }
+
+    /**
+     * Used by the track chair app see if the presentaiton was moved to this category.
+     **/
+
+    public function movedToThisCategory() {
+        $completedMove = $this->ChangeRequests()->filter(array(
+            'NewCategoryID' => $this->CategoryID,
+            'Done' => TRUE
+        ));
+        if ($completedMove->count()) return true;
+    }
+
+    public function SelectionStatus() {
+
+        $Selections = SummitSelectedPresentation::get()
+            ->leftJoin('SummitSelectedPresentationList','SummitSelectedPresentation.SummitSelectedPresentationListID = SummitSelectedPresentationList.ID')
+            ->filter(array(
+                'PresentationID' => $this->ID,
+                'ListType' => 'Group'
+            ));
+
+        // Error out if a talk has more than one selection
+        if($Selections && $Selections->count() > 1) user_error('There cannot be more than one instance of this talk selected. Talk ID '.$this->ID);
+    
+        $Selection = NULL;
+        if ($Selections) $Selection = $Selections->first();
+
+        // Error out if the category of presentation does not match category of selection
+        if($Selection && $this->CategoryID != $Selection->SummitSelectedPresentationList()->Category()->ID)
+            user_error('The selection category does not match the presentation category. Presentation ID '.$this->ID);                
+
+
+        If (!$Selection) {
+            return 'unaccepted';
+        } elseif ($Selection->Order <= $this->Category()->SessionCount) {
+            return 'accepted';
+        } else {
+            return 'alternate';
+        }
     }
 
     /**
