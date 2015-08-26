@@ -5,3 +5,13 @@
 .chosen-container-multi .chosen-choices li.search-field input[type="text"]{
     height: 30px !important;
 }
+
+.error {
+    border: 1px solid red;
+    background-color: rgba(255,0,0,0.1);
+}
+
+.valid {
+    border: 1px solid green;
+    background-color: rgba(0,255,0,0.1);
+}

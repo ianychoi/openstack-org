@@ -70,6 +70,12 @@ class SummitAppAdminController extends Page_Controller
 
     public function directory()
     {
+        Requirements::css(THIRDPARTY_DIR . '/jquery-ui-themes/smoothness/jquery-ui.css');
+        Requirements::javascript(THIRDPARTY_DIR . '/jquery-ui/jquery-ui.js');
+        Requirements::javascript(Director::protocol()."ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js");
+        Requirements::javascript("themes/openstack/javascript/jquery.validate.custom.methods.js");
+        Requirements::javascript('marketplace/code/ui/admin/js/utils.js');
+        Requirements::javascript('summit/javascript/summitapp-admin.js');
         $summits = Summit::get();
         return $this->getViewer('directory')->process
         (

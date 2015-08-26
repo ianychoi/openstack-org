@@ -105,3 +105,11 @@ function ajaxIndicatorStop()
     jQuery('body').css('cursor', 'default');
 }
 
+//convert from mm/dd/yyyy to yyyy-mm-dd
+function convertDateFormat(date) {
+    var date_arr = date.split('/');
+    var new_date = date_arr[2] + '-' + date_arr[0] + '-' + date_arr[1];
+
+    return new_date;
+}
+

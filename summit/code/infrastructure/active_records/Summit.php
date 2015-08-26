@@ -393,8 +393,6 @@ final class Summit extends DataObject implements ISummit
     }
 
     // CMS admin UI
-
-
     public function getCMSFields()
     {
 
@@ -500,5 +498,17 @@ final class Summit extends DataObject implements ISummit
         $f->addFieldToTab('Root.Attendees', $gridField);
 
         return $f;
+    }
+
+
+    /**
+     * @param SummitMainInfo $info
+     * @return void
+     */
+    function registerMainInfo(SummitMainInfo $info)
+    {
+        $this->Name = $info->getName();
+        $this->SummitBeginDate = $info->getStartDate();
+        $this->SummitEndDate = $info->getEndDate();
     }
 }
