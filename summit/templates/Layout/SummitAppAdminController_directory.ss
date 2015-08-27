@@ -37,10 +37,10 @@
                     <td>
                         $SummitEndDate.Format('M jS Y')
                     </td>
-                    <td style="text-align:center;">
+                    <td class="center_text">
                         <a href="$Top.Link/{$ID}/dashboard" class="btn btn-primary btn-sm" role="button">Control Panel</a>
                     </td>
-                    <td style="text-align:center;">
+                    <td class="center_text">
                         <a href="$Top.Link/{$ID}/edit" class="btn btn-default btn-sm" role="button">Edit</a>
                         <a href="#delete_summit_modal" data-toggle="modal" data-summit-id="{$ID}" class="btn btn-danger btn-sm delete_summit">Delete</a>
                     </td>

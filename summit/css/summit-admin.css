@@ -15,3 +15,11 @@
     border: 1px solid green;
     background-color: rgba(0,255,0,0.1);
 }
+
+.center_text {
+    text-align: center;
+}
+
+#create_summit .form-group {
+    margin-right: 35px;
+}

@@ -74,7 +74,7 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
 
     static $url_handlers = array(
         'PUT new-summit' => 'createSummit',
-        'PUT $SUMMIT_ID/delete' => 'deleteSummit',
+        'PUT $SummitID!/delete' => 'deleteSummit',
     );
 
     static $allowed_actions = array(
@@ -87,9 +87,9 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
             $data = $this->getJsonRequest();
             if (!$data) return $this->serverError();
 
-            $this->summit_manager->createSummit($data);
+            $summit = $this->summit_manager->createSummit($data);
 
-            echo $this->getSummitTable();
+            echo $this->buildSummitTableRow($summit);
         }
         catch (EntityAlreadyExistsException $ex1) {
             SS_Log::log($ex1,SS_Log::ERR);
@@ -97,40 +97,36 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
         }
     }
 
-    public function getSummitTable() {
-        $summits = Summit::get('Summit');
-        $html = '<tbody>';
-        foreach ($summits as $summit) {
-            $start_date = ($summit->getBeginDate()) ? date('M jS Y',strtotime($summit->getBeginDate())) : '';
-            $end_date = ($summit->getEndDate()) ? date('M jS Y',strtotime($summit->getEndDate())) : '';
-            $summit_id = $summit->getIdentifier();
-            $html .= ' <tr id="summit_'.$summit_id.'">
-                            <td class="summit_name">
-                                '.$summit->getName().'
-                            </td>
-                            <td>
-                                '.$start_date.'
-                            </td>
-                            <td>
-                                '.$end_date.'
-                            </td>
-                            <td style="text-align:center;">
-                                <a href="summit-admin/'.$summit_id.'/dashboard" class="btn btn-primary btn-sm" role="button">Control Panel</a>
-                            </td>
-                            <td style="text-align:center;">
-                                <a href="$Top.Link/'.$summit_id.'/edit" class="btn btn-default btn-sm" role="button">Edit</a>
-                                <a href="#delete_summit_modal" data-toggle="modal" data-summit-id="'.$summit_id.'" class="btn btn-danger btn-sm delete_summit">Delete</a>
-                            </td>
-                        </tr>';
-        }
-        $html .= '</tbody>';
+    public function buildSummitTableRow($summit) {
+        $start_date = ($summit->getBeginDate()) ? date('M jS Y',strtotime($summit->getBeginDate())) : '';
+        $end_date = ($summit->getEndDate()) ? date('M jS Y',strtotime($summit->getEndDate())) : '';
+        $summit_id = $summit->getIdentifier();
+
+        $html = ' <tr id="summit_'.$summit_id.'">
+                        <td class="summit_name">
+                            '.$summit->getName().'
+                        </td>
+                        <td>
+                            '.$start_date.'
+                        </td>
+                        <td>
+                            '.$end_date.'
+                        </td>
+                        <td class="center_text">
+                            <a href="summit-admin/'.$summit_id.'/dashboard" class="btn btn-primary btn-sm" role="button">Control Panel</a>
+                        </td>
+                        <td class="center_text">
+                            <a href="$Top.Link/'.$summit_id.'/edit" class="btn btn-default btn-sm" role="button">Edit</a>
+                            <a href="#delete_summit_modal" data-toggle="modal" data-summit-id="'.$summit_id.'" class="btn btn-danger btn-sm delete_summit">Delete</a>
+                        </td>
+                    </tr>';
 
         return $html;
     }
 
     public function deleteSummit() {
         try{
-            $summit_id = (int)$this->request->param('SUMMIT_ID');
+            $summit_id = (int)$this->request->param('SummitID');
             $this->summit_manager->deleteSummit($summit_id);
             return $this->updated();
         }

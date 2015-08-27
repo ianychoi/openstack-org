@@ -39,6 +39,7 @@ class SummitAppAdminController extends Page_Controller
         'editPresentationList',
         'ticketTypes',
         'attendees',
+        'editSummit',
     );
 
     private static $url_handlers = array (
@@ -50,6 +51,7 @@ class SummitAppAdminController extends Page_Controller
         '$SummitID!/events/$EventID!'  => 'editEvent',
         '$SummitID!/tickets'  => 'ticketTypes',
         '$SummitID!/attendees'  => 'attendees',
+        '$SummitID!/edit'  => 'editSummit'
     );
 
     /**
@@ -184,7 +186,6 @@ class SummitAppAdminController extends Page_Controller
         );
     }
 
-
     public function dashboard(SS_HTTPRequest $request)
     {
         $summit_id = intval($request->param('SummitID'));
@@ -266,4 +267,58 @@ class SummitAppAdminController extends Page_Controller
             )
         );
     }
+
+    public function editSummit(SS_HTTPRequest $request)
+    {
+        Requirements::javascript('summit/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js');
+        Requirements::css('summit/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.css');
+        Requirements::css('summit/css/summit-admin.css');
+
+        $summit_id = intval($request->param('SummitID'));
+        $summit = Summit::get()->byID($summit_id);
+
+        return $this->getViewer('EditSummit')->process(
+            $this->customise(
+                array(
+                    'Summit' => $summit
+                )
+            )
+        );
+    }
+
+    public function summitForm()
+    {
+        $summit_id = intval($this->request->param('SummitID'));
+        $summit = Summit::get()->byID($summit_id);
+
+        $form = SummitForm::create($this, "SummitForm", FieldList::create(FormAction::create('saveSummit','Save')));
+        if($data = Session::get("FormInfo.{$form->FormName()}.data")) {
+            $form->loadDataFrom($data);
+        }
+        else {
+            $form->loadDataFrom($summit);
+        }
+
+        return $form;
+    }
+
+    public function saveSummit($data, $form) {
+        Session::set("FormInfo.{$form->FormName()}.data", $data);
+        /*if(empty(strip_tags($data['Bio']))) {
+            $form->addErrorMessage('Bio','Please enter a bio', 'bad');
+            return $this->redirectBack();
+        }
+
+        $speaker = Member::currentUser()->getCurrentSpeakerProfile();
+        $form->saveInto($speaker);
+        $speaker->write();
+
+        $form->sessionMessage('Your bio has been updated', 'good');
+
+        Session::clear("FormInfo.{$form->FormName()}.data", $data);*/
+
+        return $this->redirectBack();
+    }
+
+
 }

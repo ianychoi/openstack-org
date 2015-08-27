@@ -48,8 +48,8 @@ jQuery(document).ready(function($){
             url: url,
             data: JSON.stringify(request),
             contentType: "application/json; charset=utf-8",
-            success: function (table_html) {
-                $('#summit_table').html(table_html);
+            success: function (summit_html) {
+                $('tbody','#summit_table').append(summit_html);
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 ajaxError(jqXHR, textStatus, errorThrown);
