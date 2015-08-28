@@ -73,14 +73,15 @@ class Presentation extends SummitEvent implements IPresentation
     (
         'Creator'  => 'Member',
         'Category' => 'PresentationCategory',
-        'Summit'   => 'Summit'
+        //'Summit'   => 'Summit'
     );
     
     private static $summary_fields = array
     (
         'Created',
         'Title',
-        'Level'
+        'Level',
+        'SelectionStatus',
     );
 
     public function getTypeName()

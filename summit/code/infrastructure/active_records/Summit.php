@@ -477,29 +477,56 @@ final class Summit extends DataObject implements ISummit
         $gridField = new GridField('EventTypes', 'EventTypes', $this->EventTypes(), $config);
         $f->addFieldToTab('Root.EventTypes', $gridField);
 
+        //schedule
+
+        $config = GridFieldConfig_RecordViewer::create();
+        $config->addComponent(new GridFieldAjaxRefresh(1000,false));
+        $gridField = new GridField('Schedule', 'Schedule', $this->Events()->filter('Published', true) , $config);
+        $f->addFieldToTab('Root.Schedule', $gridField);
+        $config->addComponent(new GridFieldPublishSummitEventAction);
         // events
 
         $config = GridFieldConfig_RecordEditor::create();
-        $config->removeComponentsByType('GridFieldAddNewButton');
-        $multi_class_selector = new GridFieldAddNewMultiClass();
-        $multi_class_selector->setClasses
-        (
-            array
-            (
-                'SummitEvent'         => 'Event',
-                'Presentation'        => 'Presentation',
-            )
-        );
-        $config->addComponent($multi_class_selector);
-        $gridField = new GridField('Events', 'Events', $this->Events(), $config);
+        $config->addComponent(new GridFieldPublishSummitEventAction);
+        $config->addComponent(new GridFieldAjaxRefresh(1000,false));
+        $gridField = new GridField('Events', 'Events', $this->Events()->filter('ClassName','SummitEvent') , $config);
         $f->addFieldToTab('Root.Events', $gridField);
 
-        // attendees
+        //track selection list presentations
 
+       $result = DB::query("SELECT DISTINCT SummitEvent.*, Presentation.*
+FROM SummitEvent
+INNER JOIN Presentation ON Presentation.ID = SummitEvent.ID
+INNER JOIN SummitSelectedPresentation ON SummitSelectedPresentation.PresentationID = Presentation.ID
+INNER JOIN SummitSelectedPresentationList ON SummitSelectedPresentation.SummitSelectedPresentationListID = SummitSelectedPresentationList.ID
+WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (SummitEvent.SummitID = 5) AND SummitEvent.Published = 0 ");
+
+        $presentations = new ArrayList();
+        foreach($result as $row)
+        {
+            $presentations->add(new Presentation($row));
+        }
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $config->addComponent(new GridFieldPublishSummitEventAction);
+        $config->addComponent(new GridFieldAjaxRefresh(1000, false));
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $gridField = new GridField('Presentations', 'TrackChairs Selection Lists',$presentations  , $config);
+        $f->addFieldToTab('Root.TrackChairs Selection Lists', $gridField);
+
+
+        // attendees
 
         $config = GridFieldConfig_RecordEditor::create();
         $gridField = new GridField('Attendees', 'Attendees', $this->Attendees(), $config);
         $f->addFieldToTab('Root.Attendees', $gridField);
+
+
+        //tickets types
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $gridField = new GridField('SummitTicketTypes', 'Ticket Types', $this->SummitTicketTypes(), $config);
+        $f->addFieldToTab('Root.TicketTypes', $gridField);
 
         // promo codes
 
@@ -522,8 +549,25 @@ final class Summit extends DataObject implements ISummit
         $promo_codes = new GridField('SummitRegistrationPromoCodes','Registration Promo Codes', $this->SummitRegistrationPromoCodes(), $config);
         $f->addFieldToTab('Root.RegistrationPromoCodes', $promo_codes);
 
+        // speakers
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $gridField = new GridField('Speakers', 'Speakers', $this->Speakers(), $config);
+        $f->addFieldToTab('Root.Speakers', $gridField);
+
+        // presentations
+
+        $config = GridFieldConfig_RecordEditor::create();
+        $config->addComponent(new GridFieldPublishSummitEventAction);
+        $config->addComponent(new GridFieldAjaxRefresh(1000, false));
+        $gridField = new GridField('Presentations', 'Presentations', $this->Presentations()->filter
+        (
+            'Status', 'Received'
+        ), $config);
+        $f->addFieldToTab('Root.Presentations', $gridField);
 
         return $f;
+
     }
 
 

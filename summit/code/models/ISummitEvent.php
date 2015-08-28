@@ -113,4 +113,14 @@ interface ISummitEvent extends IEntity
      * @return void
      */
     public function publish();
+
+    /**
+     * @return bool
+     */
+    public function isPublished();
+
+    /**
+     * @return void
+     */
+    public function unPublish();
 }

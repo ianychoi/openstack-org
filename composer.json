@@ -26,7 +26,8 @@
 	"unclecheese/bootstrap-forms": "1.1.*",
 	"unclecheese/dropzone": "dev-master",
 	"unclecheese/bootstrap-tagfield": "dev-master",
-    "guzzlehttp/guzzle": "5.3.0"
+    "guzzlehttp/guzzle": "5.3.0",
+    "silverstripe/gridfieldajaxrefresh":"dev-master"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "2.*",

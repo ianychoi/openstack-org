@@ -32,21 +32,53 @@ class SummitTicketType extends DataObject
 
     private static $many_many = array
     (
-
+        'AllowedSummitTypes' => 'SummitType'
     );
 
     private static $has_many = array
     (
-        'AllowedSummitTypes' => 'SummitType'
+
     );
 
     private static $summary_fields = array
     (
-        'Title'  => 'Title',
-        'Status' => 'Status',
+        'Name'       => 'Name',
+        'ExternalId' => 'ExternalId',
     );
 
     private static $searchable_fields = array
     (
     );
+
+    public function getAllowedSummitTypesBySummit($summit_id)
+    {
+        return SummitType::get()->filter(array ('SummitID'=> $summit_id ) );
+    }
+
+    // CMS admin UI
+    public function getCMSFields()
+    {
+        $f = new FieldList
+        (
+            array
+            (
+                new HiddenField('SummitID', 'SummitID'),
+                new TextField('Name', 'Name'),
+                new TextField('ExternalId', 'Eventbrite External Id'),
+            )
+        );
+        if($this->ID > 0) {
+            // summit types
+            $summit_id = $this->SummitID;
+            $config = GridFieldConfig_RelationEditor::create();
+            $config->removeComponentsByType('GridFieldEditButton');
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $list = $this->getAllowedSummitTypesBySummit($summit_id);
+            $config->getComponentByType('GridFieldAddExistingAutocompleter')->setSearchList($list);
+            $gridField = new GridField('AllowedSummitTypes', 'AllowedSummitTypes',
+                $this->AllowedSummitTypes()->where("SummitID = {$summit_id} "), $config);
+            $f->add($gridField);
+        }
+        return $f;
+    }
 }

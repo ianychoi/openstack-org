@@ -85,7 +85,9 @@ class SummitEvent extends DataObject implements ISummitEvent
      */
     public function getStartDate()
     {
-        return $this->getField('StartDate');
+        $start_date =  $this->getField('StartDate');
+        if(empty($start_date)) return 'NOT SET';
+        return $start_date;
     }
 
     /**
@@ -93,7 +95,9 @@ class SummitEvent extends DataObject implements ISummitEvent
      */
     public function getEndDate()
     {
-        return $this->getField('EndDate');
+        $end_date  = $this->getField('EndDate');
+        if(empty($end_date)) return 'NOT SET';
+        return $end_date;
     }
 
     /**
@@ -238,7 +242,7 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         $f->addFieldToTab('Root.Main', new TextField('Title','Title'));
         $f->addFieldToTab('Root.Main', new HtmlEditorField('Description','Description'));
-        $f->addFieldToTab('Root.Main', new CheckboxField('Approved','Is Approved?'));
+        $f->addFieldToTab('Root.Main', new CheckboxField('Published','Is Approved?'));
         $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
 
         $f->addFieldToTab('Root.Main',$date = new DatetimeField('StartDate', 'Start Date'));
@@ -321,5 +325,22 @@ class SummitEvent extends DataObject implements ISummitEvent
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPublished()
+    {
+        return  $this->Published;
+    }
+
+    /**
+     * @return void
+     */
+    public function unPublish()
+    {
+        $this->Published = false;
+        $this->PublishedDate = null;
     }
 }
