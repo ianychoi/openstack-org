@@ -479,8 +479,9 @@ final class Summit extends DataObject implements ISummit
 
         //schedule
 
-        $config = GridFieldConfig_RecordViewer::create();
+        $config = GridFieldConfig_RecordEditor::create();
         $config->addComponent(new GridFieldAjaxRefresh(1000,false));
+        $config->removeComponentsByType('GridFieldDeleteAction');
         $gridField = new GridField('Schedule', 'Schedule', $this->Events()->filter('Published', true) , $config);
         $f->addFieldToTab('Root.Schedule', $gridField);
         $config->addComponent(new GridFieldPublishSummitEventAction);
@@ -499,7 +500,7 @@ FROM SummitEvent
 INNER JOIN Presentation ON Presentation.ID = SummitEvent.ID
 INNER JOIN SummitSelectedPresentation ON SummitSelectedPresentation.PresentationID = Presentation.ID
 INNER JOIN SummitSelectedPresentationList ON SummitSelectedPresentation.SummitSelectedPresentationListID = SummitSelectedPresentationList.ID
-WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (SummitEvent.SummitID = 5) AND SummitEvent.Published = 0 ");
+WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (SummitEvent.SummitID = 5)");
 
         $presentations = new ArrayList();
         foreach($result as $row)
@@ -511,7 +512,7 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         $config->addComponent(new GridFieldPublishSummitEventAction);
         $config->addComponent(new GridFieldAjaxRefresh(1000, false));
         $config->removeComponentsByType('GridFieldAddNewButton');
-        $gridField = new GridField('Presentations', 'TrackChairs Selection Lists',$presentations  , $config);
+        $gridField = new GridField('TrackChairs', 'TrackChairs Selection Lists',$presentations  , $config);
         $f->addFieldToTab('Root.TrackChairs Selection Lists', $gridField);
 
 

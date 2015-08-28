@@ -40,7 +40,8 @@ implements IPresentationSpeaker
     (
         'Member.Email',
         'FirstName',
-        'LastName'
+        'LastName',
+        'AnnouncementEmailTypeSent'
     );
 
     private static $indexes = array
@@ -56,6 +57,14 @@ implements IPresentationSpeaker
     private static $belongs_many_many = array
     (
         'Presentations' => 'Presentation',
+    );
+
+    private static $summary_fields = array
+    (
+        'FirstName'  => 'LastName',
+        'LastName' => 'LastName',
+        'Member.Email' => 'Email',
+        'AnnouncementEmailTypeSent' => 'Announcement Email Sent',
     );
 
     /**
