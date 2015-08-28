@@ -48,10 +48,10 @@ class Presentation extends SummitEvent implements IPresentation
 
 
     private static $has_many = array (
-        'Votes' => 'PresentationVote',
-        'Comments' => 'SummitPresentationComment',
+        'Votes'          => 'PresentationVote',
+        'Comments'       => 'SummitPresentationComment',
         'ChangeRequests' => 'SummitCategoryChange',
-        'Materials' => 'PresentationMaterial',
+        'Materials'      => 'PresentationMaterial',
     );
 
 
@@ -73,6 +73,7 @@ class Presentation extends SummitEvent implements IPresentation
     (
         'Creator'  => 'Member',
         'Category' => 'PresentationCategory',
+        'Summit'   => 'Summit'
     );
     
     private static $summary_fields = array
