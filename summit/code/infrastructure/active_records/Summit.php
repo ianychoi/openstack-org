@@ -440,6 +440,9 @@ final class Summit extends DataObject implements ISummit
 
         $f->addFieldToTab('Root.Main',new TextField('ComingSoonBtnText', 'Coming Soon Btn Text'));
 
+        $f->addFieldToTab('Root.Main',new TextField('ExternalEventId', 'Eventbrite Event Id'));
+
+
         $config = new GridFieldConfig_RelationEditor(10);
         $categories = new GridField('Categories','Presentation Categories',$this->Categories(), $config);
         $f->addFieldToTab('Root.Presentation Categories', $categories);

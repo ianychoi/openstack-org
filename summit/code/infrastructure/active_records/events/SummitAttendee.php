@@ -18,11 +18,12 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
     private static $db = array
     (
         // https://www.eventbrite.com/developer/v3/formats/order/#ebapi-std:format-order
-        'ExternalOrderId'         => 'Int',
+        'ExternalOrderId'         => 'Text',
         'TicketBoughtDate'        => 'SS_Datetime',
         'SharedContactInfo'       => 'Boolean',
         'SummitHallCheckedIn'     => 'Boolean',
         'SummitHallCheckedInDate' => 'SS_Datetime',
+        'ExternalTicketClassID'   => 'Text',
     );
 
     private static $has_many = array
@@ -35,11 +36,16 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
 
     private static $many_many = array
     (
-        'Schedule'         => 'SummitEvent',
-        'MembershipLevels' => 'SummitType'
+        'Schedule'   => 'SummitEvent',
     );
 
-    static $many_many_extraFields = array(
+    private static $belongs_to = array
+    (
+
+    );
+
+    static $many_many_extraFields = array
+    (
         'Schedule' => array
         (
             'IsCheckedIn' => "Boolean",
@@ -48,16 +54,21 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
 
     private static $has_one = array
     (
-        'Member' => 'Member',
-        'Summit' => 'Summit',
-        'Ticket' => 'SummitTicketType',
+        'Member'     => 'Member',
+        'Summit'     => 'Summit',
+        'TicketType' => 'SummitTicketType'
     );
 
     private static $summary_fields = array
     (
-        "Member.Email" => 'Member',
-        'TicketBoughtDate' => 'Ticket Bought Date',
+        "Member.Email"        => 'Member',
+        'TicketBoughtDate'    => 'Ticket Bought Date',
         'SummitHallCheckedIn' => "Is Checked In"
+    );
+
+    static $indexes = array
+    (
+        'Summit_Member' =>  array('type'=>'unique', 'value'=>'SummitID,MemberID')
     );
 
     private static $searchable_fields = array

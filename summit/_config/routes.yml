@@ -6,3 +6,4 @@ Director:
   rules:
     'api/v1/summits': 'SummitsApi'
     'api/v1/summitapp': 'SummitAppApi'
+    'api/v1/eventbrite': 'EventbriteOrderPlacedEndpoint'

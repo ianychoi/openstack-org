@@ -30,6 +30,11 @@ class SummitTicketType extends DataObject
         'Summit' => 'Summit'
     );
 
+    private static $many_many = array
+    (
+
+    );
+
     private static $has_many = array
     (
         'AllowedSummitTypes' => 'SummitType'

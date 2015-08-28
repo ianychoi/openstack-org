@@ -11,19 +11,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 /**
  * Class SapphireSummitRepository
  */
-final class SapphireSummitRepository extends SapphireRepository {
+final class SapphireSummitRepository extends SapphireRepository implements ISummitRepository
+{
 
-	public function __construct(){
-		parent::__construct(new Summit);
-	}
+    public function __construct()
+    {
+        parent::__construct(new Summit);
+    }
 
-    public function isDuplicated(Summit $summit) {
+    public function isDuplicated(ISummit $summit)
+    {
         $start_date = $summit->getBeginDate();
         $end_date = $summit->getEndDate();
-        $dupe = Summit::get_one("Summit","Name = '".$summit->getName()."' AND SummitBeginDate = '".$start_date."'  AND SummitEndDate = '".$end_date."'");
+        $dupe = Summit::get_one("Summit",
+            "Name = '" . $summit->getName() . "' AND SummitBeginDate = '" . $start_date . "'  AND SummitEndDate = '" . $end_date . "'");
+
         return !empty($dupe);
+    }
+
+    /**
+     * @param string $external_event_id
+     * @return ISummit
+     */
+    public function getByExternalEventId($external_event_id)
+    {
+        return Summit::get()->filter('ExternalEventId', $external_event_id)->first();
     }
 }
