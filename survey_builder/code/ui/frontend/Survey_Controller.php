@@ -45,6 +45,7 @@ class Survey_Controller extends Page_Controller {
         'suggestOrganization',
         'addTeamMember',
         'deleteTeamMember',
+        'getTeamMembers'
     );
 
     static $url_handlers = array
@@ -56,6 +57,7 @@ class Survey_Controller extends Page_Controller {
         'current/$STEP_SLUG/delete/$ENTITY_SURVEY_ID'                     => 'DeleteEntity',
         'current//$STEP_SLUG'                                             => 'RenderSurvey',
         'team-members/suggest'                                            => 'suggestMember',
+        'GET entity-surveys/$ENTITY_SURVEY_ID/team-members'               => 'getTeamMembers',
         'POST entity-surveys/$ENTITY_SURVEY_ID/team-members/$MEMBER_ID'   => 'addTeamMember',
         'DELETE entity-surveys/$ENTITY_SURVEY_ID/team-members/$MEMBER_ID' => 'deleteTeamMember',
         'organizations/suggest'                                           => 'suggestOrganization',
@@ -128,13 +130,14 @@ class Survey_Controller extends Page_Controller {
         Requirements::block(SAPPHIRE_DIR . '/thirdparty/behaviour/behaviour.js');
         Requirements::block(SAPPHIRE_DIR . '/thirdparty/prototype/prototype.js');
         Requirements::block(SAPPHIRE_DIR . '/javascript/prototype_improvements.js');
+        Requirements::block("themes/openstack/javascript/jquery.autocomplete.min.js");
 
         Requirements::javascript(Director::protocol() . "ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.js");
         Requirements::javascript(Director::protocol() . "ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/additional-methods.js");
         Requirements::javascript("themes/openstack/javascript/chosen.jquery.min.js");
-        Requirements::block("themes/openstack/javascript/jquery.autocomplete.min.js");
         Requirements::javascript("themes/openstack/javascript/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js");
         Requirements::javascript('survey_builder/js/survey.validation.rules.jquery.js');
+        Requirements::javascript('themes/openstack/javascript/pure.min.js');
         Requirements::javascript('survey_builder/js/survey.controller.js');
     }
 
@@ -143,7 +146,8 @@ class Survey_Controller extends Page_Controller {
      * @param $action
      * @return HTMLText|SS_HTTPResponse
      */
-    protected function handleAction($request, $action) {
+    protected function handleAction($request, $action)
+    {
         if (!Member::currentUser()) {
             if (!in_array($action, self::$allowed_actions_without_auth)) {
                 return $this->redirect("/surveys/landing?BackURL=" . urlencode('/surveys/current'));
@@ -230,19 +234,31 @@ class Survey_Controller extends Page_Controller {
             throw new NotFoundEntityException('SurveyTemplate', 'current template not set');
 
         if(!is_null($this->current_survey)) return $this->current_survey;
+
         $current_survey_id = Session::get('CURRENT_SURVEY_ID');
-        if (!empty($current_survey_id)){
+
+        if (!empty($current_survey_id))
+        {
             $this->current_survey = $this->survey_repository->getById($current_survey_id);
-            if($this->current_survey->template()->getIdentifier() !== $current_template->getIdentifier())
+            if(is_null($this->current_survey) || $this->current_survey->template()->getIdentifier() !== $current_template->getIdentifier())
             {
                 $this->current_survey = null;
                 Session::clear('CURRENT_SURVEY_ID');
             }
         }
-        if(is_null($this->current_survey)){
+
+        if(is_null($this->current_survey))
+        {
 
             $this->current_survey     = $this->survey_manager->buildSurvey($current_template->getIdentifier(), Member::currentUserID());
             Session::set('CURRENT_SURVEY_ID', $this->current_survey->getIdentifier());
+
+            // check if we should pre populate with former data ....
+
+            if($current_template->shouldPrepopulateWithFormerData())
+            {
+                $this->survey_manager->doAutopopulation($this->current_survey, new OldSurveyDataAutopopulationStrategy);
+            }
         }
 
         $this->current_survey = $this->survey_manager->updateSurveyWithTemplate($this->current_survey, $current_template);
@@ -301,7 +317,8 @@ class Survey_Controller extends Page_Controller {
         $current_survey = $this->getCurrentSurveyInstance();
         $current_step   = $current_survey->currentStep();
         $can_skip       = $current_step->canSkip();
-        if(!$can_skip)  $this->redirectBack();
+        if($current_step instanceof ISurveyDynamicEntityStep) $can_skip = true;
+        if(!$can_skip)  return $this->redirectBack();
         $next_step = $this->survey_manager->completeStep($current_step, $data = array());
         return $this->redirect('/surveys/current/'.$next_step->template()->title());
     }
@@ -334,6 +351,31 @@ class Survey_Controller extends Page_Controller {
         }
         if(is_null($this->current_entity_survey))
             return $this->httpError(404, 'entity not found!');
+
+        $entity_step          = $this->current_entity_survey->currentStep();
+        $entity_step_template = $entity_step->template();
+
+        // check substep variable
+        if(empty($sub_step))
+        {
+            // is not set, redirect to current steo uri
+            return $this->redirect($request->getUrl().'/'.$entity_step_template->title());
+        }
+        else if($sub_step !== $entity_step_template->title())
+        {
+            // if set, but differs from current tep check if we are allowed to use that step
+            $desired_sub_step = $this->current_entity_survey->getStep($sub_step);
+            if(!is_null($desired_sub_step) && $this->current_entity_survey->isAllowedStep($sub_step))
+            {
+                $this->current_entity_survey->registerCurrentStep($desired_sub_step);
+            }
+            else
+            {
+                // redirect to current step
+                $current_url = str_replace($sub_step, '',$request->getUrl());
+                return $this->redirect($current_url.$entity_step_template->title());
+            }
+        }
 
         $this->current_entity_survey =  $this->survey_manager->updateSurveyWithTemplate
         (
@@ -527,16 +569,28 @@ HTML;
     {
         if (!Director::is_ajax()) return $this->httpError(403);
 
-        $term = Convert::raw2sql($request->getVar('term'));
+        $term       = Convert::raw2sql($request->getVar('term'));
+        $split_term = explode(' ', $term);
+
+        if(!Member::currentUser()) return $this->httpError(403);
+
+        $current_user_id = Member::currentUserID();
+
+        $full_name_condition = " FirstName LIKE '%{$term}%' OR Surname LIKE '%{$term}%' ";
+        if(count($split_term) == 2)
+        {
+            $full_name_condition = " (FirstName LIKE '%{$split_term[0]}%' AND Surname LIKE '%{$split_term[1]}%') ";
+        }
 
         $members = Member::get()
-            ->where("Email LIKE '%{$term}%' OR FirstName LIKE '%{$term}%' OR Surname LIKE '%{$term}%' ")
+            ->where("ID <> {$current_user_id} AND Email <> '' AND (Email LIKE '%{$term}%' OR {$full_name_condition} )")
             ->sort('Email')
             ->limit(10);
 
         $items = array();
 
-        foreach ($members as $member) {
+        foreach ($members as $member)
+        {
             $items[] = array(
                 'id'    => $member->ID,
                 'label' => sprintf('%s, %s (%s)',$member->FirstName, $member->Surname, $member->Email) ,
@@ -554,6 +608,7 @@ HTML;
     public function suggestOrganization(SS_HTTPRequest $request)
     {
         if (!Director::is_ajax()) return $this->httpError(403);
+        if(!Member::currentUser()) return $this->httpError(403);
 
         $term = Convert::raw2sql($request->getVar('term'));
         $orgs = Org::get()->filter('Name:PartialMatch', $term)
@@ -580,27 +635,30 @@ HTML;
     public function addTeamMember(SS_HTTPRequest $request)
     {
         if (!Director::is_ajax()) return $this->httpError(403);
+        if(!Member::currentUser()) return $this->httpError(403);
 
         $entity_survey_id  = (int)$request->param('ENTITY_SURVEY_ID');
         $member_id         = (int)$request->param('MEMBER_ID');
 
         try {
-            $this->survey_manager->registerTeamMemberOnEntitySurvey(
+            $this->survey_manager->registerTeamMemberOnEntitySurvey
+            (
                 $entity_survey_id,
                 $member_id,
-                null
+                new EntitySurveyTeamMemberEmailSenderService
             );
             return true;
         }
         catch(Exception $ex)
         {
-            return $this->httpError(500);
+            return $this->httpError(401, $ex->getMessage());
         }
     }
 
     public function deleteTeamMember(SS_HTTPRequest $request)
     {
         if (!Director::is_ajax()) return $this->httpError(403);
+        if(!Member::currentUser()) return $this->httpError(403);
 
         $entity_survey_id = (int)$request->param('ENTITY_SURVEY_ID');
         $member_id        = (int)$request->param('MEMBER_ID');
@@ -611,6 +669,37 @@ HTML;
                 $member_id
             );
             return true;
+        }
+        catch(Exception $ex)
+        {
+            return $this->httpError(500);
+        }
+    }
+
+    public function getTeamMembers(SS_HTTPRequest $request)
+    {
+        if (!Director::is_ajax()) return $this->httpError(403);
+        if(!Member::currentUser()) return $this->httpError(403);
+
+        $entity_survey_id = (int)$request->param('ENTITY_SURVEY_ID');
+
+        try {
+            $entity_survey = $this->survey_repository->getById($entity_survey_id);
+            if(is_null($entity_survey) || !$entity_survey instanceof IEntitySurvey) return $this->httpError(404);
+            $items = array();
+            foreach($entity_survey->getTeamMembers() as $member)
+            {
+                $items[] = array(
+                    'id'    => $member->ID,
+                    'fname' => $member->FirstName ,
+                    'lname' => $member->Surname ,
+                    'email' => $member->Email ,
+                );
+            }
+            $response = new SS_HTTPResponse();
+            $response->addHeader('Content-Type', 'application/json');
+            $response->setBody(json_encode($items));
+            return $response;
         }
         catch(Exception $ex)
         {

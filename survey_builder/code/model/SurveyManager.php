@@ -158,7 +158,8 @@ final class SurveyManager implements ISurveyManager {
             if($current_step instanceof ISurveyRegularStep) {
                 $current_step->clearAnswers();
                 foreach ($current_step->template()->getQuestions() as $q) {
-                    if (isset($data[$q->name()])) {
+                    if (isset($data[$q->name()]))
+                    {
                         // its has an answer set
                         if($q->name() === SurveyOrganizationQuestionTemplate::FieldName){
                             //publish event
@@ -324,6 +325,9 @@ final class SurveyManager implements ISurveyManager {
             if($member->getIdentifier() === $survey->createdBy()->getIdentifier())
                 throw new Exception('You cant add owner as a team member!');
 
+            if($survey->isTeamMember($member))
+                throw new Exception('Member already belongs to team!');
+
             $survey->addTeamMember($member);
 
             if(!is_null($sender_service))
@@ -365,6 +369,21 @@ final class SurveyManager implements ISurveyManager {
 
             $survey->removeTeamMember($member);
 
+        });
+    }
+
+    /**
+     * @param ISurvey $survey
+     * @param ISurveyAutopopulationStrategy $strategy
+     * @return mixed
+     */
+    public function doAutopopulation(ISurvey $survey, ISurveyAutopopulationStrategy $strategy)
+    {
+        $survey_builder = $this->survey_builder;
+        $this_var      = $this;
+        $this->tx_manager->transaction(function() use($survey, $strategy, $survey_builder, $this_var)
+        {
+            $strategy->autoPopulate($survey, $survey_builder, $this_var);
         });
     }
 }

@@ -23,6 +23,7 @@ class SurveyCheckBoxListQuestionTemplate
     public function getCMSFields() {
 
         $fields = parent::getCMSFields();
+        $fields->removeByName('EmptyString');
 
         if($this->ID > 0 ){
             $fields->removeByName('DefaultValueID');

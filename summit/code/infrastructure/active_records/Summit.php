@@ -43,15 +43,16 @@ final class Summit extends DataObject implements ISummit
 
     private static $has_many = array
     (
-        'Presentations' => 'Presentation',
-        'Categories'    => 'PresentationCategory',
-        'Speakers'      => 'PresentationSpeaker',
-        'Locations'     => 'SummitAbstractLocation',
-        'Types'         => 'SummitType',
-        'EventTypes'    => 'SummitEventType',
-        'Events'        => 'SummitEvent',
-        'Attendees'     => 'SummitAttendee',
-        'SummitTicketTypes' => 'SummitTicketType',
+        'Presentations'                => 'Presentation',
+        'Categories'                   => 'PresentationCategory',
+        'Speakers'                     => 'PresentationSpeaker',
+        'Locations'                    => 'SummitAbstractLocation',
+        'Types'                        => 'SummitType',
+        'EventTypes'                   => 'SummitEventType',
+        'Events'                       => 'SummitEvent',
+        'Attendees'                    => 'SummitAttendee',
+        'SummitTicketTypes'            => 'SummitTicketType',
+        'SummitRegistrationPromoCodes' => 'SummitRegistrationPromoCode',
     );
 
     private static $summary_fields = array
@@ -496,6 +497,28 @@ final class Summit extends DataObject implements ISummit
         $config = GridFieldConfig_RecordEditor::create();
         $gridField = new GridField('Attendees', 'Attendees', $this->Attendees(), $config);
         $f->addFieldToTab('Root.Attendees', $gridField);
+
+        // promo codes
+
+        $config    = GridFieldConfig_RecordEditor::create(25);
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $multi_class_selector = new GridFieldAddNewMultiClass();
+
+
+        $multi_class_selector->setClasses
+        (
+            array
+            (
+                'SpeakerSummitRegistrationPromoCode' => 'Speaker Promo Code',
+            )
+        );
+
+        $config->addComponent($multi_class_selector);
+
+
+        $promo_codes = new GridField('SummitRegistrationPromoCodes','Registration Promo Codes', $this->SummitRegistrationPromoCodes(), $config);
+        $f->addFieldToTab('Root.RegistrationPromoCodes', $promo_codes);
+
 
         return $f;
     }

@@ -22,6 +22,7 @@ class SurveyQuestionValueTemplate
     static $db = array(
         'Value' => 'Varchar(255)',
         'Order' => 'Int',
+        'Label' => 'HTMLText',
     );
 
     static $has_one = array(
@@ -48,6 +49,7 @@ class SurveyQuestionValueTemplate
 
     private static $summary_fields = array(
         'Value',
+        'Label',
     );
 
     /**
@@ -101,7 +103,19 @@ class SurveyQuestionValueTemplate
     public function getCMSFields() {
         $fields = new FieldList();
         $fields->add(new TextField('Value', 'Value'));
+        $fields->add(new TextareaField('Label', 'Label'));
         $fields->add(new HiddenField('OwnerID', 'OwnerID'));
         return $fields;
+    }
+
+    /**
+     * @return string
+     */
+    public function label()
+    {
+        $label =  $this->getField('Label');
+        if(empty($label))
+            return $this->value();
+        return $label;
     }
 }

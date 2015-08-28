@@ -18,15 +18,22 @@ implements IPresentationSpeaker
         'FundedTravel' => 'Boolean',
         'Expertise' => 'Text',
         'Country' => 'Varchar(2)',
-        'BeenEmailed' => 'Boolean'
+        'BeenEmailed' => 'Boolean',
+        'AnnouncementEmailTypeSent' => "Enum('ACCEPTED,REJECTED,ALTERNATE,ACCEPTED_ALTERNATE,ACCEPTED_REJECTED,ALTERNATE_REJECTED,NONE','NONE')",
+        'AnnouncementEmailSentDate' => 'SS_Datetime',
+        'ConfirmedDate' => 'SS_Datetime',
+        'OnSitePhoneNumber' => 'Text',
+        'RegisteredForSummit' => 'Boolean'
     );
 
 
-    private static $has_one = array (
+    private static $has_one = array
+    (
         'Photo'               => 'Image',
         'Member'              => 'Member',
         'Summit'              => 'Summit',
         'RegistrationRequest' => 'SpeakerRegistrationRequest',
+        'SummitRegistrationPromoCode' => 'SpeakerSummitRegistrationPromoCode'
     );
 
     private static $searchable_fields = array
@@ -45,9 +52,10 @@ implements IPresentationSpeaker
         'MemberID' => 0,
     );
 
+
     private static $belongs_many_many = array
     (
-        'Presentations'      => 'Presentation',
+        'Presentations' => 'Presentation',
     );
 
     /**
@@ -223,16 +231,100 @@ implements IPresentationSpeaker
         return $AlternatePresentations;
     }
 
-    public function SpeakerConfirmHash() {
+    public function getSpeakerConfirmHash() {
         $id = $this->ID;
         $prefix = "000";
         $hash = base64_encode($prefix . $id);
         return $hash;
     }
 
-    public function RegistrationCode() {
-        return SummitRegCode::get()->filter('MemberID', $this->MemberID)->first();
+    public function getSpeakerConfirmationLink()
+    {
+        $confirmation_page = SummitConfirmSpeakerPage::get()->filter('SummitID', Summit::get_active()->ID)->first();
+        if(!$confirmation_page) throw new Exception('Confirmation Speaker Page not set on current summit!');
+        $url = $confirmation_page->getAbsoluteLiveLink(false);
+        $url = $url.'confirm?h='.$this->getSpeakerConfirmHash();
+        return $url;
     }
 
+    /**
+     * @return bool
+     */
+    public function announcementEmailAlreadySent()
+    {
+        $email_type = $this->getAnnouncementEmailTypeSent();
+        return !is_null($email_type) && $email_type !== 'NONE';
+    }
 
+    /**
+     * @return string|null
+     */
+    public function getAnnouncementEmailTypeSent()
+    {
+       return $this->getField('AnnouncementEmailTypeSent');
+    }
+
+    /**
+     * @param string $email_type
+     * @throws Exception
+     */
+    public function registerAnnouncementEmailTypeSent($email_type)
+    {
+        if($this->announcementEmailAlreadySent()) throw new Exception('Announcement Email already sent');
+        $this->AnnouncementEmailTypeSent = $email_type;
+        $this->AnnouncementEmailSentDate = MySQLDatabase56::nowRfc2822();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasRejectedPresentations()
+    {
+        return $this->UnacceptedPresentations()->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasApprovedPresentations()
+    {
+        return $this->AcceptedPresentations()->count() > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasAlternatePresentations()
+    {
+        return $this->AlternatePresentations()->count() > 0;
+    }
+
+    /**
+     * @param ISpeakerSummitRegistrationPromoCode $promo_code
+     * @return $this
+     */
+    public function registerSummitPromoCode(ISpeakerSummitRegistrationPromoCode $promo_code)
+    {
+        $member = AssociationFactory::getInstance()->getMany2OneAssociation($this,'Member')->getTarget();
+        $member->registerPromoCode($promo_code);
+        $promo_code->assignSpeaker($this);
+        AssociationFactory::getInstance()->getMany2OneAssociation($this,'SummitRegistrationPromoCode')->setTarget($promo_code);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSummitPromoCode()
+    {
+       $code = $this->getSummitPromoCode();
+       return !is_null($code);
+    }
+
+    /**
+     * @return ISpeakerSummitRegistrationPromoCode
+     */
+    public function getSummitPromoCode()
+    {
+        return AssociationFactory::getInstance()->getMany2OneAssociation($this,'SummitRegistrationPromoCode')->getTarget();
+    }
 }

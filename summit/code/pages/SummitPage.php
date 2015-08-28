@@ -95,11 +95,18 @@ class SummitPage extends Page
     public function onBeforeWrite() {
         parent::onBeforeWrite();
         $parent = $this->Parent();
-        if($parent && $parent instanceof SummitOverviewPage){
+        if($parent && ($parent instanceof SummitPage) && $parent->SummitID > 0){
             $this->SummitID = $parent->SummitID;
         }
     }
 
+    public function LinkingMode() {
+        if($this->isSection()) {
+            return 'current';
+        } else {
+            return 'link';
+        }
+    }
 }
 
 

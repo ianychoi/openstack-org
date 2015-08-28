@@ -12,11 +12,21 @@
  * limitations under the License.
  **/
 
-interface IEntitySurveyTemplate
-    extends ISurveyTemplate {
+interface IEntitySurveyTemplate extends ISurveyTemplate
+{
 
     /**
      * @return string
      */
     public function getEntityName();
+
+    /**
+     * @return bool
+     */
+    public function belongsToDynamicStep();
+
+    /**
+     * @return ISurveyDynamicEntityStepTemplate
+     */
+    public function getDynamicStepTemplate();
 }
