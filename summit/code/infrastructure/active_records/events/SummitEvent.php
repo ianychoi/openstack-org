@@ -48,11 +48,11 @@ class SummitEvent extends DataObject implements ISummitEvent
 
     private static $summary_fields = array
     (
-        'Title',
-        'StartDate',
-        'EndDate',
-        'LocationName',
-        'TypeName',
+        'Title' => 'Event Title',
+        'StartDateNice' => 'Event Start Date',
+        'EndDateNice' => 'Event End Date',
+        'LocationNameNice' => 'Location',
+        'TypeName' => 'Event Type',
     );
 
     private static $searchable_fields = array
@@ -78,25 +78,45 @@ class SummitEvent extends DataObject implements ISummitEvent
         {
             return $this->Location()->Name;
         }
-        return 'NOT SET';
+        return '';
+    }
+
+    public function getLocationNameNice()
+    {
+        if($this->Location()->ID > 0)
+        {
+            return $this->Location()->Name;
+        }
+        return 'TBD';
     }
     /**
      * @return DateTime
      */
     public function getStartDate()
     {
+        return $this->getField('StartDate');
+    }
+
+    public function getStartDateNice()
+    {
         $start_date =  $this->getField('StartDate');
-        if(empty($start_date)) return 'NOT SET';
+        if(empty($start_date)) return 'TBD';
         return $start_date;
     }
+
 
     /**
      * @return DateTime
      */
     public function getEndDate()
     {
+        return $this->getField('EndDate');
+    }
+
+    public function getEndDateNice()
+    {
         $end_date  = $this->getField('EndDate');
-        if(empty($end_date)) return 'NOT SET';
+        if(empty($end_date)) return 'TBD';
         return $end_date;
     }
 
@@ -311,13 +331,14 @@ class SummitEvent extends DataObject implements ISummitEvent
         return $f;
     }
 
-    /**
-     * @return void
-     */
     public function publish()
     {
         if($this->Published)
             throw new Exception('Already published Summit Event');
+
+        if($this->getStartDate() === 'TBD' || $this->getEndDate() === 'TBD')
+            throw new Exception('You must define a start/end datetime before publish it');
+
         $this->Published = true;
         $this->PublishedDate = MySQLDatabase56::nowRfc2822();
     }
@@ -325,6 +346,13 @@ class SummitEvent extends DataObject implements ISummitEvent
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+        $publish_date = $this->PublishedDate;
+        //first time published ...
+        if($this->isPublished() && is_null($publish_date))
+        {
+            $this->unPublish();
+            $this->publish();
+        }
     }
 
     /**
@@ -342,5 +370,43 @@ class SummitEvent extends DataObject implements ISummitEvent
     {
         $this->Published = false;
         $this->PublishedDate = null;
+    }
+
+    protected function validate()
+    {
+        $valid = parent::validate();
+        if(!$valid->valid()) return $valid;
+
+        $summit_id = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+
+        $summit   = Summit::get()->byID($summit_id);
+
+        if(!$summit){
+            return $valid->error('Invalid Summit!');
+        }
+
+        $start_date = $this->getStartDate();
+        $end_date   = $this->getEndDate();
+        if((empty($start_date) || empty($end_date)) && $this->isPublished())
+            return $valid->error('To publish this event you must define a start/end datetime!');
+
+        if(!empty($start_date) && !empty($end_date))
+        {
+            $start_date = new DateTime($start_date);
+            $end_date = new DateTime($end_date);
+            if($end_date < $start_date)
+                return $valid->error('start datetime must be greather or equal than end datetime!');
+            if(!$summit->isEventInsideSummitDuration($this))
+                return $valid->error(sprintf('start/end datetime must be between summit start/end datetime! (%s - %s)', $summit->getBeginDate(), $summit->getEndDate()));
+
+            // validate start time/end time and location
+            if(!empty($this->LocationID))
+            {
+
+            }
+        }
+
+
+        return $valid;
     }
 }

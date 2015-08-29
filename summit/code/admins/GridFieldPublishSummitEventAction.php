@@ -57,16 +57,26 @@ class GridFieldPublishSummitEventAction implements GridField_ColumnProvider, Gri
         if($actionName == 'publishsummitevent') {
             $summit_event = $gridField->getList()->byID($arguments['RecordID']);
             $former_state = $summit_event->isPublished();
-            if($former_state)
-                $summit_event->unPublish();
-            else
-                $summit_event->publish();
-            $summit_event->write();
             $msg  = 'Summit Event Published!';
-            if($former_state){
-                $msg  = 'Summit Event Ubnpublished!';
+            $code = 200;
+            try {
+                if ($former_state) {
+                    $summit_event->unPublish();
+                } else {
+                    $summit_event->publish();
+                }
+                $summit_event->write();
+                if($former_state){
+                    $msg  = 'Summit Event Unpublished!';
+                }
             }
-            Controller::curr()->getResponse()->setStatusCode(200,$msg);
+            catch(Exception $ex)
+            {
+                $code = 401;
+                $msg = $ex->getMessage();
+            }
+
+            Controller::curr()->getResponse()->setStatusCode($code,$msg);
         }
     }
 }

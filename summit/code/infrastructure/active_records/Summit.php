@@ -482,9 +482,17 @@ final class Summit extends DataObject implements ISummit
         $config = GridFieldConfig_RecordEditor::create();
         $config->addComponent(new GridFieldAjaxRefresh(1000,false));
         $config->removeComponentsByType('GridFieldDeleteAction');
-        $gridField = new GridField('Schedule', 'Schedule', $this->Events()->filter('Published', true) , $config);
+        $gridField = new GridField('Schedule', 'Schedule', $this->Events()->filter('Published', true)->sort
+        (
+            array
+            (
+                'StartDate' => 'ASC',
+                'EndDate' => 'ASC'
+            )
+        ) , $config);
         $f->addFieldToTab('Root.Schedule', $gridField);
         $config->addComponent(new GridFieldPublishSummitEventAction);
+
         // events
 
         $config = GridFieldConfig_RecordEditor::create();
@@ -581,5 +589,18 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         $this->Name = $info->getName();
         $this->SummitBeginDate = $info->getStartDate();
         $this->SummitEndDate = $info->getEndDate();
+    }
+
+
+    public function isEventInsideSummitDuration(ISummitEvent $summit_event)
+    {
+        $event_start_date = new DateTime($summit_event->getStartDate());
+        $event_end_date   = new DateTime($summit_event->getEndDate());
+        $summit_start_date = new DateTime($this->getBeginDate());
+        $summit_end_date = new DateTime($this->getEndDate());
+
+        return  $event_start_date >= $summit_start_date && $event_start_date <= $summit_end_date &&
+        $event_end_date <= $summit_end_date && $event_end_date >= $event_start_date;
+
     }
 }

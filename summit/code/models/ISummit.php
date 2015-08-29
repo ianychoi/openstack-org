@@ -148,4 +148,10 @@ interface ISummit extends IEntity
      * @return ISummit
      */
     public static function CurrentSummit();
+
+    /**
+     * @param ISummitEvent $summit_event
+     * @return bool
+     */
+    public function isEventInsideSummitDuration(ISummitEvent $summit_event);
 }
