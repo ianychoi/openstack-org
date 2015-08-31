@@ -274,13 +274,29 @@ final class Summit extends DataObject implements ISummit
         return $this->getField('SelectionEndDate');
     }
 
+    /**
+     * @return ISummitEventType[]
+     */
+    public function getEventTypes()
+    {
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'EventTypes');
+    }
+
+    /**
+     * @param ISummitEventType $type
+     * @return void
+     */
+    public function addEventType(ISummitEventType $event_type)
+    {
+        AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'EventTypes')->add($event_type);
+    }
 
     /**
      * @return ISummitType[]
      */
     public function getTypes()
     {
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Types')->toArray();
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Types');
     }
 
     /**

@@ -43,4 +43,16 @@ interface ISummitType extends IEntity
      * @return int
      */
     public function getDayDuration();
+
+    public function setTitle($title);
+
+    public function setDescription($description);
+
+    public function setAudience($audience);
+
+    public function setStartDate($start_date);
+
+    public function setEndDate($end_date);
+
+    public function setSummitId($summit_id);
 }

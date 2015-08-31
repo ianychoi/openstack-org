@@ -57,4 +57,5 @@ class SummitEventType extends DataObject implements ISummitEventType
     {
         return $this->getField('Type');
     }
+
 }

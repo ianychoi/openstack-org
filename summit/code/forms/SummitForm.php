@@ -3,25 +3,31 @@
 class SummitForm extends BootstrapForm
 {
 
-    public function __construct($controller, $name, $actions) {
+    public function __construct($summit,$controller, $name, $actions) {
         parent::__construct(
             $controller, 
             $name, 
-            $this->getSummitFields(),
+            $this->getSummitFields($summit),
             $actions
         );
 
         $this->setTemplate($this->class);
 
+        $this->customise(
+            array(
+                'Summit' => $summit
+            )
+        );
+
     }
 
 
-    protected function getSummitFields() {
+    protected function getSummitFields(ISummit $summit) {
         $fields = FieldList::create(
             TextField::create('Name')->setAttribute('autofocus','TRUE'),
             TextField::create('SummitBeginDate'),
             TextField::create('SummitEndDate'),
-            DropdownField::create('EventTypes','',SummitEventType::get("SummitEventType")->map("ID", "Title"))->setAttribute('data-role','tagsinput')->setAttribute('multiple','multiple')
+            DropdownField::create('EventTypes','',$summit->getEventTypes()->map("Type"))->setAttribute('data-role','tagsinput')->setAttribute('multiple','multiple')
         );
 
         return $fields;

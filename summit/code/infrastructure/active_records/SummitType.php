@@ -96,4 +96,28 @@ class SummitType extends DataObject implements ISummitType
     {
         return 0;
     }
+
+    public function setTitle($title) {
+        $this->setField('Title',$title);
+    }
+
+    public function setDescription($description) {
+        $this->setField('Description',$description);
+    }
+
+    public function setAudience($audience) {
+        $this->setField('Audience',$audience);
+    }
+
+    public function setStartDate($start_date) {
+        $this->setField('StartDate',$start_date);
+    }
+
+    public function setEndDate($end_date) {
+        $this->setField('EndDate',$end_date);
+    }
+
+    public function setSummitId($summit_id) {
+        $this->setField('SummitID',$summit_id);
+    }
 }

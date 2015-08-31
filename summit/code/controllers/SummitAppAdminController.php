@@ -270,20 +270,12 @@ class SummitAppAdminController extends Page_Controller
 
     public function editSummit(SS_HTTPRequest $request)
     {
-        Requirements::javascript('summit/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js');
+        Requirements::javascript('summit/javascript/summitapp-summitform.js');
+        Requirements::javascript('summit/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.js');
         Requirements::css('summit/bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.css');
         Requirements::css('summit/css/summit-admin.css');
 
-        $summit_id = intval($request->param('SummitID'));
-        $summit = Summit::get()->byID($summit_id);
-
-        return $this->getViewer('EditSummit')->process(
-            $this->customise(
-                array(
-                    'Summit' => $summit
-                )
-            )
-        );
+        return $this->getViewer('EditSummit')->process($this->owner);
     }
 
     public function summitForm()
@@ -291,7 +283,7 @@ class SummitAppAdminController extends Page_Controller
         $summit_id = intval($this->request->param('SummitID'));
         $summit = Summit::get()->byID($summit_id);
 
-        $form = SummitForm::create($this, "SummitForm", FieldList::create(FormAction::create('saveSummit','Save')));
+        $form = SummitForm::create($summit,$this, "SummitForm", FieldList::create(FormAction::create('saveSummit','Save')));
         if($data = Session::get("FormInfo.{$form->FormName()}.data")) {
             $form->loadDataFrom($data);
         }
