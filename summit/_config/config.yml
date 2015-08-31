@@ -7,6 +7,9 @@ Member:
     - PresentationMemberExtension
     - MemberTokenProvider
     - SummitAttendeeMemberExtension
+EditProfilePage_Controller:
+  extensions:
+    - EditProfilePageSummitAttendeeExtension
 MemberTokenProvider:
   token_expire: 3600
 Director:

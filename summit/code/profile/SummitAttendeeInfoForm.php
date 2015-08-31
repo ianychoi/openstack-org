@@ -20,10 +20,12 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
         (
             array
             (
-                new TextField('ExternalOrderId', 'Eventbrite Order #'),
+                $t1 = new TextField('ExternalOrderId', 'Eventbrite Order #'),
                 new CheckboxField('SharedContactInfo', 'Allow to share contact info?')
             )
         );
+        $t1->setAttribute('placeholder', 'Enter your Eventbrite order #');
+        $t1->addExtraClass('event-brite-order-number');
         // Create action
         $actions = new FieldList
         (
@@ -35,12 +37,19 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
         parent::__construct($controller, $name, $fields, $actions, $validator);
     }
 
-    public function loadDataFrom($data, $mergeStrategy = 0, $fieldList = null) {
+    public function loadDataFrom($data, $mergeStrategy = 0, $fieldList = null)
+    {
+        parent::loadDataFrom($data, $mergeStrategy, $fieldList);
         if($data && $data->ID > 0)
         {
-            $this->fields->insertAfter($t1 = new TextField('TicketBoughtDate', 'Ticket Bought Date'),'ExternalOrderId');
+            $this->fields->insertAfter($t1 = new TextField('TicketBoughtDate', 'Ticket Bought Date', $data->TicketBoughtDate),'ExternalOrderId');
+            $t2 = $this->fields->fieldByName('ExternalOrderId');
+            $this->fields->insertAfter($t3 = new TextField('TicketType', 'Ticket Type', $data->TicketType()->Name), 'TicketBoughtDate');
+
             $t1->setReadonly(true);
+            $t2->setReadonly(true);
+            $t3->setReadonly(true);
         }
-        parent::loadDataFrom($data, $mergeStrategy, $fieldList);
+
     }
 }

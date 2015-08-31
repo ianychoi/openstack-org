@@ -40,9 +40,6 @@ class EditProfilePage_Controller extends Page_Controller
         'EditSpeakerProfileForm',
         'downgrade2communitymember',
         'upgrade2foundationmember',
-        'attendeeInfoRegistration',
-        'SummitAttendeeInfoForm',
-        'saveSummitAttendeeInfo',
     );
 
     /**
@@ -685,6 +682,13 @@ class EditProfilePage_Controller extends Page_Controller
         return $html;
     }
 
+    function getNavMessageExtensions()
+    {
+        $html = '';
+        $this->extend('NavMessageExtensions', $html);
+        return $html;
+    }
+
     public function LogoutUrl()
     {
         return $this->Link('logout');
@@ -723,47 +727,5 @@ class EditProfilePage_Controller extends Page_Controller
         $html = '';
         $this->extend('getRenderUITopExtensions',$html);
         return $html;
-    }
-
-
-    public function UpcomingSummit()
-    {
-        return Summit::GetUpcoming();
-    }
-
-    public function CurrentSummit()
-    {
-        $current_summit = Summit::CurrentSummit();
-        if(is_null($current_summit))
-            $current_summit = $this->UpcomingSummit();
-        return $current_summit;
-    }
-
-
-    public function attendeeInfoRegistration(SS_HTTPRequest $request)
-    {
-        return $this->customise(array())->renderWith(array('EditProfilePage_attendeeInfoRegistration', 'Page'));
-    }
-
-    public function SummitAttendeeInfoForm()
-    {
-        if ($CurrentMember = Member::currentUser())
-        {
-            $form = new SummitAttendeeInfoForm($this, 'SummitAttendeeInfoForm');
-            //Populate the form with the current members data
-            $attendee = $CurrentMember->getCurrentSummitAttendee();
-            if($attendee) $form->loadDataFrom($attendee->data());
-            return $form;
-        }
-    }
-
-    public function saveSummitAttendeeInfo($data, $form)
-    {
-        if ($CurrentMember = Member::currentUser())
-        {
-            $attendee = $CurrentMember->getCurrentSummitAttendee();
-            return $this->redirect($this->Link('?saved=1'));
-        }
-        return $this->httpError(403);
     }
 }

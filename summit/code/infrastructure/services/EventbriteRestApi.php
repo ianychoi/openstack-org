@@ -14,6 +14,7 @@
  **/
 final class EventbriteRestApi implements IEventbriteRestApi
 {
+    const BaseUrl = 'https://www.eventbriteapi.com/v3';
 
     private $auth_info;
     /**
@@ -29,9 +30,11 @@ final class EventbriteRestApi implements IEventbriteRestApi
      * @param string $api_url
      * @param array $params
      * @return mixed
+     * @throws Exception
      */
     public function getEntity($api_url, array $params)
     {
+        if(strstr($api_url, EventbriteRestApi::BaseUrl) === false) throw new Exception('invalid base url!');
         $client   = new GuzzleHttp\Client();
 
         $query = array
@@ -58,5 +61,16 @@ final class EventbriteRestApi implements IEventbriteRestApi
         $json = $response->getBody()->getContents();
         return json_decode($json, true);
 
+    }
+
+    /**
+     * @param string $order_id
+     * @return mixed
+     */
+    public function getOrder($order_id)
+    {
+        $order_id = intval($order_id);
+        $url = sprintf('%s/orders/%s', self::BaseUrl, $order_id);
+        return $this->getEntity($url, array('expand' => 'attendees'));
     }
 }

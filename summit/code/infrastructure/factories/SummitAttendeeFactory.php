@@ -18,6 +18,7 @@ final class SummitAttendeeFactory implements ISummitAttendeeFactory
     /**
      * @param Member $member
      * @param ISummit $summit
+     * @param string $external_id
      * @param string $order_external_id
      * @param string $ticket_external_id
      * @param string $bought_date
@@ -26,6 +27,7 @@ final class SummitAttendeeFactory implements ISummitAttendeeFactory
     public function build(
         Member $member,
         ISummit $summit,
+        $external_id,
         $order_external_id,
         $ticket_external_id,
         $bought_date
@@ -33,6 +35,7 @@ final class SummitAttendeeFactory implements ISummitAttendeeFactory
         $attendee = new SummitAttendee;
         $attendee->MemberID = $member->ID;
         $attendee->SummitID = $summit->ID;
+        $attendee->ExternalId = $external_id;
         $attendee->ExternalOrderId = $order_external_id;
         $attendee->ExternalTicketClassID = $ticket_external_id;
         $attendee->TicketBoughtDate  = $bought_date;

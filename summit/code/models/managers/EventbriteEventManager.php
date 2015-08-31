@@ -139,6 +139,7 @@ final class EventbriteEventManager implements IEventbriteEventManager
                     {
                         $profile         = $attendee['profile'];
                         $email           = $profile['email'];
+                        $external_id     = $attendee['id'];
                         $answers         = $attendee['answers'];
                         $order_id        = $attendee['order_id'];
                         $event_id        = $attendee['event_id'];
@@ -168,7 +169,7 @@ final class EventbriteEventManager implements IEventbriteEventManager
                             continue;
                         }
 
-                        $attendee = $attendee_factory->build($member, $current_summit, $order_id, $ticket_class_id, $order_date);
+                        $attendee = $attendee_factory->build($member, $current_summit, $external_id, $order_id, $ticket_class_id, $order_date);
 
                         $attendee_repository->add($attendee);
                     }

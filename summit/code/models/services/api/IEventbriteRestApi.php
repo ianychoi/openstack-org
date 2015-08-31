@@ -27,4 +27,10 @@ interface IEventbriteRestApi
      * @return mixed
      */
     public function getEntity($api_url, array $params);
+
+    /**
+     * @param string $order_id
+     * @return mixed
+     */
+    public function getOrder($order_id);
 }
