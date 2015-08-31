@@ -6,6 +6,7 @@ Member:
   extensions:
     - PresentationMemberExtension
     - MemberTokenProvider
+    - SummitAttendeeMemberExtension
 MemberTokenProvider:
   token_expire: 3600
 Director:

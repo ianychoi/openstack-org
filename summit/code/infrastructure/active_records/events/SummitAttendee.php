@@ -19,6 +19,7 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
     (
         // https://www.eventbrite.com/developer/v3/formats/order/#ebapi-std:format-order
         'ExternalOrderId'         => 'Text',
+        'ExternalId'              => 'Text',
         'TicketBoughtDate'        => 'SS_Datetime',
         'SharedContactInfo'       => 'Boolean',
         'SummitHallCheckedIn'     => 'Boolean',

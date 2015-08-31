@@ -617,6 +617,10 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
 
         return  $event_start_date >= $summit_start_date && $event_start_date <= $summit_end_date &&
         $event_end_date <= $summit_end_date && $event_end_date >= $event_start_date;
+    }
 
+    public function isAttendeesRegistrationOpened()
+    {
+        return true;
     }
 }
