@@ -74,6 +74,8 @@ final class EventbriteEventManager implements IEventbriteEventManager
         $this->attendee_repository = $attendee_repository;
         $this->summit_repository = $summit_repository;
         $this->tx_manager = $tx_manager;
+
+        $this->api->setCredentials(array('token' => EVENTBRITE_PERSONAL_OAUTH2_TOKEN));
     }
 
     /**
@@ -107,7 +109,7 @@ final class EventbriteEventManager implements IEventbriteEventManager
      */
     public function ingestEvents($bach_size)
     {
-        $repository = $this->repository;
+        $repository          = $this->repository;
         $api                 = $this->api;
         $member_repository   = $this->member_repository;
         $attendee_factory    = $this->attendee_factory;
@@ -126,56 +128,134 @@ final class EventbriteEventManager implements IEventbriteEventManager
 
             list($list, $count) = $repository->getUnprocessed(0, $bach_size);
 
-            $api->setCredentials(array('token' => EVENTBRITE_PERSONAL_OAUTH2_TOKEN));
-
             foreach ($list as $event)
             {
                 $json_data = $api->getEntity($event->getApiUrl(), array('expand' => 'attendees'));
                 if (isset($json_data['attendees']))
                 {
                     $order_date = $json_data['created'];
+                    $status     = $json_data['status'];
 
-                    foreach ($json_data['attendees'] as $attendee)
+                    if($status === 'placed')
                     {
-                        $profile         = $attendee['profile'];
-                        $email           = $profile['email'];
-                        $external_id     = $attendee['id'];
-                        $answers         = $attendee['answers'];
-                        $order_id        = $attendee['order_id'];
-                        $event_id        = $attendee['event_id'];
-                        $ticket_class_id = $attendee['ticket_class_id'];
-
-                        if (empty($email))
+                        foreach ($json_data['attendees'] as $attendee)
                         {
-                            continue;
+                            $profile         = $attendee['profile'];
+                            $email           = $profile['email'];
+                            $external_id     = $attendee['id'];
+                            $answers         = $attendee['answers'];
+                            $order_id        = $attendee['order_id'];
+                            $event_id        = $attendee['event_id'];
+                            $ticket_class_id = $attendee['ticket_class_id'];
+                            $cancelled       = $attendee['cancelled'];
+                            $refunded        = $attendee['refunded'];
+                            $status          = $attendee['status'];
+
+                            if($cancelled || $refunded) continue;
+                            if($status !== 'Attending') continue;
+
+                            if (empty($email))
+                            {
+                                continue;
+                            }
+                            $member = $member_repository->findByEmail($email);
+                            if (is_null($member)) {
+                                continue;
+                            }
+                            $current_summit = $summit_repository->getByExternalEventId($event_id);
+
+                            if (!$current_summit)
+                            {
+                                continue;
+                            }
+
+                            $old_attendee = $attendee_repository->getByMemberAndSummit
+                            (
+                                $member->getIdentifier(),
+                                $current_summit->getIdentifier()
+                            );
+
+                            if ($old_attendee) {
+                                continue;
+                            }
+
+                            $attendee = $attendee_factory->build
+                            (
+                                $member,
+                                $current_summit,
+                                $external_id,
+                                $order_id,
+                                $ticket_class_id,
+                                $order_date
+                            );
+
+                            $attendee_repository->add($attendee);
                         }
-                        $member = $member_repository->findByEmail($email);
-                        if (is_null($member))
-                        {
-                            continue;
-                        }
-                        $current_summit = $summit_repository->getByExternalEventId($event_id);
-
-                        if(!$current_summit) continue;
-
-                        $old_attendee   = $attendee_repository->getByMemberAndSummit
-                        (
-                            $member->getIdentifier(),
-                            $current_summit->getIdentifier()
-                        );
-
-                        if ($old_attendee)
-                        {
-                            continue;
-                        }
-
-                        $attendee = $attendee_factory->build($member, $current_summit, $external_id, $order_id, $ticket_class_id, $order_date);
-
-                        $attendee_repository->add($attendee);
                     }
                 }
-                $event->markAsProcessed();
+                $event->markAsProcessed($status);
             };
         });
+    }
+
+    /**
+     * @param $member
+     * @param string $order_external_id
+     * @param string $attendee_external_id
+     * @return ISummitAttendee
+     * @throws MultipleAttendeesOrderException
+     * @throws InvalidEventbriteOrderStatusException
+     */
+    public function registerAttendee($member, $order_external_id, $attendee_external_id = null)
+    {
+        $repository = $this->repository;
+        $api = $this->api;
+        $member_repository = $this->member_repository;
+        $attendee_factory = $this->attendee_factory;
+        $attendee_repository = $this->attendee_repository;
+        $summit_repository = $this->summit_repository;
+
+        return $this->tx_manager->transaction(function () use (
+            $member,
+            $order_external_id,
+            $attendee_external_id,
+            $repository,
+            $api,
+            $member_repository,
+            $attendee_factory,
+            $attendee_repository,
+            $summit_repository
+        ) {
+            $order = $api->getOrder($order_external_id);
+
+            if (isset($order['attendees']))
+            {
+                $order_date = $order['created'];
+                $status     = $order['status'];
+
+                if($status === 'placed') throw new InvalidEventbriteOrderStatusException($status);
+
+                $attendees = $order['attendees'];
+            }
+        });
+    }
+
+    /**
+     * @param $order_external_id
+     * @return mixed
+     * @throw InvalidEventbriteOrderStatusException
+     */
+    public function getOrderAttendees($order_external_id)
+    {
+        $order = $this->api->getOrder($order_external_id);
+
+        if (isset($order['attendees']))
+        {
+            $status     = $order['status'];
+
+            if($status !== 'placed') throw new InvalidEventbriteOrderStatusException($status);
+
+            return $order['attendees'];
+        }
     }
 }

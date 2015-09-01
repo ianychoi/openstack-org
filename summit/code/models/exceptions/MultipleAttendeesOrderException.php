@@ -12,27 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-interface IEventbriteEvent extends IEntity
+class MultipleAttendeesOrderException extends Exception
 {
     /**
-     * @param string $status
-     * @return void
+     * @var array
      */
-    public function markAsProcessed($status);
+    private $attendees;
 
-    /**
-     * @return string
-     */
-    public function getApiUrl();
+    public function __construct(array $attendees, $message)
+    {
+        parent::__construct($message);
+        $this->attendees = $attendees;
+    }
 
-    /**
-     * @return string
-     */
-    public function getType();
-
-    /**
-     * @return bool
-     */
-    public function isAlreadyProcessed();
-
+    public function getAttendees()
+    {
+        return $this->attendees;
+    }
 }

@@ -32,7 +32,7 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
             new FormAction('saveSummitAttendeeInfo', 'Save')
         );
 
-        $validator = null;
+        $validator = new RequiredFields(array('ExternalOrderId'));
 
         parent::__construct($controller, $name, $fields, $actions, $validator);
     }
@@ -40,7 +40,7 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
     public function loadDataFrom($data, $mergeStrategy = 0, $fieldList = null)
     {
         parent::loadDataFrom($data, $mergeStrategy, $fieldList);
-        if($data && $data->ID > 0)
+        if($data && $data instanceof SummitAttendee && $data->ID > 0)
         {
             $this->fields->insertAfter($t1 = new TextField('TicketBoughtDate', 'Ticket Bought Date', $data->TicketBoughtDate),'ExternalOrderId');
             $t2 = $this->fields->fieldByName('ExternalOrderId');

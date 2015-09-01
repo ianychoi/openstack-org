@@ -12,27 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-interface IEventbriteEvent extends IEntity
+class InvalidEventbriteOrderStatusException extends Exception
 {
-    /**
-     * @param string $status
-     * @return void
-     */
-    public function markAsProcessed($status);
-
-    /**
-     * @return string
-     */
-    public function getApiUrl();
-
-    /**
-     * @return string
-     */
-    public function getType();
-
-    /**
-     * @return bool
-     */
-    public function isAlreadyProcessed();
 
 }

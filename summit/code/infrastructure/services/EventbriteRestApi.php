@@ -73,4 +73,5 @@ final class EventbriteRestApi implements IEventbriteRestApi
         $url = sprintf('%s/orders/%s', self::BaseUrl, $order_id);
         return $this->getEntity($url, array('expand' => 'attendees'));
     }
+
 }

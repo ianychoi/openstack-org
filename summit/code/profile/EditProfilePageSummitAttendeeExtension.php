@@ -14,7 +14,24 @@
  **/
 class EditProfilePageSummitAttendeeExtension extends Extension
 {
-    public function onBeforeInit(){
+
+    /**
+     * @var IEventbriteEventManager
+     */
+    private $manager;
+
+    public function getEventbriteEventManager()
+    {
+        return $this->manager;
+    }
+
+    public function setEventbriteEventManager(IEventbriteEventManager $manager)
+    {
+        $this->manager = $manager;
+    }
+
+    public function onBeforeInit()
+    {
         Config::inst()->update(get_class($this), 'allowed_actions', array
         (
             'attendeeInfoRegistration',
@@ -23,7 +40,8 @@ class EditProfilePageSummitAttendeeExtension extends Extension
         ));
     }
 
-    public function getNavActionsExtensions(&$html){
+    public function getNavActionsExtensions(&$html)
+    {
         $view = new SSViewer('EditProfilePage_SummitAttendeeNav');
         $html .= $view->process($this->owner);
     }
@@ -55,11 +73,11 @@ class EditProfilePageSummitAttendeeExtension extends Extension
 
     public function SummitAttendeeInfoForm()
     {
-        if ($CurrentMember = Member::currentUser())
+        if ($current_member = Member::currentUser())
         {
             $form = new SummitAttendeeInfoForm($this->owner, 'SummitAttendeeInfoForm');
             //Populate the form with the current members data
-            $attendee = $CurrentMember->getCurrentSummitAttendee();
+            $attendee = $current_member->getCurrentSummitAttendee();
             if($attendee) $form->loadDataFrom($attendee->data());
             return $form;
         }
@@ -67,11 +85,25 @@ class EditProfilePageSummitAttendeeExtension extends Extension
 
     public function saveSummitAttendeeInfo($data, $form)
     {
-        if ($CurrentMember = Member::currentUser())
+        if ($current_member = Member::currentUser())
         {
-            $attendee = $CurrentMember->getCurrentSummitAttendee();
-            return $this->redirect($this->Link('?saved=1'));
+            $attendee = $current_member->getCurrentSummitAttendee();
+            if(!$attendee)
+            {
+                try
+                {
+                    $attendees = $this->manager->getOrderAttendees($data['ExternalOrderId']);
+                    Session::set('attendees', $attendees);
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?select=1'));
+                }
+                catch(InvalidEventbriteOrderStatusException $ex1)
+                {
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?error=1'));
+                }
+            }
+            Session::clear('attendees');
+            return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?saved=1'));
         }
-        return $this->httpError(403);
+        return $this->owner->httpError(403);
     }
 }

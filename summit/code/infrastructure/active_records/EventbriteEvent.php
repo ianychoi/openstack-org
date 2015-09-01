@@ -20,6 +20,7 @@ class EventbriteEvent extends DataObject implements IEventbriteEvent
         'ApiUrl'        => 'Varchar(512)',
         'Processed'     => 'Boolean',
         'ProcessedDate' => 'SS_DateTime',
+        'FinalStatus'   => 'Varchar(255)',
     );
 
     static $indexes = array
@@ -27,11 +28,17 @@ class EventbriteEvent extends DataObject implements IEventbriteEvent
 
     );
 
-    public function markAsProcessed()
+    /**
+     * @param string $status
+     * @throws Exception
+     */
+    public function markAsProcessed($status)
     {
         if($this->Processed) throw new Exception('EventbriteEvent already processed!');
-        $this->Processed    = true;
+
+        $this->Processed     = true;
         $this->ProcessedDate = MySQLDatabase56::nowRfc2822();
+        $this->FinalStatus   = $status;
     }
 
     /**

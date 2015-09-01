@@ -26,4 +26,20 @@ interface IEventbriteEventManager
      * @return int
      */
     public function ingestEvents($bach_size);
+
+
+    /**
+     * @param $member
+     * @param string $order_external_id
+     * @param string $attendee_external_id
+     * @return ISummitAttendee
+     * @throws MultipleAttendeesOrderException
+     */
+    public function registerAttendee($member, $order_external_id, $attendee_external_id = null);
+
+    /**
+     * @param $order_external_id
+     * @throw InvalidEventbriteOrderStatusException
+     */
+    public function getOrderAttendees($order_external_id);
 }

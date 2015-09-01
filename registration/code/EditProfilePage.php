@@ -40,6 +40,8 @@ class EditProfilePage_Controller extends Page_Controller
         'EditSpeakerProfileForm',
         'downgrade2communitymember',
         'upgrade2foundationmember',
+        'SummitAttendeeInfoForm',
+        'saveSummitAttendeeInfo',
     );
 
     /**

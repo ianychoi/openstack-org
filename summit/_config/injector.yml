@@ -12,7 +12,9 @@ SummitSecurity:
 EventbriteOrderPlacedEndpoint:
   dependencies:
     EventbriteEventManager: '%$EventbriteEventManager'
-
+EditProfilePageSummitAttendeeExtension:
+  dependencies:
+    EventbriteEventManager: '%$EventbriteEventManager'
 Injector:
   SchedRestfulService:
     class: RestfulService
