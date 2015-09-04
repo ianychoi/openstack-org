@@ -18,6 +18,7 @@ class SummitEventType extends DataObject implements ISummitEventType
     private static $db = array
     (
         'Type' => 'Text',
+        'Color' => 'Text'
     );
 
     private static $has_many = array

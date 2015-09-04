@@ -1,0 +1,33 @@
+
+
+#schedule_container {
+    font-family: Lato, 'Helvetica Neue', 'Lucida Grande', Helvetica, Arial, sans-serif;
+    color: rgb(51, 51, 51);
+}
+
+.day {
+    font-size: 16px;
+    clear: left;
+    margin: 20px 0 10px 5px;
+    float: left;
+}
+
+.time {
+    color: rgb(153, 153, 153);
+    font-size: 12px;
+}
+
+.event {
+    float:left;
+    margin: 10px;
+    border:1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 2px 0px;
+    padding: 5px;
+}
+
+.event_wrapper {
+    float:left;
+    border-left: 1px solid rgb(205, 205, 205);
+    width: 650px;
+    margin-left: 15px;
+}

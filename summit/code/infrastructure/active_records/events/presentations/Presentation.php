@@ -597,4 +597,8 @@ class Presentation extends SummitEvent implements IPresentation
 
         // check SummitSelectedPresentationList to select the TrackChair Status
     }
+
+    public function getSpeakers() {
+        return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Speakers')->toArray();
+    }
 }

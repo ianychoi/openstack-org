@@ -274,6 +274,10 @@ final class Summit extends DataObject implements ISummit
         return $this->getField('SelectionEndDate');
     }
 
+    public function getEvents() {
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events');
+    }
+
     /**
      * @return ISummitEventType[]
      */
@@ -595,7 +599,6 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
 
     }
 
-
     /**
      * @param SummitMainInfo $info
      * @return void
@@ -606,7 +609,6 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         $this->SummitBeginDate = $info->getStartDate();
         $this->SummitEndDate = $info->getEndDate();
     }
-
 
     public function isEventInsideSummitDuration(ISummitEvent $summit_event)
     {
