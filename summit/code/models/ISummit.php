@@ -154,4 +154,12 @@ interface ISummit extends IEntity
      * @return bool
      */
     public function isEventInsideSummitDuration(ISummitEvent $summit_event);
+
+
+    /**
+     * @param string $ticket_external_id
+     * @return ISummitTicketType
+     */
+    public function findTicketTypeByExternalId($ticket_external_id);
+
 }

@@ -543,6 +543,7 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         $config->addComponent(new GridFieldAjaxRefresh(1000, false));
         $config->removeComponentsByType('GridFieldAddNewButton');
         $gridField = new GridField('TrackChairs', 'TrackChairs Selection Lists',$presentations  , $config);
+        $gridField->setModelClass('Presentation');
         $f->addFieldToTab('Root.TrackChairs Selection Lists', $gridField);
 
 
@@ -626,5 +627,14 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
     public function isAttendeesRegistrationOpened()
     {
         return true;
+    }
+
+    /**
+     * @param string $ticket_external_id
+     * @return ISummitTicketType
+     */
+    public function findTicketTypeByExternalId($ticket_external_id)
+    {
+       return $this->SummitTicketTypes()->filter('ExternalId', $ticket_external_id)->first();
     }
 }

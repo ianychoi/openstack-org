@@ -12,18 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-interface ISummitAttendeeFactory
+interface ISummitTicketType extends IEntity
 {
+    /**
+     * @return string
+     */
+    public function getExternalId();
 
     /**
-     * @param Member $member
-     * @param ISummit $summit
-     * @param string $external_attendee_id
-     * @param string $order_external_id
-     * @param ISummitTicketType $ticket_type
-     * @param string $bought_date
-     * @param bool $shared_contact_info
-     * @return ISummitAttendee
+     * @return string
      */
-    public function build(Member $member, ISummit $summit, $external_attendee_id , $order_external_id, ISummitTicketType $ticket_type , $bought_date, $shared_contact_info = false);
+    public function getName();
+
+    /**
+     * @return ISummit
+     */
+    public function getSummit();
 }

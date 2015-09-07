@@ -84,38 +84,78 @@ class EditProfilePageSummitAttendeeExtension extends Extension
         }
     }
 
-    public function saveSummitAttendeeInfo($data, $form)
+    public function saveSummitAttendeeInfo($data, Form $form)
     {
         if ($current_member = Member::currentUser())
         {
             $attendee = $current_member->getCurrentSummitAttendee();
             if(!$attendee && !isset($data['SelectedAttendee']))
             {
+
                 try
                 {
+                    if(Session::get('attendees'))
+                    {
+                        // already retrieved data
+                        $form->sessionMessage('Please select an attendee', "bad");
+                        return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
+                    }
                     $attendees = $this->manager->getOrderAttendees($data['ExternalOrderId']);
                     Session::set('attendees', $attendees);
                     Session::set('ExternalOrderId', $data['ExternalOrderId']);
-                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?select=1'));
+                    Session::set('SharedContactInfo',$data['SharedContactInfo']);
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
                 }
                 catch(InvalidEventbriteOrderStatusException $ex1)
                 {
-                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?error=1'));
                     Session::clear('attendees');
                     Session::clear('ExternalOrderId');
+                    Session::clear('SharedContactInfo');
+                    $form->sessionMessage('Current order was cancelled, please try with another one!', "bad");
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
                 }
+            }
+            if($attendee)
+            {
+                return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
             }
             if(isset($data['SelectedAttendee']))
             {
-                // register attendee with current member
-                $attendees = Session::get('attendees');
-                $external_order_id = Session::get('ExternalOrderId');
-                $external_attendee_id = $data['SelectedAttendee'];
-                Session::clear('attendees');
-                Session::clear('ExternalOrderId');
-                $this->manager->registerAttendee($current_member, $external_order_id, $external_attendee_id);
+                try {
+                    // register attendee with current member
+                    $attendees                = Session::get('attendees');
+                    $external_order_id        = Session::get('ExternalOrderId');
+                    $external_attendee_id     = $data['SelectedAttendee'];
+                    $selected_attendee_data   = $attendees[$external_attendee_id];
+                    $external_event_id        = $selected_attendee_data['event_id'];
+                    $external_ticket_class_id = $selected_attendee_data['ticket_class_id'];
+                    $created                  = $selected_attendee_data['created'];
 
-                return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?saved=1'));
+                    $this->manager->registerAttendee
+                    (
+                        $current_member,
+                        $external_event_id,
+                        $external_order_id,
+                        $external_attendee_id,
+                        $external_ticket_class_id,
+                        $created,
+                        $data['SharedContactInfo']
+                    );
+                    Session::clear('attendees');
+                    Session::clear('ExternalOrderId');
+                    Session::clear('SharedContactInfo');
+                    $form->sessionMessage('Your registration request was successfully processed!', "good");
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
+                }
+                catch(Exception $ex)
+                {
+                    Session::clear('attendees');
+                    Session::clear('ExternalOrderId');
+                    Session::clear('SharedContactInfo');
+                    SS_Log::log($ex->getMessage(), SS_Log::ERR);
+                    $form->sessionMessage('Your request can not be processed, please contact your administrator', "bad");
+                    return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
+                }
             }
 
         }
@@ -126,6 +166,7 @@ class EditProfilePageSummitAttendeeExtension extends Extension
     {
         Session::clear('attendees');
         Session::clear('ExternalOrderId');
+        Session::clear('SharedContactInfo');
         return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
     }
 }

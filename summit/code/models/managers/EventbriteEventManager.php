@@ -169,6 +169,13 @@ final class EventbriteEventManager implements IEventbriteEventManager
                                 continue;
                             }
 
+                            $ticket_type = $current_summit->findTicketTypeByExternalId($ticket_class_id);
+
+                            if (!$ticket_type)
+                            {
+                                continue;
+                            }
+
                             $old_attendee = $attendee_repository->getByMemberAndSummit
                             (
                                 $member->getIdentifier(),
@@ -185,7 +192,7 @@ final class EventbriteEventManager implements IEventbriteEventManager
                                 $current_summit,
                                 $external_id,
                                 $order_id,
-                                $ticket_class_id,
+                                $ticket_type,
                                 $order_date
                             );
 
@@ -200,50 +207,62 @@ final class EventbriteEventManager implements IEventbriteEventManager
 
     /**
      * @param $member
-     * @param string $order_external_id
-     * @param string $attendee_external_id
+     * @param string $external_summit_id
+     * @param string $external_order_id
+     * @param string $external_attendee_id
+     * @param string $external_ticket_class_id
+     * @param string $bought_date
+     * @param bool $shared_contact_info
      * @return ISummitAttendee
-     * @throws MultipleAttendeesOrderException
-     * @throws InvalidEventbriteOrderStatusException
      */
-    public function registerAttendee($member, $order_external_id, $attendee_external_id = null)
+    public function registerAttendee($member, $external_summit_id, $external_order_id, $external_attendee_id, $external_ticket_class_id, $bought_date, $shared_contact_info = false)
     {
-        $repository = $this->repository;
-        $api = $this->api;
-        $member_repository = $this->member_repository;
-        $attendee_factory = $this->attendee_factory;
+        $repository          = $this->repository;
+        $member_repository   = $this->member_repository;
+        $attendee_factory    = $this->attendee_factory;
         $attendee_repository = $this->attendee_repository;
-        $summit_repository = $this->summit_repository;
+        $summit_repository   = $this->summit_repository;
 
         return $this->tx_manager->transaction(function () use (
             $member,
-            $order_external_id,
-            $attendee_external_id,
+            $external_summit_id,
+            $external_order_id,
+            $external_attendee_id,
+            $external_ticket_class_id,
+            $bought_date,
+            $shared_contact_info,
             $repository,
-            $api,
             $member_repository,
             $attendee_factory,
             $attendee_repository,
             $summit_repository
         ) {
-            $order = $api->getOrder($order_external_id);
+            $summit = $summit_repository->getByExternalEventId($external_summit_id);
+            if(is_null($summit)) throw new NotFoundEntityException('Summit', sprintf('external_summit_id %s', $external_summit_id));
+            $ticket_type = $summit->findTicketTypeByExternalId($external_ticket_class_id);
+            if(is_null($ticket_type)) throw new NotFoundEntityException('SummitTicketType', sprintf('external_ticket_class_id %s', $external_ticket_class_id));
 
-            if (isset($order['attendees']))
-            {
-                $order_date = $order['created'];
-                $status     = $order['status'];
+            $attendee = $attendee_factory->build
+            (
+                $member,
+                $summit,
+                $external_attendee_id,
+                $external_order_id,
+                $ticket_type,
+                $bought_date,
+                $shared_contact_info
+            );
 
-                if($status === 'placed') throw new InvalidEventbriteOrderStatusException($status);
+            $attendee_repository->add($attendee);
 
-                $attendees = $order['attendees'];
-            }
+            return $attendee;
         });
     }
 
     /**
      * @param $order_external_id
      * @return mixed
-     * @throw InvalidEventbriteOrderStatusException
+     * @throws InvalidEventbriteOrderStatusException
      */
     public function getOrderAttendees($order_external_id)
     {
@@ -255,7 +274,13 @@ final class EventbriteEventManager implements IEventbriteEventManager
 
             if($status !== 'placed') throw new InvalidEventbriteOrderStatusException($status);
 
-            return $order['attendees'];
+            $attendees = array();
+            foreach($order['attendees'] as $a)
+            {
+                $attendees[$a['id']] = $a;
+            }
+
+            return $attendees;
         }
     }
 }

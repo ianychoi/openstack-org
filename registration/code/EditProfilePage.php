@@ -687,7 +687,7 @@ class EditProfilePage_Controller extends Page_Controller
     function getNavMessageExtensions()
     {
         $html = '';
-        $this->extend('NavMessageExtensions', $html);
+        $this->extend('getNavMessageExtensions', $html);
         return $html;
     }
 

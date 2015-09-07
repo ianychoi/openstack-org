@@ -30,12 +30,24 @@ interface IEventbriteEventManager
 
     /**
      * @param $member
-     * @param string $order_external_id
-     * @param string $attendee_external_id
+     * @param string $external_summit_id
+     * @param string $external_order_id
+     * @param string $external_attendee_id
+     * @param string $external_ticket_class_id
+     * @param string $bought_date
+     * @param bool $shared_contact_info
      * @return ISummitAttendee
-     * @throws MultipleAttendeesOrderException
      */
-    public function registerAttendee($member, $order_external_id, $attendee_external_id = null);
+    public function registerAttendee
+    (
+        $member,
+        $external_summit_id,
+        $external_order_id,
+        $external_attendee_id,
+        $external_ticket_class_id,
+        $bought_date,
+        $shared_contact_info = false
+    );
 
     /**
      * @param $order_external_id

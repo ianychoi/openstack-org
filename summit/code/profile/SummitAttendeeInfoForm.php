@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SummitAttendeeInfoForm extends SafeXSSForm
+final class SummitAttendeeInfoForm extends BootstrapForm
 {
     function __construct($controller, $name)
     {
@@ -21,9 +21,10 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
             array
             (
                 $t1 = new TextField('ExternalOrderId', 'Eventbrite Order #'),
-                new CheckboxField('SharedContactInfo', 'Allow to share contact info?')
+                $checkbox = new CheckboxField('SharedContactInfo', 'Allow to share contact info?')
             )
         );
+
         $t1->setAttribute('placeholder', 'Enter your Eventbrite order #');
         $t1->addExtraClass('event-brite-order-number');
 
@@ -32,6 +33,9 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
         if(count($attendees) > 0)
         {
             $t1->setValue(Session::get('ExternalOrderId'));
+            $t1->setReadonly(true);
+            $checkbox->setValue(intval(Session::get('SharedContactInfo')) === 1);
+
             $fields->add(new LiteralField('ctrl1','Current Order has following registered attendees, please select one:'));
             $options = array();
             foreach($attendees as $attendee)
@@ -46,9 +50,12 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
             // Create action
             $actions = new FieldList
             (
-                new FormAction('clearSummitAttendeeInfo', 'Clear'),
-                new FormAction('saveSummitAttendeeInfo', 'Done')
+                $btn_clear = new FormAction('clearSummitAttendeeInfo', 'Clear'),
+                $btn = new FormAction('saveSummitAttendeeInfo', 'Done')
             );
+
+            $btn->addExtraClass('btn btn-default active');
+            $btn_clear->addExtraClass('btn btn-danger active');
         }
         else {
 
@@ -57,13 +64,13 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
             // Create action
             $actions = new FieldList
             (
-                new FormAction('saveSummitAttendeeInfo', 'Get Order')
+                $btn = new FormAction('saveSummitAttendeeInfo', 'Get Order')
             );
+
+            $btn->addExtraClass('btn btn-default active');
         }
 
-
         parent::__construct($controller, $name, $fields, $actions, $validator);
-
 
     }
 
@@ -81,6 +88,15 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
             $t1->setReadonly(true);
             $t2->setReadonly(true);
             $t3->setReadonly(true);
+
+            $checkbox = $this->getField('SharedContactInfo');
+
+            if(!is_null($checkbox))
+                $checkbox->setValue(intval($data->SharedContactInfo) === 1);
+
+            $btn = $this->Actions()->first();
+            if(!is_null($btn))
+                $btn->setTitle('Save');
         }
 
     }

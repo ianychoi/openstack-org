@@ -17,12 +17,13 @@
  * Class SummitTicketType
  * https://www.eventbrite.com/developer/v3/endpoints/events/#ebapi-get-events-id-ticket-classes-ticket-class-id
  */
-class SummitTicketType extends DataObject
+class SummitTicketType extends DataObject implements ISummitTicketType
 {
     private static $db = array
     (
         'ExternalId' => 'Text',
         'Name' => 'Text',
+        'Description' => 'Text',
     );
 
     private static $has_one = array
@@ -38,6 +39,11 @@ class SummitTicketType extends DataObject
     private static $has_many = array
     (
 
+    );
+
+    static $indexes = array
+    (
+       // 'ExternalId' => array('type' => 'unique', 'value' => 'ExternalId')
     );
 
     private static $summary_fields = array
@@ -80,5 +86,37 @@ class SummitTicketType extends DataObject
             $f->add($gridField);
         }
         return $f;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIdentifier()
+    {
+        return (int)$this->getField('ID');
+    }
+
+    /**
+     * @return string
+     */
+    public function getExternalId()
+    {
+       return $this->getField('ExternalId');
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+       return $this->getField('Name');
+    }
+
+    /**
+     * @return ISummit
+     */
+    public function getSummit()
+    {
+       return AssociationFactory::getInstance()->getMany2OneAssociation($this, 'Summit')->getTarget();
     }
 }
