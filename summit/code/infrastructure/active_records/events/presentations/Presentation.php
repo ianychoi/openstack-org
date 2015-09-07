@@ -599,6 +599,6 @@ class Presentation extends SummitEvent implements IPresentation
     }
 
     public function getSpeakers() {
-        return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Speakers')->toArray();
+        return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Speakers');
     }
 }

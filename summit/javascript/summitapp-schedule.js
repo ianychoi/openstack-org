@@ -18,10 +18,34 @@ $(document).ready(function(){
         // hide using classes
         $('.summit_type_'+$(this).data('summit_type_id')).toggle();
 
+        // apply event type filter
+        var event_type_id = $('.summit_event_type_filter').val();
+        if (event_type_id != -1) {
+            $('.event').not('.event_type_'+event_type_id).hide();
+        }
+
         // hide pulling filtered events
         /*var summit_type_ids = getSummitTypeFilters();
         var filters = {summit_types: summit_type_ids};
         getSchedule(filters);*/
+    });
+
+    $('.summit_event_type_filter').change(function(){
+        var event_type_id = $(this).val();
+        if (event_type_id != -1) {
+            $('.event').hide();
+            $('.event_type_'+event_type_id).show();
+        } else {
+            $('.event').show();
+        }
+
+        //apply summit type filter
+        $('.summit_type_filter').each(function(){
+            if (!$(this).hasClass('checked')) {
+                $('.summit_type_'+$(this).data('summit_type_id')).hide();
+            }
+        });
+
     });
 
     var summit_type_ids = getSummitTypeFilters();
@@ -72,6 +96,14 @@ function getSchedule(filters) {
         contentType: "application/json; charset=utf-8",
         success: function (schedule_html) {
             $('#schedule_container').html(schedule_html);
+            $('.event').popover({
+                placement: "right",
+                trigger: "hover",
+                html : true,
+                content: function() {
+                    return $(".description",this).html();
+                }
+            });
         },
         error: function (jqXHR, textStatus, errorThrown) {
             ajaxError(jqXHR, textStatus, errorThrown);

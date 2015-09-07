@@ -31,3 +31,12 @@
     width: 650px;
     margin-left: 15px;
 }
+
+.description {
+    display: none;
+}
+
+.summit_event_type_filter {
+    height: 32px;
+    margin-left: 20px;
+}
