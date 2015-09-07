@@ -26,20 +26,52 @@ final class SummitAttendeeInfoForm extends SafeXSSForm
         );
         $t1->setAttribute('placeholder', 'Enter your Eventbrite order #');
         $t1->addExtraClass('event-brite-order-number');
-        // Create action
-        $actions = new FieldList
-        (
-            new FormAction('saveSummitAttendeeInfo', 'Save')
-        );
 
-        $validator = new RequiredFields(array('ExternalOrderId'));
+        $attendees = Session::get('attendees');
+
+        if(count($attendees) > 0)
+        {
+            $t1->setValue(Session::get('ExternalOrderId'));
+            $fields->add(new LiteralField('ctrl1','Current Order has following registered attendees, please select one:'));
+            $options = array();
+            foreach($attendees as $attendee)
+            {
+                $options[$attendee['id']] = $attendee['profile']['name'];
+            }
+            $attendees_ctrl = new OptionSetField('SelectedAttendee','', $options);
+            $fields->add($attendees_ctrl);
+
+            $validator = new RequiredFields(array('ExternalOrderId'));
+
+            // Create action
+            $actions = new FieldList
+            (
+                new FormAction('clearSummitAttendeeInfo', 'Clear'),
+                new FormAction('saveSummitAttendeeInfo', 'Done')
+            );
+        }
+        else {
+
+
+            $validator = new RequiredFields(array('ExternalOrderId'));
+            // Create action
+            $actions = new FieldList
+            (
+                new FormAction('saveSummitAttendeeInfo', 'Get Order')
+            );
+        }
+
 
         parent::__construct($controller, $name, $fields, $actions, $validator);
+
+
     }
 
     public function loadDataFrom($data, $mergeStrategy = 0, $fieldList = null)
     {
         parent::loadDataFrom($data, $mergeStrategy, $fieldList);
+
+
         if($data && $data instanceof SummitAttendee && $data->ID > 0)
         {
             $this->fields->insertAfter($t1 = new TextField('TicketBoughtDate', 'Ticket Bought Date', $data->TicketBoughtDate),'ExternalOrderId');

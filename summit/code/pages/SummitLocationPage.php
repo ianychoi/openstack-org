@@ -404,7 +404,6 @@ class SummitLocationPage_Controller extends SummitPage_Controller
         );
     }
 
-
     public function AlternateHotels() {
         $getVars = $this->request->getVars();
         if(isset($getVars['showHidden'])) {
@@ -414,7 +413,6 @@ class SummitLocationPage_Controller extends SummitPage_Controller
         }
         return $hotels;
     }
-    
 
     public function Airports() {
         $summit   = $this->Summit()->ID > 0 ? $this->Summit() : $this->CurrentSummit();

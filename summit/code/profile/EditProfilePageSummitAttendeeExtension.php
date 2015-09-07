@@ -37,6 +37,7 @@ class EditProfilePageSummitAttendeeExtension extends Extension
             'attendeeInfoRegistration',
             'SummitAttendeeInfoForm',
             'saveSummitAttendeeInfo',
+            'clearSummitAttendeeInfo',
         ));
     }
 
@@ -88,22 +89,43 @@ class EditProfilePageSummitAttendeeExtension extends Extension
         if ($current_member = Member::currentUser())
         {
             $attendee = $current_member->getCurrentSummitAttendee();
-            if(!$attendee)
+            if(!$attendee && !isset($data['SelectedAttendee']))
             {
                 try
                 {
                     $attendees = $this->manager->getOrderAttendees($data['ExternalOrderId']);
                     Session::set('attendees', $attendees);
+                    Session::set('ExternalOrderId', $data['ExternalOrderId']);
                     return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?select=1'));
                 }
                 catch(InvalidEventbriteOrderStatusException $ex1)
                 {
                     return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?error=1'));
+                    Session::clear('attendees');
+                    Session::clear('ExternalOrderId');
                 }
             }
-            Session::clear('attendees');
-            return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?saved=1'));
+            if(isset($data['SelectedAttendee']))
+            {
+                // register attendee with current member
+                $attendees = Session::get('attendees');
+                $external_order_id = Session::get('ExternalOrderId');
+                $external_attendee_id = $data['SelectedAttendee'];
+                Session::clear('attendees');
+                Session::clear('ExternalOrderId');
+                $this->manager->registerAttendee($current_member, $external_order_id, $external_attendee_id);
+
+                return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration?saved=1'));
+            }
+
         }
         return $this->owner->httpError(403);
+    }
+
+    public function clearSummitAttendeeInfo($data, $form)
+    {
+        Session::clear('attendees');
+        Session::clear('ExternalOrderId');
+        return $this->owner->redirect($this->owner->Link('attendeeInfoRegistration'));
     }
 }
