@@ -301,7 +301,7 @@ ul.survey-steps li a.future:hover {
     text-decoration: none;
 }
 input.action, input.action:focus, input.action:active {
-    display: block;
+    display: inline;
     outline: none;
     background: #30739C;
     padding: 10px 20px;
@@ -470,3 +470,31 @@ div.deployment {
 {
     border: 1px solid #aaa !important;
 }
+
+.checkbox-label
+{
+    font-weight: normal !important;
+    display:inline !important;
+}
+
+table.checkboxset
+{
+    margin-left: 15px;
+}
+
+table.checkboxset tr
+{
+    padding: 15px;
+}
+
+
+table.checkboxset tr td {
+    vertical-align: middle !important;
+    text-align: left !important;
+}
+
+table.checkboxset tr td input[type="checkbox"]
+{
+    top:4px !important;
+}
+

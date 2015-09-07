@@ -26,8 +26,20 @@
     function checkQuestionVisibilityDropDown(ddl, question_container, values)
     {
         var show = false;
-        $.each(values, function(index , val){
-            show = show || parseInt(ddl.val()) === parseInt(val);
+        $.each(values, function(index , val)
+        {
+            var selected_values = ddl.val();
+            if(Array.isArray(selected_values))
+            {
+                for(var i=0;i<selected_values.length;i++)
+                {
+                    show = show || parseInt(val) === parseInt(selected_values[i]);
+                }
+            }
+            else
+            {
+                show = show || parseInt(selected_values) === parseInt(val);
+            }
         });
         setQuestionVisibility(show, question_container)
     }
@@ -96,7 +108,29 @@
                 });
             });
             checkQuestionVisibilityRanking(ranking_group, question_container);
-         }
+         },
+
+        addRequiredAnswer4TableGroup: function(table_group, question_container){
+
+            $('body').on('table_clear', function(evt, selected){
+                var current = $(evt.target);
+
+                $.each(table_group, function(index , entry){
+                    var radio_class = '.radio_' + entry.value;
+                    setQuestionVisibility($(radio_class, entry.field).is(':checked'), question_container);
+                });
+            });
+
+            $.each(table_group, function(index , entry){
+                var radio_class = '.radio_' + entry.value;
+
+                $(radio_class, entry.field).live('change', function (e) {
+                    setQuestionVisibility($(this).is(':checked'), question_container)
+                });
+
+                setQuestionVisibility($(radio_class, entry.field).is(':checked'), question_container);
+            });
+        }
     };
 
     $.fn.survey_validation_rules = function(methodOrOptions) {

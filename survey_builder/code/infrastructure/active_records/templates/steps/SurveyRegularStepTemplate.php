@@ -52,32 +52,31 @@ class SurveyRegularStepTemplate
 
     public function getCMSFields() {
 
-        $fields = new FieldList();
-        $fields->add(new TextField('FriendlyName','Friendly Name'));
-        $fields->add(new HtmlEditorField('Content','Content'));
-        $fields->add(new CheckboxField('SkipStep','Allow To Skip'));
-        $fields->add(new HiddenField('SurveyStepTemplateID','SurveyStepTemplateID'));
+        $fields = parent::getCMSFields();
+
         if($this->ID > 0) {
             //questions
             $config = GridFieldConfig_RecordEditor::create(100);
             $config->removeComponentsByType('GridFieldAddNewButton');
             $multi_class_selector = new GridFieldAddNewMultiClass();
             $multi_class_selector->setClasses(
-                array(
-                    'SurveyTextBoxQuestionTemplate'         => 'TextBox' ,
-                    'SurveyMemberEmailQuestionTemplate'     => 'Current Member Email' ,
-                    'SurveyMemberFirstNameQuestionTemplate' => 'Current Member FirstName' ,
-                    'SurveyMemberLastNameQuestionTemplate'  => 'Current Member LastName' ,
-                    'SurveyTextBoxQuestionTemplate'         => 'TextBox' ,
-                    'SurveyTextBoxQuestionTemplate'         => 'TextBox' ,
-                    'SurveyTextAreaQuestionTemplate'        => 'TextArea',
-                    'SurveyCheckBoxQuestionTemplate'        => 'CheckBox',
-                    'SurveyCheckBoxListQuestionTemplate'    => 'CheckBoxList',
-                    'SurveyRadioButtonListQuestionTemplate' => 'RadioButtonList',
-                    'SurveyDropDownQuestionTemplate'        => 'ComboBox',
-                    'SurveyRankingQuestionTemplate'         => 'Ranking',
-                    'SurveyOrganizationQuestionTemplate'    => 'Organization',
-                    'SurveyLiteralContentQuestionTemplate'  => 'Literal',
+                array
+                (
+                    'SurveyTextBoxQuestionTemplate'           => 'TextBox' ,
+                    'SurveyMemberEmailQuestionTemplate'       => 'Current Member Email' ,
+                    'SurveyMemberFirstNameQuestionTemplate'   => 'Current Member FirstName' ,
+                    'SurveyMemberLastNameQuestionTemplate'    => 'Current Member LastName' ,
+                    'SurveyTextBoxQuestionTemplate'           => 'TextBox' ,
+                    'SurveyTextBoxQuestionTemplate'           => 'TextBox' ,
+                    'SurveyTextAreaQuestionTemplate'          => 'TextArea',
+                    'SurveyCheckBoxQuestionTemplate'          => 'CheckBox',
+                    'SurveyCheckBoxListQuestionTemplate'      => 'CheckBoxList',
+                    'SurveyRadioButtonListQuestionTemplate'   => 'RadioButtonList',
+                    'SurveyDropDownQuestionTemplate'          => 'ComboBox',
+                    'SurveyRankingQuestionTemplate'           => 'Ranking',
+                    'SurveyOrganizationQuestionTemplate'      => 'Organization',
+                    'SurveyLiteralContentQuestionTemplate'    => 'Literal',
+                    'SurveyRadioButtonMatrixTemplateQuestion' => 'RadioButtonMatrix',
                 )
             );
             $config->addComponent($multi_class_selector);

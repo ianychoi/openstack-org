@@ -17,9 +17,11 @@
  */
 class SurveyQuestionTemplate
     extends DataObject
-    implements ISurveyQuestionTemplate {
+    implements ISurveyQuestionTemplate
+{
 
-    static $db = array(
+    static $db = array
+    (
         'Name'         => 'VarChar(255)',
         'Label'        => 'HTMLText',
         'Order'        => 'Int',
@@ -27,19 +29,22 @@ class SurveyQuestionTemplate
         'ReadOnly'     => 'Boolean',
     );
 
-    static $has_one = array(
+    static $has_one = array
+    (
         'Step' => 'SurveyStepTemplate',
     );
 
-    static $indexes = array(
+    static $indexes = array
+    (
         'StepID_Name' => array('type' => 'unique', 'value' => 'StepID,Name')
     );
 
-    static $belongs_to = array(
-
+    static $belongs_to = array
+    (
     );
 
-    static $many_many = array(
+    static $many_many = array
+    (
         'DependsOn' => 'SurveyQuestionTemplate'
     );
 
@@ -49,6 +54,7 @@ class SurveyQuestionTemplate
             'ValueID'      => "Int",
             'Operator'     => "Enum('Equal, Not-Equal','Equal')",
             'Visibility'   => "Enum('Visible, Not-Visible','Visible')",
+            'BooleanOperatorOnValues'   => "Enum('And, Or','And')",
             'DefaultValue' => 'Varchar(254)',
         ),
     );
@@ -146,7 +152,7 @@ class SurveyQuestionTemplate
     public function getDependsOn()
     {
         $result = DB::query("
-        SELECT SurveyQuestionTemplate.ClassName, ChildID AS ID, ValueID, Operator, Visibility, DefaultValue
+        SELECT SurveyQuestionTemplate.ClassName, ChildID AS ID, ValueID, Operator, Visibility, DefaultValue, BooleanOperatorOnValues
         FROM SurveyQuestionTemplate_DependsOn
         INNER JOIN SurveyQuestionTemplate ON SurveyQuestionTemplate.ID = ChildID
         WHERE SurveyQuestionTemplateID = $this->ID
@@ -154,13 +160,14 @@ class SurveyQuestionTemplate
         $list   = array();
         foreach($result as $row)
         {
-            $class                    = $row['ClassName'];
-            $question_id              = intval($row['ID']);
-            $q                        = $class::get()->byID($question_id);
-            $q->ValueID               = $row['ValueID'];
-            $q->Operator              = $row['Operator'];
-            $q->Visibility            = $row['Visibility'];
-            $q->DependantDefaultValue = $row['DefaultValue'];
+            $class                      = $row['ClassName'];
+            $question_id                = intval($row['ID']);
+            $q                          = $class::get()->byID($question_id);
+            $q->ValueID                 = $row['ValueID'];
+            $q->Operator                = $row['Operator'];
+            $q->Visibility              = $row['Visibility'];
+            $q->DependantDefaultValue   = $row['DefaultValue'];
+            $q->BooleanOperatorOnValues = $row['BooleanOperatorOnValues'];
             $list[] = $q;
         }
         return $list;
@@ -223,6 +230,7 @@ class SurveyQuestionTemplate
                     'Type'          => 'Type',
                     'Name'          => 'Name',
                     'DDLOperator'   => 'Operator',
+                    'DDLBooleanOperator' => 'Boolean Operator (Values)',
                     'DDLValues'     => 'Values ( on which depends)',
                     'DDLVisibility' => 'Visibility',
                     'TxtValue'      => 'Default Value',
@@ -244,7 +252,8 @@ class SurveyQuestionTemplate
     /**
      * @return DataList
      */
-    private function getAllowedDependants(){
+    private function getAllowedDependants()
+    {
         $steps_query = new SQLQuery();
         $steps_query->setSelect("ID");
         $steps_query->setFrom("SurveyStepTemplate");
@@ -275,34 +284,51 @@ class SurveyQuestionTemplate
         return new LiteralField('Empty','&nbsp;N/A&nbsp;');
     }
 
+    public function DDLBooleanOperator()
+    {
+        return new LiteralField('Empty','&nbsp;N/A&nbsp;');
+    }
+
     function onAfterWrite() {
         parent::onAfterWrite();
         if (is_subclass_of(Controller::curr(), "LeftAndMain")) { // check if we are on admin (CMS side)
             //update all relationships with dependants
             foreach ($this->DependsOn() as $question) {
-                if (isset($_REQUEST["Values_{$question->ID}"]) &&
+                if
+                (
+                    isset($_REQUEST["Values_{$question->ID}"]) &&
                     isset($_REQUEST["Visibility_{$question->ID}"]) &&
                     isset($_REQUEST["DefaultValue_{$question->ID}"]) &&
-                    isset($_REQUEST["Operator_{$question->ID}"])) {
+                    isset($_REQUEST["Operator_{$question->ID}"]) &&
+                    isset($_REQUEST["BooleanOperatorOnValues_{$question->ID}"])
+                )
+                {
 
                     $value_ids     = $_REQUEST["Values_{$question->ID}"];
                     $operator      = $_REQUEST["Operator_{$question->ID}"];
                     $visibility    = $_REQUEST["Visibility_{$question->ID}"];
                     $initial_value = $_REQUEST["DefaultValue_{$question->ID}"];
+                    $boolean_operator = $_REQUEST["BooleanOperatorOnValues_{$question->ID}"];
 
                     if (is_array($value_ids) && count($value_ids) > 0) {
                         DB::query("DELETE FROM SurveyQuestionTemplate_DependsOn WHERE SurveyQuestionTemplateID = {$this->ID} AND ChildID = {$question->ID};");
                         foreach ($value_ids as $value_id) {
                             $value_id = intval(Convert::raw2sql($value_id));
-                            DB::query("INSERT INTO SurveyQuestionTemplate_DependsOn (SurveyQuestionTemplateID, ChildID , ValueID,Operator, Visibility, DefaultValue) VALUES ({$this->ID}, {$question->ID}, $value_id,'{$operator}','{$visibility}','{$initial_value}');");
+                            DB::query("INSERT INTO SurveyQuestionTemplate_DependsOn (SurveyQuestionTemplateID, ChildID , ValueID,Operator, Visibility, DefaultValue, BooleanOperatorOnValues) VALUES ({$this->ID}, {$question->ID}, $value_id,'{$operator}','{$visibility}','{$initial_value}', '{$boolean_operator}');");
                         }
                     }
                 } else {
                     DB::query("DELETE FROM SurveyQuestionTemplate_DependsOn WHERE SurveyQuestionTemplateID = {$this->ID} AND ChildID = {$question->ID};");
-                    DB::query("INSERT INTO SurveyQuestionTemplate_DependsOn (SurveyQuestionTemplateID,ChildID,ValueID,Operator, Visibility,DefaultValue) VALUES ({$this->ID},{$question->ID},0,'Equal','Visible','');");
+                    DB::query("INSERT INTO SurveyQuestionTemplate_DependsOn (SurveyQuestionTemplateID,ChildID,ValueID,Operator, Visibility,DefaultValue, BooleanOperatorOnValues) VALUES ({$this->ID},{$question->ID},0,'Equal','Visible','','And');");
                 }
             }
         }
+    }
+
+    protected function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+        DB::query("DELETE FROM SurveyQuestionTemplate_DependsOn WHERE SurveyQuestionTemplateID = {$this->ID};");
     }
 
     /**

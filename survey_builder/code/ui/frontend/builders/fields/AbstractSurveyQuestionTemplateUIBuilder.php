@@ -38,11 +38,13 @@ abstract class AbstractSurveyQuestionTemplateUIBuilder
                      // js rule, question on which we depends on its on the same step (form)
                      if(!isset( $js_rules[$d->getIdentifier()]))
                          $js_rules[$d->getIdentifier()] = array (
-                             'question'    => $d,
-                             'values'      => array(),
-                             'operator'    => $d->Operator,
-                             'visibility'  => $d->Visibility,
-                             'default'     => $d->DependantDefaultValue
+                             'question'          => $d,
+                             'values'            => array(),
+                             'operator'          => $d->Operator,
+                             'visibility'        => $d->Visibility,
+                             'default'           => $d->DependantDefaultValue,
+                             'boolean_operator'  => $d->BooleanOperatorOnValues,
+                             'initial_condition' => ($d->BooleanOperatorOnValues === 'And') ? true:false
                          );
 
                      array_push($js_rules[$d->getIdentifier()]['values'], $d->ValueID);
@@ -51,11 +53,13 @@ abstract class AbstractSurveyQuestionTemplateUIBuilder
                      // belongs to another step (former one)
                      if(!isset($static_rules[$d->getIdentifier()]))
                          $static_rules[$d->getIdentifier()] = array (
-                            'question'   => $d,
-                            'values'     => array(),
-                            'operator'   => $d->Operator,
-                            'visibility' => $d->Visibility,
-                            'default'    => $d->DependantDefaultValue
+                            'question'           => $d,
+                            'values'             => array(),
+                            'operator'           => $d->Operator,
+                            'visibility'         => $d->Visibility,
+                            'default'            => $d->DependantDefaultValue,
+                             'boolean_operator'  => $d->BooleanOperatorOnValues,
+                             'initial_condition' => ($d->BooleanOperatorOnValues === 'And') ? true:false
                          );
 
                      array_push($static_rules[$d->getIdentifier()]['values'], $d->ValueID);
@@ -102,48 +106,67 @@ final class StaticRulesStrategy implements IDependantRulesStrategy {
 
         if(count($static_rules)){
 
-            foreach ($static_rules as $id => $info) {
+            foreach ($static_rules as $id => $info)
+            {
 
-                $q          = $info['question'];
-                $values     = $info['values'];
-                $operator   = $info['operator'];
-                $visibility = $info['visibility'];
-                $default    = $info['default'];
+                $q                 = $info['question'];
+                $values            = $info['values'];
+                $operator          = $info['operator'];
+                $visibility        = $info['visibility'];
+                $default           = $info['default'];
+                $boolean_operator  = $info['boolean_operator'];
+                $initial_condition = $info['initial_condition'];
 
-                if(!$q instanceof IMultiValueQuestionTemplate) continue;
                 $answer = $current_step->survey()->findAnswerByQuestion($q);
                 if(is_null($answer)) continue;
-                $condition  = true;
+
+
                 //checks the condition
                 switch($operator){
                     case 'Equal':{
                         foreach($values as $vid) {
-                            $condition &= (strpos($answer->value(), $vid) !== false);
+                            if($boolean_operator === 'And')
+                                $initial_condition &= (strpos($answer->value(), $vid) !== false);
+                            else
+                                $initial_condition |= (strpos($answer->value(), $vid) !== false);
                         }
                     }
                     break;
                     case 'Not-Equal':{
                         foreach($values as $vid) {
-                            $condition &= (strpos($answer->value(), $vid) === false);
+                            if($boolean_operator === 'And')
+                                $initial_condition &= (strpos($answer->value(), $vid) === false);
+                            else
+                                $initial_condition |= (strpos($answer->value(), $vid) === false);
                         }
                     }
                     break;
                 }
                 //visibility
-                switch($visibility){
-                    case 'Visible':{
-                        if(!$condition){
+                switch($visibility)
+                {
+                    case 'Visible':
+                    {
+                        if(!$initial_condition){
                             $field->addExtraClass('hidden');
                             // if not visible clean it
                             $field->setValue('');
                         }
+                        else
+                        {
+                            $field->removeExtraClass('hidden');
+                        }
                     }
                     break;
                     case 'Not-Visible':{
-                        if($condition) {
+                        if($initial_condition) {
                             $field->addExtraClass('hidden');
                             // if not visible clean it
                             $field->setValue('');
+                        }
+                        else
+                        {
+                            $field->removeExtraClass('hidden');
                         }
                     }
                     break;
@@ -181,11 +204,12 @@ final class JSRulesStrategy implements IDependantRulesStrategy {
 
             $js = "jQuery(document).ready(function($){
 
-                    var form              = $('.survey_step_form');
-                    var form_id           = form.attr('id');
-                    var clickable_fields  = [];
-                    var selectable_fields = [];
-                    var rankable_fields   = [];
+                    var form                = $('.survey_step_form');
+                    var form_id             = form.attr('id');
+                    var clickable_fields    = [];
+                    var selectable_fields   = [];
+                    var rankable_fields     = [];
+                    var double_table_fields = [];
                     ";
 
             //hide and set js rule
@@ -199,7 +223,12 @@ final class JSRulesStrategy implements IDependantRulesStrategy {
                 $operator   = $info['operator'];
                 $visibility = $info['visibility'];
 
-                if(($d instanceof ISurveyClickableQuestion) || ($d instanceof ISurveyRankableQuestion))
+                if
+                (
+                    ($d instanceof ISurveyClickableQuestion) ||
+                    ($d instanceof ISurveyRankableQuestion)  ||
+                    ($d instanceof IDoubleEntryTableQuestionTemplate)
+                )
                 {
                     foreach($values as $value)
                     {
@@ -224,6 +253,11 @@ final class JSRulesStrategy implements IDependantRulesStrategy {
                                 $js .= " rankable_fields.push( $('#'+form_id+'_{$option_id}') );";
                             }
                         }
+
+                        if($d instanceof IDoubleEntryTableQuestionTemplate)
+                        {
+                            $js .= " double_table_fields.push({table : $('#'+'{$option_id}'), value: $value });";
+                        }
                     }
                 }
 
@@ -238,11 +272,15 @@ final class JSRulesStrategy implements IDependantRulesStrategy {
             $js .= "for(var i = 0 ; i < selectable_fields.length; i++ ){
                 form.survey_validation_rules('addRequiredAnswer4SelectAbleGroup', selectable_fields, $('#{$question_id}'));
                 }";
+
             $js .= "if(clickable_fields.length > 0 )
                 form.survey_validation_rules('addRequiredAnswer4CheckAbleGroup', clickable_fields, $('#{$question_id}') ); ";
 
             $js .= "if(rankable_fields.length > 0 )
-                form.survey_validation_rules('addRequiredAnswer4RankAbleGroup', rankable_fields, $('#{$question_id}') );
+                form.survey_validation_rules('addRequiredAnswer4RankAbleGroup', rankable_fields, $('#{$question_id}') );";
+
+            $js .= "if(double_table_fields.length > 0 )
+                form.survey_validation_rules('addRequiredAnswer4TableGroup', double_table_fields, $('#{$question_id}') );
                 });";
 
             Requirements::customScript($js);

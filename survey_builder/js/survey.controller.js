@@ -53,11 +53,17 @@ jQuery(document).ready(function($) {
         errorPlacement: jqueryValidatorErrorPlacement
     });
 
+
     //custom validation rules
 
     $.validator.addMethod("ranking_required", function (value, element, container_id) {
         var sorted  = $('.selected-rank','#'+container_id);
         return sorted.length > 0;
+    });
+
+    $.validator.addMethod("radio_button_matrix_required", function (value, element, container_id) {
+        var radios  = $('.radio_opt:checked','#'+container_id);
+        return radios.length > 0;
     });
 
     $('.survey_step_form').submit(function (evt){
@@ -71,5 +77,11 @@ jQuery(document).ready(function($) {
             event.preventDefault();
             return false;
         }
+    });
+
+    $('.entity-survey-prev-action').click(function(event){
+        window.location = $(this).attr('data-prev-url');
+        event.preventDefault();
+        return false;
     });
 });
