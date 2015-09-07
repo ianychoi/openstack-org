@@ -32,7 +32,11 @@ SQL;
 
             DB::query($SQL);
 
+            DB::query('DELETE FROM SummitEvent;');
+
+
             $SQL = <<<SQL
+
 INSERT INTO SummitEvent
 (ID, Created, LastEdited, ClassName, Title, Description, SummitID)
 SELECT ID, Created, LastEdited, ClassName, Title, Description, SummitID FROM Presentation;
