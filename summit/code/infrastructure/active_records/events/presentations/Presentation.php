@@ -464,7 +464,7 @@ class Presentation extends SummitEvent implements IPresentation
     public function getCMSFields()
     {
         $f = parent::getCMSFields();
-        $f->removeByName('TypeID');
+        //$f->removeByName('TypeID');
         $f->htmlEditor('ShortDescription')
             ->dropdown('Level', 'Level', $this->dbObject('Level')->enumValues())
             ->dropdown('CategoryID', 'Category', PresentationCategory::get()->map('ID', 'Title'))
