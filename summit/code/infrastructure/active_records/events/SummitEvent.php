@@ -78,7 +78,7 @@ class SummitEvent extends DataObject implements ISummitEvent
         {
             return $this->Location()->Name;
         }
-        return '';
+        return 'TBD';
     }
 
     public function getLocationNameNice()
@@ -408,5 +408,9 @@ class SummitEvent extends DataObject implements ISummitEvent
 
 
         return $valid;
+    }
+
+    public function getSpeakers() {
+        return new ArrayList();
     }
 }
