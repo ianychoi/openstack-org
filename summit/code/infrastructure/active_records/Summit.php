@@ -275,7 +275,9 @@ final class Summit extends DataObject implements ISummit
     }
 
     public function getEvents() {
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events');
+        $query = new QueryObject();
+        $query->addAndCondition(QueryCriteria::equal('Published',1));
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query);
     }
 
     /**
