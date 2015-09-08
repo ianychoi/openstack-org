@@ -84,6 +84,29 @@ class Presentation extends SummitEvent implements IPresentation
         'SelectionStatus',
     );
 
+    /* before saving we check that the EventType is Presentation, if that type does not exist for the summit we create it */
+    public function onBeforeWrite() {
+        parent::onBeforeWrite();
+
+        if ($this->TypeID == 0) {
+            $summit_id = $this->getSummit()->ID;
+            $presentation_type = SummitEventType::get("SummitEventType","Type = 'Presentation' AND SummitID = $summit_id")->first();
+
+            if ($presentation_type) {
+                $presentation_type_id = $presentation_type->getIdentifier();
+            } else {
+                $presentation_type = new SummitEventType();
+                $presentation_type->Type = 'Presentation';
+                $presentation_type->SummitID = $summit_id;
+                $presentation_type->Color = '#D0A9F5';
+                $presentation_type_id = $presentation_type->Write();
+            }
+
+            $this->TypeID = $presentation_type_id;
+        }
+
+    }
+
     public function getTypeName()
     {
         return 'Presentation';
@@ -464,7 +487,7 @@ class Presentation extends SummitEvent implements IPresentation
     public function getCMSFields()
     {
         $f = parent::getCMSFields();
-        //$f->removeByName('TypeID');
+        $f->removeByName('TypeID');
         $f->htmlEditor('ShortDescription')
             ->dropdown('Level', 'Level', $this->dbObject('Level')->enumValues())
             ->dropdown('CategoryID', 'Category', PresentationCategory::get()->map('ID', 'Title'))

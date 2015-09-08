@@ -59,4 +59,11 @@ class SummitEventType extends DataObject implements ISummitEventType
         return $this->getField('Type');
     }
 
+    public function canDelete($member=null) {
+        if ($this->getType() == 'Presentation') {
+            return false;
+        }
+        return parent::canDelete($member);
+    }
+
 }
