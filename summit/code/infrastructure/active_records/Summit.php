@@ -277,6 +277,7 @@ final class Summit extends DataObject implements ISummit
     public function getEvents() {
         $query = new QueryObject();
         $query->addAndCondition(QueryCriteria::equal('Published',1));
+        $query->addOrder(QueryOrder::asc('StartDate'));
         return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query);
     }
 
