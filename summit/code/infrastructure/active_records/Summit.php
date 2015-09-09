@@ -274,7 +274,7 @@ final class Summit extends DataObject implements ISummit
         return $this->getField('SelectionEndDate');
     }
 
-    public function getEvents() {
+    public function getSchedule() {
         $query = new QueryObject();
         $query->addAndCondition(QueryCriteria::equal('Published',1));
         $query->addOrder(QueryOrder::asc('StartDate'));

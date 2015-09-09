@@ -178,7 +178,7 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
         $summit_types_filter = explode(',',$filters['summit_types']);
         $summit_id = (int)$this->request->param('SummitID');
         $summit = $this->summit_repository->getById($summit_id);
-        $events = $summit->getEvents();
+        $events = $summit->getSchedule();
         $filtered_events = new ArrayList();
 
         if (count($summit_types_filter)) {
