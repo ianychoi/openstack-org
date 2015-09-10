@@ -25,6 +25,10 @@
     padding: 5px;
 }
 
+.popover hr {
+    margin-top: 10px;
+}
+
 .event_wrapper {
     float:left;
     border-left: 1px solid rgb(205, 205, 205);
@@ -32,11 +36,38 @@
     margin-left: 15px;
 }
 
-.description {
+.event_details {
     display: none;
 }
 
 .summit_event_type_filter {
     height: 32px;
     margin-left: 20px;
+}
+
+.popover.bottom>.arrow {
+    left: 10%;
+}
+
+.popover {
+    max-width: 500px;
+}
+
+.description {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.socials {
+    float: right;
+}
+
+.twitter-share-button {
+    position: relative !important;
+    top: 1px;
+    left: 5px;
+}
+
+.fb-like {
+    top: -4px;
 }

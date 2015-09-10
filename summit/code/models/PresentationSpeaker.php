@@ -336,4 +336,26 @@ implements IPresentationSpeaker
     {
         return AssociationFactory::getInstance()->getMany2OneAssociation($this,'SummitRegistrationPromoCode')->getTarget();
     }
+
+    function ProfilePhoto($width=100){
+        $img = $this->Photo();
+        $twitter_name = $this->TwitterHandle;
+        if(!is_null($img)  && $img->exists() && Director::fileExists($img->Filename)){
+            $img = $img->SetWidth($width);
+            return "<img alt='{$this->ID}_profile_photo' src='{$img->getURL()}' class='member-profile-photo'/>";
+        } elseif (!empty($twitter_name)) {
+            if ($width < 100) {
+                return '<img src="https://twitter.com/'.$twitter_name.'/profile_image?size=normal" />';
+            } else {
+                return '<img src="https://twitter.com/'.$twitter_name.'/profile_image?size=bigger" />';
+            }
+        } else {
+            if ($width < 100) {
+                return "<img src='themes/openstack/images/generic-profile-photo-small.png'/>";
+            } else {
+                return "<img src='themes/openstack/images/generic-profile-photo.png'/>";
+            }
+        }
+    }
+
 }

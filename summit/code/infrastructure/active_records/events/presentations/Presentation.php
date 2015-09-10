@@ -397,7 +397,7 @@ class Presentation extends SummitEvent implements IPresentation
     }
 
 
-   /**
+    /**
      * Used by the track chair app to allow chairs to add a presentation to a group list.
      **/
 
@@ -623,5 +623,9 @@ class Presentation extends SummitEvent implements IPresentation
 
     public function getSpeakers() {
         return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Speakers');
+    }
+
+    public function getTopics() {
+        return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Topics');
     }
 }

@@ -16,6 +16,6 @@
     <input id="summit_id" type="hidden" value="$Summit.ID" />
     <div id="schedule_container"></div>
     <div id="schedule_sidebar"></div>
-
-
 </div>
+
+<div id="fb-root"></div>

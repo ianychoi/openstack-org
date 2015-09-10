@@ -96,14 +96,50 @@ function getSchedule(filters) {
         contentType: "application/json; charset=utf-8",
         success: function (schedule_html) {
             $('#schedule_container').html(schedule_html);
+
             $('.event').popover({
-                placement: "right",
-                trigger: "hover",
+                placement: "bottom",
+                trigger: "manual",
                 html : true,
                 content: function() {
-                    return $(".description",this).html();
+                    return $(".event_details",this).html();
                 }
+            }).on("mouseenter", function () {
+                var _this = this;
+                $(this).popover("show");
+                $(this).siblings(".popover").css('left', $(this).position().left+'px');
+
+                $(this).siblings(".popover").on("mouseleave", function () {
+                    $(_this).popover('hide');
+                });
+            }).on("mouseleave", function () {
+                    var _this = this;
+                    setTimeout(function () {
+                        if (!$(".popover:hover").length) {
+                            $(_this).popover("hide")
+                        }
+                    }, 100);
             });
+
+            //facebook
+            (function(d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) return;
+                js = d.createElement(s); js.id = id;
+                js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.4&appId=264587816899119";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+
+            //twitter
+            !function(d,s,id){
+                var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';
+                if(!d.getElementById(id)){
+                    js=d.createElement(s);
+                    js.id=id;
+                    js.src=p+'://platform.twitter.com/widgets.js';
+                    fjs.parentNode.insertBefore(js,fjs);
+                }
+            }(document, 'script', 'twitter-wjs');
         },
         error: function (jqXHR, textStatus, errorThrown) {
             ajaxError(jqXHR, textStatus, errorThrown);
