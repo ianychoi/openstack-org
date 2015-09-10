@@ -273,6 +273,18 @@ class SummitEvent extends DataObject implements ISummitEvent
         $date->getDateField()->setConfig('showcalendar', true);
         $date->setConfig('dateformat', 'dd/MM/yyyy');
 
+
+        $locations = SummitAbstractLocation::get()
+            ->filter('SummitID', $summit_id )
+            ->filter('ClassName', array('SummitVenue', 'SummitVenueRoom', 'SummitExternalLocation') );
+
+        $locations_source = array();
+
+        foreach($locations as $l)
+        {
+            $locations_source[$l->ID] = $l->getFullName();
+        }
+
         $f->addFieldToTab
         (
             'Root.Main',
@@ -280,9 +292,7 @@ class SummitEvent extends DataObject implements ISummitEvent
             (
                 'LocationID',
                 'Location',
-                SummitAbstractLocation::get()
-                    ->filter('SummitID', $summit_id )
-                    ->filter('ClassName', array('SummitVenue', 'SummitVenueRoom') )->map('ID', 'Name')
+                $locations_source
             )
         );
 
@@ -405,8 +415,6 @@ class SummitEvent extends DataObject implements ISummitEvent
 
             }
         }
-
-
         return $valid;
     }
 

@@ -55,13 +55,14 @@ SQL;
 
             $SQL = <<<SQL
 INSERT INTO SummitAbstractLocation
-(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID)
+(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID, LocationType)
 SELECT ID, 'SummitVenue', Created, LastEdited, `Name` , Description, `Order`,
 CASE SummitLocationPageID
 WHEN 2345 THEN 4
 WHEN 2579 THEN 5
 ELSE NULL
-END AS SummitID
+END AS SummitID,
+'Internal'
 from SummitLocation where Type ='Venue';
 SQL;
 
@@ -76,24 +77,16 @@ SQL;
 
             DB::query($SQL);
 
-
-            $SQL = <<<SQL
-INSERT INTO SummitVenue
-(ID)
-SELECT ID from SummitLocation where Type ='Venue';
-SQL;
-
-            DB::query($SQL);
-
             $SQL = <<<SQL
 INSERT INTO SummitAbstractLocation
-(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID)
+(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID, LocationType)
 SELECT ID, 'SummitHotel', Created, LastEdited, `Name` , Description, `Order`,
 CASE SummitLocationPageID
 WHEN 2345 THEN 4
 WHEN 2579 THEN 5
 ELSE 0
-END AS SummitID
+END AS SummitID,
+'External'
 from SummitLocation where Type ='Hotel';
 SQL;
 
@@ -119,13 +112,14 @@ SQL;
 
             $SQL = <<<SQL
 INSERT INTO SummitAbstractLocation
-(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID)
+(ID, ClassName, Created, LastEdited, `Name`, Description, `Order`, SummitID, LocationType)
 SELECT ID, 'SummitAirport', Created, LastEdited, `Name` , Description, `Order`,
 CASE SummitLocationPageID
 WHEN 2345 THEN 4
 WHEN 2579 THEN 5
 ELSE 0
-END AS SummitID
+END AS SummitID,
+'External'
 from SummitLocation where Type ='Airport';
 SQL;
 
@@ -148,7 +142,6 @@ SELECT ID from SummitLocation where Type ='Airport';
 SQL;
 
             DB::query($SQL);
-
 
 
             $migration = new Migration();

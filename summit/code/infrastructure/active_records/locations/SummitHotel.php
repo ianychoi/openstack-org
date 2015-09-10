@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-class SummitHotel extends SummitGeoLocatedLocation implements ISummitHotel
+class SummitHotel extends SummitExternalLocation implements ISummitHotel
 {
     private static $db = array
     (
@@ -80,4 +80,5 @@ class SummitHotel extends SummitGeoLocatedLocation implements ISummitHotel
     {
         return 'Hotel';
     }
+
 }

@@ -38,6 +38,10 @@ class SummitType extends DataObject implements ISummitType
 
     private static $summary_fields = array
     (
+        'Title',
+        'Audience',
+        'StartDate',
+        'EndDate'
     );
 
     private static $searchable_fields = array
@@ -120,4 +124,65 @@ class SummitType extends DataObject implements ISummitType
     public function setSummitId($summit_id) {
         $this->setField('SummitID',$summit_id);
     }
+
+    public function getCMSFields()
+    {
+
+        $summit_id = isset($_REQUEST['SummitID']) ? $_REQUEST['SummitID'] : $this->SummitID;
+
+        $f = new FieldList
+        (
+            $rootTab = new TabSet("Root", $tabMain = new Tab('Main'))
+        );
+
+        $f->addFieldToTab('Root.Main', new TextField('Title','Title'));
+        $f->addFieldToTab('Root.Main', new HtmlEditorField('Description','Description'));
+        $f->addFieldToTab('Root.Main', new TextField('Audience','Audience'));
+
+        $f->addFieldToTab('Root.Main',$date = new DatetimeField('StartDate', 'Start Date'));
+        $date->getDateField()->setConfig('showcalendar', true);
+        $date->setConfig('dateformat', 'dd/MM/yyyy');
+
+        $f->addFieldToTab('Root.Main',$date = new DatetimeField('EndDate', 'End Date'));
+        $date->getDateField()->setConfig('showcalendar', true);
+        $date->setConfig('dateformat', 'dd/MM/yyyy');
+
+        $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
+
+        return $f;
+    }
+
+    protected function validate()
+    {
+        $valid = parent::validate();
+        if(!$valid->valid()) return $valid;
+
+        $summit_id = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+
+        $summit   = Summit::get()->byID($summit_id);
+
+        if(!$summit){
+            return $valid->error('Invalid Summit!');
+        }
+
+        $start_date = $this->getStartDate();
+        $end_date   = $this->getEndDate();
+
+        if((empty($start_date) || empty($end_date)))
+            return $valid->error('You must define a start/end datetime!');
+
+        if(!empty($start_date) && !empty($end_date))
+        {
+            $start_date = new DateTime($start_date);
+            $end_date   = new DateTime($end_date);
+
+            if($end_date < $start_date)
+                return $valid->error('start datetime must be greather or equal than end datetime!');
+            if(!$summit->isEventInsideSummitDuration($this))
+                return $valid->error(sprintf('start/end datetime must be between summit start/end datetime! (%s - %s)', $summit->getBeginDate(), $summit->getEndDate()));
+
+        }
+        return $valid;
+    }
+
 }

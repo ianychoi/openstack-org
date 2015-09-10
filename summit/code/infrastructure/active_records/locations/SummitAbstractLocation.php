@@ -19,11 +19,18 @@ class SummitAbstractLocation extends DataObject implements ISummitLocation
         'Name'        => 'Varchar(255)',
         'Description' => 'HTMLText',
         'Order'       => 'Int',
+        'LocationType' => 'Enum(array("External","Internal", "None"), "None")',
     );
 
     private static $has_many = array
     (
     );
+
+    public function getFullName()
+    {
+        return $this->Name;
+    }
+
 
     private static $has_one = array
     (
@@ -85,4 +92,17 @@ class SummitAbstractLocation extends DataObject implements ISummitLocation
         $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
         return $f;
     }
+
+    public function inferLocationType()
+    {
+        return 'None';
+    }
+
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $this->LocationType = $this->inferLocationType();
+    }
+
+
 }

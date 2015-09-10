@@ -181,17 +181,26 @@ final class Summit extends DataObject implements ISummit
         ))->first();
     }
 
+    private $must_seed = false;
+
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+
+        if($this->ID === 0)
+        {
+            $this->must_seed = true;
+        }
+    }
 
     public function onAfterWrite()
     {
         parent::onAfterWrite();
-
-        /*if ($this->Active) {
-            foreach (Presentation::get()->exclude('ID', $this->ID) as $p) {
-                $p->Active = false;
-                $p->write();
-            }
-        }*/
+        if($this->must_seed)
+        {
+            self::seedBasicEventTypes($this->ID);
+            self::seedSummitTypes($this->ID);
+        }
     }
 
     /**
@@ -479,9 +488,10 @@ final class Summit extends DataObject implements ISummit
         (
             array
             (
-              'SummitVenue'        => 'Venue',
-              'SummitHotel'        => 'Hotel',
-              'SummitAirport'      => 'Airport',
+              'SummitVenue'            => 'Venue',
+              'SummitHotel'            => 'Hotel',
+              'SummitAirport'          => 'Airport',
+              'SummitExternalLocation' => 'External Location',
             )
         );
         $config->addComponent($multi_class_selector);
@@ -637,5 +647,62 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
     public function findTicketTypeByExternalId($ticket_external_id)
     {
        return $this->SummitTicketTypes()->filter('ExternalId', $ticket_external_id)->first();
+    }
+
+
+    /**
+     * @param int $summit_id
+     * @throws ValidationException
+     * @throws null
+     */
+    public static function seedSummitTypes($summit_id)
+    {
+        if(!SummitType::get()->filter(array('Title'=>'Main Conference', 'SummitID'=>$summit_id))->first()) {
+            $main_type = new SummitType();
+            $main_type->Title = 'Main Conference';
+            $main_type->Description = 'This Schedule is for general attendees. Its includes breakout tracks, hand-ons labs, keynotes and sponsored sessions';
+            $main_type->Audience = 'General Attendees';
+            $main_type->SummitID = $summit_id;
+            $main_type->write();
+        }
+
+        if(!SummitType::get()->filter(array('Title'=>'Design Summit + Main Conference', 'SummitID'=>$summit_id))->first()) {
+            $design_type = new SummitType();
+            $design_type->Title = 'Design Summit + Main Conference';
+            $design_type->Description = 'This Schedule is specifically for developers and operators who contribute to the roadmap for the N release cycle. The Design Summit is not a classic track with speakers and presentations and its not the right place to get started or learn the basics of OpenStack. This schedule also Includes the Main Conference Sessions';
+            $design_type->Audience = 'Developers And Operators';
+            $design_type->SummitID = $summit_id;
+            $design_type->write();
+        }
+
+    }
+
+    /**
+     * @param int $summit_id
+     * @throws ValidationException
+     * @throws null
+     */
+    public static function seedBasicEventTypes($summit_id)
+    {
+        if(!SummitEventType::get()->filter(array('Type'=>'Presentation', 'SummitID'=>$summit_id))->first()) {
+            $presentation = new SummitEventType();
+            $presentation->Type = 'Presentation';
+            $presentation->SummitID = $summit_id;
+            $presentation->write();
+        }
+
+        if(!SummitEventType::get()->filter(array('Type'=>'Keynote', 'SummitID'=>$summit_id))->first()) {
+            $key_note = new SummitEventType();
+            $key_note->Type = 'Keynote';
+            $key_note->SummitID = $summit_id;
+            $key_note->write();
+        }
+
+        if(!SummitEventType::get()->filter(array('Type'=>'Hand-on Lab', 'SummitID'=>$summit_id))->first()) {
+            $hand_on = new SummitEventType();
+            $hand_on->Type = 'Hand-on Lab';
+            $hand_on->SummitID = $summit_id;
+            $hand_on->write();
+        }
     }
 }

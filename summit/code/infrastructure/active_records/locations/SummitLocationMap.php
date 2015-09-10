@@ -12,50 +12,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-class SummitAirport extends SummitExternalLocation implements ISummitAirport
+class SummitLocationMap extends DataObject
 {
-
-    private static $db = array
-    (
-        'Type' => 'Enum(array("International","Domestic"), "International")',
-    );
-
-    private static $has_many = array
-    (
-    );
-
-    private static $defaults = array
-    (
-    );
 
     private static $has_one = array
     (
+        'Map' => 'BetterImage',
+        'Location' => 'SummitGeoLocatedLocation'
     );
 
-    private static $summary_fields = array
-    (
-    );
-
-    private static $searchable_fields = array
-    (
-    );
-
-    public function getTypeName()
-    {
-        return 'Airport';
-    }
     /**
      * @return string
      */
-    public function getType()
+    public function getUrl()
     {
-       return $this->getField('Type');
+        if($this->Map()->exists())
+        {
+            return $this->Map()->Link();
+        }
+        return null;
     }
+
 
     public function getCMSFields()
     {
-        $f = parent::getCMSFields();
-        $f->addFieldToTab('Root.Main', new DropdownField('Type','Type',  singleton('SummitAirport')->dbObject('Type')->enumValues()));
+        $f = new FieldList();
+
+        $map_field = new UploadField('Map','Map');
+        $map_field->setAllowedMaxFileNumber(1);
+        $map_field->setFolderName(sprintf('summits/%s/locations/maps/', $this->Location()->SummitID));
+
+        $f->add($map_field );
+
+        $f->add(new HiddenField('LocationID', 'LocationID') );
+
         return $f;
     }
+
 }

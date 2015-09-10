@@ -66,4 +66,11 @@ class SummitEventType extends DataObject implements ISummitEventType
         return parent::canDelete($member);
     }
 
+    public function getCMSFields() {
+        $fields = new FieldList();
+        $fields->add(new TextField('Type','Type'));
+        $fields->add(new ColorField("Color","Color"));
+        $fields->add(new HiddenField('SummitID','SummitID'));
+        return $fields;
+    }
 }

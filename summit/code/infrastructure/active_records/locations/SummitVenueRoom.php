@@ -29,6 +29,11 @@ class SummitVenueRoom extends SummitAbstractLocation implements ISummitVenueRoom
         'Venue' => 'SummitVenue'
     );
 
+    public function getFullName()
+    {
+        return sprintf('%s - %s', $this->Venue()->Name, $this->Name);
+    }
+
     private static $summary_fields = array
     (
         'Name',

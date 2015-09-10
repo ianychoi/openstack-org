@@ -12,27 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-interface ISummitVenue extends ISummitGeoLocatedLocation
+class SummitExternalLocation extends SummitGeoLocatedLocation
 {
-
-    /**
-     * @return bool
-     */
-    public function hasRooms();
-
-    /**
-     * @return ISummitVenueRoom[]
-     */
-    public function getRooms();
-
-    /**
-     * @param ISummitVenueRoom $room
-     * @return void
-     */
-    public function addRoom(ISummitVenueRoom $room);
-
-    /**
-     * @return void
-     */
-    public function clearAllRooms();
+    public function inferLocationType()
+    {
+        return 'External';
+    }
 }

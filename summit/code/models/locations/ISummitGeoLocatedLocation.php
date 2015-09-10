@@ -64,4 +64,9 @@ interface ISummitGeoLocatedLocation extends ISummitLocation
      * @return void
      */
     public function setCoordinates(IGeoCodingService $geo_service);
+
+    /**
+     * @return string[]
+     */
+    public function getMapsUrls();
 }

@@ -33,15 +33,12 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
 
     private static $has_many = array
     (
+        'Maps' => 'SummitLocationMap'
     );
 
     private static $defaults = array
     (
         'DisplayOnSite' => false
-    );
-
-    private static $has_one = array
-    (
     );
 
     private static $summary_fields = array
@@ -165,7 +162,8 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
         $f->addFieldToTab('Root.Main', new TextField('LocationMessage','Message to display for this location'));
         $f->addFieldToTab('Root.Main', new CheckboxField('DetailsPage','Send people to a details page first?'));
         
-        $f->addFieldsToTab("Root.Location", array(
+        $f->addFieldsToTab("Root.Location", array
+        (
             // Create hidden latitude field
             HiddenField::create("Lat"),
             // Create hidden longitude field
@@ -194,7 +192,26 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
             ))
         ));
 
+        if($this->ID > 0)
+        {
+            $config = GridFieldConfig_RecordEditor::create();
+            $gridField = new GridField('Maps', 'Maps', $this->Maps(), $config);
+            $f->addFieldToTab('Root.Maps', $gridField);
+        }
 
         return $f;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getMapsUrls()
+    {
+       $urls = array();
+       foreach($this->Maps() as $map)
+       {
+           array_push($urls, $map->getUrl());
+       }
+        return $urls;
     }
 }

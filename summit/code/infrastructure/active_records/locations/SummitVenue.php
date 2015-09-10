@@ -28,10 +28,6 @@ class SummitVenue extends SummitGeoLocatedLocation implements ISummitVenue
     (
     );
 
-    private static $has_one = array
-    (
-        'Map' => 'BetterImage',
-    );
 
     private static $summary_fields = array
     (
@@ -40,17 +36,7 @@ class SummitVenue extends SummitGeoLocatedLocation implements ISummitVenue
     private static $searchable_fields = array
     (
     );
-    /**
-     * @return string
-     */
-    public function getMapUrl()
-    {
-        if($this->Map()->exists())
-        {
-            return $this->Map()->Link();
-        }
-        return null;
-    }
+
 
     /**
      * @return bool
@@ -106,4 +92,11 @@ class SummitVenue extends SummitGeoLocatedLocation implements ISummitVenue
     {
         return 'Venue';
     }
+
+    public function inferLocationType()
+    {
+        return 'Internal';
+    }
+
+
 }
