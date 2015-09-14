@@ -40,6 +40,10 @@ class SummitEventFeedback extends DataObject implements ISummitEventFeedBack
 
     private static $summary_fields = array
     (
+        'Rate',
+        'Owner.Email',
+        'Approved',
+        'ApprovedDate',
     );
 
     private static $searchable_fields = array
@@ -85,4 +89,53 @@ class SummitEventFeedback extends DataObject implements ISummitEventFeedBack
     {
         return AssociationFactory::getInstance()->getMany2OneAssociation($this, 'Event')->getTarget();
     }
+
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $approved_date = $this->ApprovedDate;
+        //first time published ...
+        if($this->isApproved() && is_null($approved_date))
+        {
+            $this->Approved = false;
+            $this->approve();
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isApproved()
+    {
+        return  $this->Approved;
+    }
+
+    public function approve()
+    {
+        if($this->Approved)
+            throw new Exception('Already approved feedback Summit Event');
+
+        $this->Approved = true;
+        $this->ApprovedDate = MySQLDatabase56::nowRfc2822();
+        $this->ApprovedByID = Member::currentUserID();
+    }
+
+    public function getCMSFields()
+    {
+
+        $summit_id = isset($_REQUEST['SummitID']) ? $_REQUEST['SummitID'] : $this->SummitID;
+
+        $f = new FieldList();
+
+        $f->add(new NumericField('Rate', 'Rate'));
+        $f->add(new HtmlEditorField('Note', 'Note'));
+        $f->add(new CheckboxField('Approved','Approved'));
+        $f->add(new HiddenField('EventID', 'EventID'));
+        $f->add(new HiddenField('OwnerID', 'OwnerID'));
+        $f->add(new HiddenField('ApprovedByID', 'ApprovedByID'));
+
+
+        return $f;
+    }
+
 }

@@ -47,11 +47,13 @@ class Presentation extends SummitEvent implements IPresentation
     );
 
 
-    private static $has_many = array (
+    private static $has_many = array
+    (
         'Votes'          => 'PresentationVote',
         'Comments'       => 'SummitPresentationComment',
         'ChangeRequests' => 'SummitCategoryChange',
         'Materials'      => 'PresentationMaterial',
+        'SpeakersFeedback' => 'PresentationSpeakerFeedback',
     );
 
 
@@ -59,7 +61,7 @@ class Presentation extends SummitEvent implements IPresentation
     (
         'Speakers' => 'PresentationSpeaker',        
         'Tags'     => 'Tag',
-        'Topics'   => 'PresentationTopic'
+        'Topics'   => 'PresentationTopic',
     );
 
     static $many_many_extraFields = array(
@@ -513,14 +515,20 @@ class Presentation extends SummitEvent implements IPresentation
             ));
 
         // speakers
-        $config = new GridFieldConfig_RelationEditor(10);
+        $config = new GridFieldConfig_RelationEditor(100);
         $config->removeComponentsByType('GridFieldAddNewButton');
         $speakers = new GridField('Speakers', 'Speakers', $this->Speakers(), $config);
         $f->addFieldToTab('Root.Speakers', $speakers);
 
+        // speakers feedback
+        $config = GridFieldConfig_RecordEditor::create(100);
+        $config->removeComponentsByType('GridFieldAddNewButton');
+        $gridField = new GridField('SpeakersFeedback', 'Speakers Feedback', $this->SpeakersFeedback(), $config);
+        $f->addFieldToTab('Root.SpeakersFeedback', $gridField);
+
         // materials
 
-        $config = GridFieldConfig_RecordEditor::create();
+        $config = GridFieldConfig_RecordEditor::create(100);
         $config->removeComponentsByType('GridFieldAddNewButton');
         $multi_class_selector = new GridFieldAddNewMultiClass();
         $multi_class_selector->setClasses

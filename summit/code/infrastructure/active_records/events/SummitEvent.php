@@ -16,12 +16,13 @@ class SummitEvent extends DataObject implements ISummitEvent
 {
     private static $db = array
     (
-        'Title'        => 'Text',
-        'Description'  => 'HTMLText',
-        'StartDate'    => 'SS_Datetime',
-        'EndDate'      => 'SS_Datetime',
+        'Title'         => 'Text',
+        'Description'   => 'HTMLText',
+        'StartDate'     => 'SS_Datetime',
+        'EndDate'       => 'SS_Datetime',
         'Published'     => 'Boolean',
         'PublishedDate' => 'SS_Datetime',
+        'AllowFeedBack' => 'Boolean',
     );
 
     private static $has_many = array
@@ -262,7 +263,8 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         $f->addFieldToTab('Root.Main', new TextField('Title','Title'));
         $f->addFieldToTab('Root.Main', new HtmlEditorField('Description','Description'));
-        $f->addFieldToTab('Root.Main', new CheckboxField('Published','Is Approved?'));
+        $f->addFieldToTab('Root.Main', new CheckboxField('AllowFeedBack','Is feedback allowed?'));
+        $f->addFieldToTab('Root.Main', new CheckboxField('Published','Is approved?'));
         $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
 
         $f->addFieldToTab('Root.Main',$date = new DatetimeField('StartDate', 'Start Date'));
@@ -317,7 +319,7 @@ class SummitEvent extends DataObject implements ISummitEvent
         {
 
             // summits types
-            $config = new GridFieldConfig_RelationEditor(10);
+            $config = new GridFieldConfig_RelationEditor(100);
             $config->removeComponentsByType('GridFieldEditButton');
             $config->removeComponentsByType('GridFieldAddNewButton');
             $completer = $config->getComponentByType('GridFieldAddExistingAutocompleter');
@@ -326,15 +328,15 @@ class SummitEvent extends DataObject implements ISummitEvent
             $f->addFieldToTab('Root.Main', $summit_types);
 
             // sponsors
-            $config = new GridFieldConfig_RelationEditor(10);
+            $config = new GridFieldConfig_RelationEditor(100);
             $config->removeComponentsByType('GridFieldEditButton');
             $config->removeComponentsByType('GridFieldAddNewButton');
             $sponsors = new GridField('Sponsors', 'Sponsors', $this->Sponsors(), $config);
             $f->addFieldToTab('Root.Sponsors', $sponsors);
 
             // feedback
-            $config = new GridFieldConfig_RecordEditor(10);
-            $config->removeComponentsByType('GridFieldEditButton');
+            $config = new GridFieldConfig_RecordEditor(100);
+            $config->removeComponentsByType('GridFieldAddNewButton');
             $sponsors = new GridField('Feedback', 'Feedback', $this->Feedback(), $config);
             $f->addFieldToTab('Root.Feedback', $sponsors);
         }
