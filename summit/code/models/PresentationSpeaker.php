@@ -36,6 +36,11 @@ implements IPresentationSpeaker
         'SummitRegistrationPromoCode' => 'SpeakerSummitRegistrationPromoCode'
     );
 
+    private static $has_many = array
+    (
+        'Feedback' => 'PresentationSpeakerFeedback',
+    );
+
     private static $searchable_fields = array
     (
         'Member.Email',
@@ -144,6 +149,13 @@ implements IPresentationSpeaker
              $config->removeComponentsByType('GridFieldAddNewButton');
              $gridField = new GridField('Presentations', 'Presentations', $this->Presentations(), $config);
              $fields->addFieldToTab('Root.Presentations', $gridField);
+
+             //speaker feedback
+
+             $config = GridFieldConfig_RecordEditor::create();
+             $config->removeComponentsByType('GridFieldAddNewButton');
+             $gridField = new GridField('Feedback', 'Feedback', $this->Feedback(), $config);
+             $fields->addFieldToTab('Root.Feedback', $gridField);
          }
 
          return $fields;

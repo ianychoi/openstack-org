@@ -337,8 +337,8 @@ class SummitEvent extends DataObject implements ISummitEvent
             // feedback
             $config = new GridFieldConfig_RecordEditor(100);
             $config->removeComponentsByType('GridFieldAddNewButton');
-            $sponsors = new GridField('Feedback', 'Feedback', $this->Feedback(), $config);
-            $f->addFieldToTab('Root.Feedback', $sponsors);
+            $feedback = new GridField('Feedback', 'Feedback', $this->Feedback(), $config);
+            $f->addFieldToTab('Root.Feedback', $feedback);
         }
         return $f;
     }
