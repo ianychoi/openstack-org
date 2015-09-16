@@ -66,10 +66,6 @@ function getSummitTypeFilters() {
     return summit_type_ids;
 }
 
-
-
-
-
 function toggleCheckboxButton(button_elem) {
     var icon = $('.glyphicon',button_elem);
     button_elem.blur();
@@ -91,58 +87,104 @@ function getSchedule(filters) {
     var summit_id = $('#summit_id').val();
     $.ajax({
         type: 'PUT',
-        url: 'api/v1/summitapp/'+summit_id+'/get-schedule',
+        url: 'api/v1/summitschedule/'+summit_id+'/get-schedule',
         data: JSON.stringify(filters),
         contentType: "application/json; charset=utf-8",
         success: function (schedule_html) {
             $('#schedule_container').html(schedule_html);
 
-            $('.event').popover({
-                placement: "bottom",
-                trigger: "manual",
-                html : true,
-                content: function() {
-                    return $(".event_details",this).html();
-                }
-            }).on("mouseenter", function () {
-                var _this = this;
-                $(this).popover("show");
-                $(this).siblings(".popover").css('left', $(this).position().left+'px');
-
-                $(this).siblings(".popover").on("mouseleave", function () {
-                    $(_this).popover('hide');
-                });
-            }).on("mouseleave", function () {
-                    var _this = this;
-                    setTimeout(function () {
-                        if (!$(".popover:hover").length) {
-                            $(_this).popover("hide")
-                        }
-                    }, 100);
-            });
+            setEventHandlers();
 
             //facebook
-            (function(d, s, id) {
-                var js, fjs = d.getElementsByTagName(s)[0];
-                if (d.getElementById(id)) return;
-                js = d.createElement(s); js.id = id;
-                js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.4&appId=264587816899119";
-                fjs.parentNode.insertBefore(js, fjs);
-            }(document, 'script', 'facebook-jssdk'));
-
+            facebookScript();
             //twitter
-            !function(d,s,id){
-                var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';
-                if(!d.getElementById(id)){
-                    js=d.createElement(s);
-                    js.id=id;
-                    js.src=p+'://platform.twitter.com/widgets.js';
-                    fjs.parentNode.insertBefore(js,fjs);
-                }
-            }(document, 'script', 'twitter-wjs');
+            twitterScript();
+
         },
         error: function (jqXHR, textStatus, errorThrown) {
             ajaxError(jqXHR, textStatus, errorThrown);
+        }
+    });
+
+}
+
+function twitterScript() {
+    !function(d,s,id){
+        var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';
+        if(!d.getElementById(id)){
+            js=d.createElement(s);
+            js.id=id;
+            js.src=p+'://platform.twitter.com/widgets.js';
+            fjs.parentNode.insertBefore(js,fjs);
+        }
+    }(document, 'script', 'twitter-wjs');
+}
+
+function facebookScript() {
+    (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.4&appId=264587816899119";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+}
+
+function setEventHandlers() {
+    $('.event').popover({
+        placement: "bottom",
+        trigger: "manual",
+        html : true,
+        content: function() {
+            return $(".event_details",this).html();
+        }
+    }).on("mouseenter", function () {
+        var _this = this;
+        $(this).popover("show");
+        $(this).siblings(".popover").css('left', $(this).position().left+'px');
+
+        $(this).siblings(".popover").on("mouseleave", function () {
+            $(_this).popover('hide');
+        });
+    }).on("mouseleave", function () {
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+    });
+}
+
+function addToSchedule(event_id) {
+
+    $.ajax({
+        type: 'PUT',
+        url: 'api/v1/summitschedule/'+event_id+'/add-to-schedule',
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
+            $('.add_to_schedule',event_wrapper).replaceWith('<button onclick="removeFromSchedule('+event_id+')" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>');
+
+            /*var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
+             $('.event',event_wrapper).popover("show");
+             $('.popover',event_wrapper).css('left', $('.event',event_wrapper).position().left+'px');*/
+        }
+    });
+}
+
+function removeFromSchedule(event_id) {
+
+    $.ajax({
+        type: 'PUT',
+        url: 'api/v1/summitschedule/'+event_id+'/remove-from-schedule',
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
+            $('.remove_from_schedule',event_wrapper).replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
+            /*var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
+            $('.event',event_wrapper).popover("show");
+            $('.popover',event_wrapper).css('left', $('.event',event_wrapper).position().left+'px');*/
         }
     });
 }

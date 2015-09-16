@@ -20,8 +20,14 @@
                                 <% end_loop %>
                             <% end_if %>
                         </div>
-                        <div class="event_details">
-                            <button type="button" data-event_id="$ID" class="btn btn-xs btn-success" data-toggle="button">Add to My Schedule</button>
+                        <div class="event_details" id="event_details_$ID">
+                            <% if Top.isAttendee($Summit.ID) %>
+                                <% if Top.isScheduled($Summit.ID, $ID) %>
+                                    <button onclick="removeFromSchedule($ID)" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>
+                                <% else %>
+                                            <button onclick="addToSchedule($ID)" class="btn btn-xs btn-success add_to_schedule">Add to My Schedule</button>
+                                <% end_if %>
+                            <% end_if %>
                             <button type="button" data-event_id="$ID" class="btn btn-xs btn-info" data-toggle="button">Go to Event</button>
                             <div class="socials">
                                 <div class="fb-like" data-href="http://openstack.org" data-layout="button" data-action="like" data-show-faces="false" data-share="false"></div>

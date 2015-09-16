@@ -36,6 +36,15 @@ class SummitAppSchedPage extends SummitPage {
         return $this->renderWith('SummitAppSchedPage_schedule',array('Schedule'=>$viewable_schedule));
     }
 
+    public function isAttendee($summit_id) {
+        return Member::currentUser()->isAttendee($summit_id);
+    }
+
+    public function isScheduled($summit_id,$event_id) {
+        $attendee = Member::currentUser()->getSummitAttendee($summit_id);
+
+        return $attendee->isScheduled($event_id);
+    }
     
 }
 

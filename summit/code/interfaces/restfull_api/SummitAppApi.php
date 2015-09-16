@@ -84,14 +84,12 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
         'PUT new-summit' => 'createSummit',
         'PUT $SummitID!/delete' => 'deleteSummit',
         'PUT $SummitID!/save-summittype' => 'saveSummitType',
-        'PUT $SummitID!/get-schedule' => 'getSchedule',
     );
 
     static $allowed_actions = array(
         'createSummit',
         'deleteSummit',
         'saveSummitType',
-        'getSchedule',
     );
 
     public function createSummit() {
@@ -171,40 +169,6 @@ final class SummitAppApi extends AbstractRestfulJsonApi {
             SS_Log::log($ex,SS_Log::ERR);
             return $this->serverError();
         }
-    }
-
-    public function getSchedule() {
-        $filters = $this->getJsonRequest();
-        $summit_types_filter = explode(',',$filters['summit_types']);
-        $summit_id = (int)$this->request->param('SummitID');
-        $summit = $this->summit_repository->getById($summit_id);
-        $events = $summit->getSchedule();
-        $filtered_events = new ArrayList();
-
-        if (count($summit_types_filter)) {
-            foreach ($events as $event) {
-                $allowed_summit_types = $event->getAllowedSummitTypes();
-                if (count($allowed_summit_types)) {
-                    foreach ($allowed_summit_types as $type) {
-                        $event->SummitTypes .= ' summit_type_'.$type->ID;
-                        if (in_array($type->ID,$summit_types_filter)) {
-                            $filtered_events->push($event);
-                        }
-                    }
-                } else {
-                    $filtered_events->push($event);
-                }
-
-            }
-        } else {
-            $filtered_events = $events;
-        }
-
-
-
-        $sched_page = new SummitAppSchedPage();
-
-        return $sched_page->renderSchedule($filtered_events);
     }
 
 }

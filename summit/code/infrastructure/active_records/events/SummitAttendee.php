@@ -133,6 +133,18 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
     }
 
     /**
+     * @return bool
+     */
+    public function isScheduled($event_id)
+    {
+        $query = new QueryObject($this);
+        $query->addAndCondition(QueryCriteria::equal('SummitEvent.ID',$event_id));
+        $events = AssociationFactory::getInstance()->getMany2ManyAssociation($this, 'Schedule', $query)->toArray();
+
+        return (count($events) > 0);
+    }
+
+    /**
      * @param ISummitEvent $summit_event
      * @return void
      */
@@ -143,6 +155,15 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
             $summit_event,
             array('IsCheckedIn'=> false)
         );
+    }
+
+    /**
+     * @param ISummitEvent $summit_event
+     * @return void
+     */
+    public function removeFromSchedule(ISummitEvent $summit_event)
+    {
+        AssociationFactory::getInstance()->getMany2ManyAssociation($this, 'Schedule')->remove($summit_event);
     }
 
     /**
