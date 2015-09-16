@@ -51,10 +51,10 @@ class MemberDecorator extends DataExtension {
 		'Org' => 'Org'
 	);
 
-
 	private static $has_many =  array(
 		'LegalAgreements' => 'LegalAgreement',
-		'Affiliations'=>'Affiliation'
+		'Affiliations'=>'Affiliation',
+        'Attendees' => 'SummitAttendee'
 	);
 
 	private static $belongs_many_many =  array(
@@ -311,5 +311,19 @@ class MemberDecorator extends DataExtension {
 		$res = Permission::check("EDIT_COMPANY");
 		return $res;
 	}
+
+    public function isAttendee($summit_id) {
+        $attendee = $this->getSummitAttendee($summit_id);
+
+        return ($attendee ? true : false) ;
+    }
+
+    public function getSummitAttendee($summit_id) {
+        $attendee = $this->owner->Attendees()->filter(array(
+            'SummitID' => $summit_id
+        ))->first();
+
+        return $attendee;
+    }
 }
 
