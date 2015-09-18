@@ -60,7 +60,7 @@ final class AttendeeMember extends DataExtension implements IAttendeeMember
         $current_summit = Summit::CurrentSummit();
         if($current_summit)
         {
-            $this->getSummitAttendee($current_summit->ID);
+            return $this->getSummitAttendee($current_summit->ID);
         }
         return $this->getUpcomingSummitAttendee();
     }
@@ -73,7 +73,7 @@ final class AttendeeMember extends DataExtension implements IAttendeeMember
         $upcoming_summit = Summit::GetUpcoming();
         if($upcoming_summit)
         {
-            $this->getSummitAttendee($upcoming_summit->ID);
+            return $this->getSummitAttendee($upcoming_summit->ID);
         }
         return null;
     }

@@ -22,21 +22,26 @@ Director:
 PresentationCategory:
   extensions:
     - JSONable
+    - SummitEntity
 PresentationSpeaker:
   extensions:
     - JSONable
+    - SummitEntity
 PresentationTopic:
   extensions:
     - JSONable
+    - SummitEntity
 SummitPresentationComment:
   extensions:
     - JSONable
 Summit:
   extensions:
     - JSONable
+    - SummitEntity
 SummitTrackChair:
   extensions:
     - JSONable
+    - SummitEntity
 SummitCategoryChange:
   extensions:
     - JSONable    
@@ -44,6 +49,7 @@ Presentation:
   extensions:
     - Sluggable
     - JSONable
+    - SummitEntity
   status_options:
     - Received
     - In community voting
@@ -54,3 +60,27 @@ Presentation:
 BootstrapMemberLoginForm:
   extensions:
     - BootstrapLoginFormExtension
+SummitAttendee:
+  extensions:
+    - SummitEntity
+SummitEvent:
+  extensions:
+    - SummitEntity
+SummitEventFeedback:
+  extensions:
+    - SummitEntity
+SummitEventType:
+  extensions:
+    - SummitEntity
+PresentationMaterial:
+  extensions:
+    - SummitEntity
+SummitAbstractLocation:
+  extensions:
+    - SummitEntity
+SummitType:
+  extensions:
+    - SummitEntity
+SummitTicketType:
+  extensions:
+    - SummitEntity

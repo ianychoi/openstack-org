@@ -27,6 +27,8 @@ final class Summit extends DataObject implements ISummit
         'VotingEndDate'               => 'SS_Datetime',
         'SelectionBeginDate'          => 'SS_Datetime',
         'SelectionEndDate'            => 'SS_Datetime',
+        'RegistrationBeginDate'       => 'SS_Datetime',
+        'RegistrationEndDate'         => 'SS_Datetime',
         'Active'                      => 'Boolean',
         'DateLabel'                   => 'Varchar',
         'Link'                        => 'Varchar',
@@ -34,6 +36,7 @@ final class Summit extends DataObject implements ISummit
         'ComingSoonBtnText'           => 'Text',
         // https://www.eventbrite.com
         'ExternalEventId'             => 'Text',
+        'TimeZone'                    => 'Text',
     );
 
     private static $has_one = array
@@ -469,11 +472,18 @@ final class Summit extends DataObject implements ISummit
         $f->addFieldToTab('Root.Main',$date = new DatetimeField('SelectionEndDate', 'Selection End Date'));
         $date->getDateField()->setConfig('showcalendar', true);
         $date->setConfig('dateformat', 'dd/MM/yyyy');
+        $f->addFieldToTab('Root.Main',$date = new DatetimeField('RegistrationBeginDate', 'Registration Begin Date'));
+        $date->getDateField()->setConfig('showcalendar', true);
+        $date->setConfig('dateformat', 'dd/MM/yyyy');
+        $f->addFieldToTab('Root.Main',$date = new DatetimeField('RegistrationEndDate', 'Registration End Date'));
+        $date->getDateField()->setConfig('showcalendar', true);
+        $date->setConfig('dateformat', 'dd/MM/yyyy');
 
         $f->addFieldToTab('Root.Main',new TextField('ComingSoonBtnText', 'Coming Soon Btn Text'));
-
         $f->addFieldToTab('Root.Main',new TextField('ExternalEventId', 'Eventbrite Event Id'));
+        $f->addFieldsToTab('Root.Main', $ddl_timezone = new DropdownField('TimeZone', 'Time Zone', DateTimeZone::listIdentifiers()));
 
+        $ddl_timezone->setEmptyString('-- Select a Timezone --');
 
         $config = new GridFieldConfig_RelationEditor(10);
         $categories = new GridField('Categories','Presentation Categories',$this->Categories(), $config);
@@ -613,6 +623,41 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
 
     }
 
+    protected function validate(){
+        $valid = parent::validate();
+        if(!$valid->valid()) return $valid;
+        $name = $this->Name;
+        if(empty($name)){
+            return $valid->error('Name is required!');
+        }
+
+        $time_zone = $this->TimeZone;
+        if(empty($time_zone)){
+            return $valid->error('Time Zone is required!');
+        }
+
+        $start_date = $this->SummitBeginDate;
+        $end_date   = $this->SummitEndDate;
+        if(!is_null($start_date) && !is_null($end_date))
+        {
+            $start_date = new DateTime($start_date);
+            $end_date   = new DateTime($end_date);
+            if($start_date > $end_date)
+                return $valid->error('End Date must be greather than Start Date');
+        }
+
+        $start_date = $this->RegistrationBeginDate;
+        $end_date   = $this->RegistrationEndDate;
+        if(!is_null($start_date) && !is_null($end_date))
+        {
+            $start_date = new DateTime($start_date);
+            $end_date   = new DateTime($end_date);
+            if($start_date > $end_date)
+                return $valid->error('Registration End Date must be greather than Registration Start Date');
+        }
+        return $valid;
+    }
+
     /**
      * @param SummitMainInfo $info
      * @return void
@@ -637,7 +682,18 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
 
     public function isAttendeesRegistrationOpened()
     {
-        return true;
+        $registration_begin_date = $this->RegistrationBeginDate;
+        $registration_end_date   = $this->RegistrationEndDate;
+
+        if(is_null($registration_begin_date) || is_null($registration_end_date)) return false;
+        $time_zone_list          = timezone_identifiers_list();
+        $summit_time_zone        = new DateTimeZone($time_zone_list[$this->TimeZone]);
+
+        $registration_begin_date = new DateTime($registration_begin_date, $summit_time_zone);
+        $registration_end_date   = new DateTime($registration_end_date, $summit_time_zone);
+        $now                     = new DateTime("now", $summit_time_zone);
+
+        return $now >= $registration_begin_date && $now <=$registration_end_date;
     }
 
     /**
@@ -648,7 +704,6 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
     {
        return $this->SummitTicketTypes()->filter('ExternalId', $ticket_external_id)->first();
     }
-
 
     /**
      * @param int $summit_id
