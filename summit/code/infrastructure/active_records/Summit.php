@@ -142,6 +142,20 @@ final class Summit extends DataObject implements ISummit
         return is_null($current) ? 0 : $current->ID;
     }
 
+
+    public static function ActiveSummit()
+    {
+        $summit = self::CurrentSummit();
+        if(is_null($summit)) $summit = self::GetUpcoming();
+        return $summit;
+    }
+
+    public static function ActiveSummitID()
+    {
+        $current = self::ActiveSummit();
+        return is_null($current) ? 0 : $current->ID;
+    }
+
     /**
      * @return ISummit
      */
@@ -154,6 +168,9 @@ final class Summit extends DataObject implements ISummit
             'Active' => 1
         ))->first();
     }
+
+
+
 
     /**
      * @return bool

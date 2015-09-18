@@ -35,9 +35,6 @@ final class SummitEntity extends DataExtension
     public function onAfterWrite()
     {
 
-        $summit_id = $this->owner->getField('SummitID');
-        if(is_null($summit_id)) $summit_id = Summit::CurrentSummitID();
-
         if($this->inserting)
         {
             // insert
@@ -47,9 +44,7 @@ final class SummitEntity extends DataExtension
                 'inserted_summit_entity',
                 array
                 (
-                    $summit_id,
-                    $this->owner->ID,
-                    $this->owner->ClassName,
+                    $this->owner
                 )
             );
         }
@@ -60,9 +55,7 @@ final class SummitEntity extends DataExtension
                 'updated_summit_entity',
                 array
                 (
-                    $summit_id,
-                    $this->owner->ID,
-                    $this->owner->ClassName,
+                    $this->owner
                 )
             );
         }
@@ -71,17 +64,12 @@ final class SummitEntity extends DataExtension
     public function onBeforeDelete()
     {
 
-        $summit_id = $this->owner->getField('SummitID');
-        if(is_null($summit_id)) $summit_id = Summit::CurrentSummitID();
-
         PublisherSubscriberManager::getInstance()->publish
         (
             'deleted_summit_entity',
             array
             (
-                $summit_id,
-                $this->owner->ID,
-                $this->owner->ClassName,
+                $this->owner
             )
         );
     }
