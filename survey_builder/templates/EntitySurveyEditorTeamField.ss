@@ -12,21 +12,21 @@
         <% if TeamMembers %>
         <div class="row" id="team-members-container">
             <div class="col-md-12">
-                <table class="table">
+                <table class="table team-member-table">
                     <thead>
                     <tr>
+                        <th>&nbsp;</th>
                         <th>First Name</th>
                         <th>Last Name</th>
-                        <th>Username</th>
                         <th>&nbsp;</th>
                     </tr>
                     </thead>
                     <tbody id="team-members-body">
                     <% loop TeamMembers %>
                     <tr>
+                        <td><img width="50" height="50" src="{$ProfilePhotoUrl}"/></td>
                         <td>$FirstName</td>
                         <td>$Surname</td>
-                        <td>$Email</td>
                         <td><button class="btn btn-danger active btn-sm delete-team-member" data-member-id="$ID">Delete</button></td>
                     </tr>
                     <% end_loop %>

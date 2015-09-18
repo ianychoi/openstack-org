@@ -251,7 +251,11 @@ class Survey_Controller extends Page_Controller {
         if(is_null($this->current_survey))
         {
 
-            $this->current_survey     = $this->survey_manager->buildSurvey($current_template->getIdentifier(), Member::currentUserID());
+            $this->current_survey     = $this->survey_manager->buildSurvey
+                                        (
+                                            $current_template->getIdentifier(),
+                                            Member::currentUserID()
+                                        );
             // check if we should pre populate with former data ....
 
             if($current_template->shouldPrepopulateWithFormerData())
@@ -270,9 +274,11 @@ class Survey_Controller extends Page_Controller {
      * @return IEntitySurvey
      * @throws NotFoundEntityException
      */
-    private function getCurrentEntitySurveyInstance($entity_survey_id){
+    private function getCurrentEntitySurveyInstance($entity_survey_id)
+    {
         if(!is_null($this->current_entity_survey)) return $this->current_entity_survey;
-        $this->current_survey = $this->getCurrentSurveyInstance();
+
+        $this->current_survey        = $this->getCurrentSurveyInstance();
         $this->current_entity_survey = $this->current_survey->currentStep()->getEntitySurvey($entity_survey_id);
         return $this->current_entity_survey;
     }
@@ -312,7 +318,8 @@ class Survey_Controller extends Page_Controller {
      * @return SS_HTTPResponse
      * @throws NotFoundEntityException
      */
-    public function SkipStep($request){
+    public function SkipStep($request)
+    {
         $current_survey = $this->getCurrentSurveyInstance();
         $current_step   = $current_survey->currentStep();
         $can_skip       = $current_step->canSkip();
@@ -324,88 +331,45 @@ class Survey_Controller extends Page_Controller {
 
     // Dynamic Entities
 
-    /**
-     * @param $request
-     * @return HTMLText|SS_HTTPResponse|void
-     * @throws NotFoundEntityException
-     */
-    public function EditEntity($request)
-    {
-
-        $step                 = $request->param('STEP_SLUG');
-        $sub_step             = $request->param('SUB_STEP_SLUG');
-        $entity_survey_id     = intval($request->param('ENTITY_SURVEY_ID'));
-        $this->current_survey = $this->getCurrentSurveyInstance();
-        $current_step         = $this->current_survey->currentStep();
-
-        if(!($current_step instanceof ISurveyDynamicEntityStep)) throw new LogicException();
-
-        $this->current_entity_survey  = $current_step->getEntitySurvey($entity_survey_id);
-
-        if(is_null($this->current_entity_survey))
-        {
-            //check if its a entity survey from a team that i belong
-            $current_member = Member::currentUser();
-            $this->current_entity_survey = $current_member->TeamEntitySurveys()->filter('EntitySurveyID',$entity_survey_id)->first();
-        }
-        if(is_null($this->current_entity_survey))
-            return $this->httpError(404, 'entity not found!');
-
-        $entity_step          = $this->current_entity_survey->currentStep();
-        $entity_step_template = $entity_step->template();
-
-        // check substep variable
-        if(empty($sub_step))
-        {
-            // is not set, redirect to current steo uri
-            return $this->redirect($request->getUrl().'/'.$entity_step_template->title());
-        }
-        else if($sub_step !== $entity_step_template->title())
-        {
-            // if set, but differs from current tep check if we are allowed to use that step
-            $desired_sub_step = $this->current_entity_survey->getStep($sub_step);
-            if(!is_null($desired_sub_step) && $this->current_entity_survey->isAllowedStep($sub_step))
-            {
-                $this->current_entity_survey->registerCurrentStep($desired_sub_step);
-            }
-            else
-            {
-                // redirect to current step
-                $current_url = str_replace($sub_step, '',$request->getUrl());
-                return $this->redirect($current_url.$entity_step_template->title());
-            }
-        }
-
-        $this->current_entity_survey =  $this->survey_manager->updateSurveyWithTemplate
-        (
-            $this->current_entity_survey,
-            $this->current_entity_survey->template()
-        );
-
-        if($sub_step === 'skip-step' && $this->current_entity_survey->currentStep()->canSkip()){
-            $next_step = $this->survey_manager->completeStep($this->current_entity_survey->currentStep(), $data = array());
-            return $this->go2DynEntityStep($this->current_entity_survey, $next_step);
-        }
-
-        return $this->customise(array(
-            'Survey'       => $this->current_survey,
-            'EntitySurvey' => $this->current_entity_survey
-        ))->renderWith(array('Surveys_CurrentSurveyDynamicEntityContainer', 'Page'));
-    }
 
     /**
      * @param $request
      * @return SS_HTTPResponse
      * @throws NotFoundEntityException
      */
-    public function DeleteEntity($request){
-        $step                 = $request->param('STEP_SLUG');
-        $entity_survey_id     = intval($request->param('ENTITY_SURVEY_ID'));
-        $current_survey       = $this->getCurrentSurveyInstance();
-        $current_step          = $current_survey->currentStep();
-        $this->survey_manager->deleteEntitySurvey($current_step, $entity_survey_id);
+    public function DeleteEntity($request)
+    {
+        try
+        {
+            if(!Member::currentUser()) return $this->httpError(403);
 
-        return $this->redirect('/surveys/current/'.$step);
+            $step                 = $request->param('STEP_SLUG');
+            $sub_step             = $request->param('SUB_STEP_SLUG');
+            $entity_survey_id     = intval($request->param('ENTITY_SURVEY_ID'));
+
+            $this->current_survey = $this->getCurrentSurveyInstance();
+            $current_step         = $this->current_survey->currentStep();
+
+            if(!($current_step instanceof ISurveyDynamicEntityStep))
+            {
+                if($this->current_survey->isAllowedStep($step))
+                {
+                    $current_step = $this->current_survey->getStep($step);
+                    $this->survey_manager->registerCurrentStep($this->current_survey, $step);
+                }
+                else
+                    throw new LogicException(sprintf('template %s', $current_step->template()->title()));
+            }
+
+            $this->survey_manager->deleteEntitySurvey($current_step, $entity_survey_id);
+
+            return $this->redirect('/surveys/current/'.$step);
+        }
+        catch(Exception $ex)
+        {
+            SS_Log::log($ex->getMessage(), SS_Log::ERR);
+            return $this->httpError(404);
+        }
     }
 
     /**
@@ -414,14 +378,149 @@ class Survey_Controller extends Page_Controller {
      */
     public function AddEntity($request){
 
-        $current_survey = $this->getCurrentSurveyInstance();
-        $current_step   = $current_survey->currentStep();
-        if(!($current_step instanceof ISurveyDynamicEntityStep)) throw new LogicException();
+        try
+        {
+            if(!Member::currentUser()) return $this->httpError(403);
 
-        //create the current survey entity
-        $this->current_entity_survey = $this->survey_manager->buildEntitySurvey($current_step, Member::currentUserID());
-        $url = sprintf('surveys/current/%s/edit/%s', $current_step->template()->title(), $this->current_entity_survey->getIdentifier());
-        $this->redirect($url);
+            $step                 = $request->param('STEP_SLUG');
+            $sub_step             = $request->param('SUB_STEP_SLUG');
+
+            $current_survey = $this->getCurrentSurveyInstance();
+            $current_step   = $current_survey->currentStep();
+
+            if(!($current_step instanceof ISurveyDynamicEntityStep))
+            {
+                if($this->current_survey->isAllowedStep($step)) {
+                    $current_step = $this->current_survey->getStep($step);
+                    $this->survey_manager->registerCurrentStep($this->current_survey, $step);
+                }
+                else
+                    throw new LogicException(sprintf('template %s', $current_step->template()->title()));
+            }
+
+            //create the current survey entity
+            $this->current_entity_survey = $this->survey_manager->buildEntitySurvey($current_step, Member::currentUserID());
+            $url = sprintf('surveys/current/%s/edit/%s', $current_step->template()->title(), $this->current_entity_survey->getIdentifier());
+            $this->redirect($url);
+        }
+        catch(Exception $ex)
+        {
+            SS_Log::log($ex->getMessage(), SS_Log::ERR);
+            return $this->httpError(404);
+        }
+    }
+
+    /**
+     * @param $request
+     * @return HTMLText|SS_HTTPResponse|void
+     * @throws NotFoundEntityException
+     */
+    public function EditEntity($request)
+    {
+        try
+        {
+            if (!Member::currentUser()) return $this->httpError(403);
+
+            $step             = $request->param('STEP_SLUG');
+            $sub_step         = $request->param('SUB_STEP_SLUG');
+            $entity_survey_id = intval($request->param('ENTITY_SURVEY_ID'));
+
+            $this->current_survey = $this->getCurrentSurveyInstance();
+            $current_step         = $this->current_survey->currentStep();
+
+            if (!($current_step instanceof ISurveyDynamicEntityStep))
+            {
+                if ($this->current_survey->isAllowedStep($step)) {
+                    $current_step = $this->current_survey->getStep($step);
+                    $this->survey_manager->registerCurrentStep($this->current_survey, $step);
+                } else {
+                    throw new LogicException(sprintf('template %s', $current_step->template()->title()));
+                }
+            }
+
+            $this->current_entity_survey = $current_step->getEntitySurvey($entity_survey_id);
+
+            if (is_null($this->current_entity_survey))
+            {
+                //check if its a entity survey from a team that i belong
+                $current_member = Member::currentUser();
+                $this->current_entity_survey = $current_member->TeamEntitySurveys()->filter('EntitySurveyID',
+                    $entity_survey_id)->first();
+            }
+
+            if (is_null($this->current_entity_survey))
+            {
+                throw new LogicException(sprintf('entity survey id is %s - member_id %s', $entity_survey_id, Member::currentUserID()));
+            }
+
+            $entity_step          = $this->current_entity_survey->currentStep();
+            $entity_step_template = $entity_step->template();
+
+            // check substep variable
+            if (empty($sub_step))
+            {
+                // is not set, redirect to current steo uri
+                return $this->redirect($request->getUrl() . '/' . $entity_step_template->title());
+            }
+            else
+            {
+                if ($sub_step !== $entity_step_template->title())
+                {
+                    // if set, but differs from current step check if we are allowed to use that step
+                    $desired_sub_step = $this->current_entity_survey->getStep($sub_step);
+                    if (!is_null($desired_sub_step) && $this->current_entity_survey->isAllowedStep($sub_step))
+                    {
+                        $this->current_entity_survey->registerCurrentStep($desired_sub_step);
+                    }
+                    else
+                    {
+                        // if we are not allowed to go to desired step , redirect to current step
+
+                        $current_url = Controller::join_links
+                        (
+                            Director::absoluteBaseURL(),
+                            'surveys/current/',
+                            $step,
+                            'edit',
+                            $entity_survey_id,
+                            $entity_step_template->title()
+                        );
+
+                        return $this->redirect($current_url);
+                    }
+                }
+            }
+
+            $this->current_entity_survey = $this->survey_manager->updateSurveyWithTemplate
+            (
+                $this->current_entity_survey,
+                $this->current_entity_survey->template()
+            );
+
+            if ($sub_step === 'skip-step' && $this->current_entity_survey->currentStep()->canSkip())
+            {
+                $next_step = $this->survey_manager->completeStep
+                (
+                    $this->current_entity_survey->currentStep(),
+                    $data = array()
+                );
+                return $this->go2DynEntityStep($this->current_entity_survey, $next_step);
+            }
+
+            return $this->customise
+            (
+                array
+                (
+                    'Survey'       => $this->current_survey,
+                    'EntitySurvey' => $this->current_entity_survey
+                )
+            )->renderWith(array('Surveys_CurrentSurveyDynamicEntityContainer', 'Page'));
+        }
+        catch(Exception $ex)
+        {
+            SS_Log::log($ex->getMessage(), SS_Log::ERR);
+            return $this->httpError(404);
+        }
     }
 
     /**
@@ -430,28 +529,103 @@ class Survey_Controller extends Page_Controller {
      */
     public function SurveyDynamicEntityStepForm()
     {
-        $this->current_survey = $this->getCurrentSurveyInstance();
-        $current_step        =  $this->current_survey->currentStep();
+        if(!Member::currentUser()) return $this->httpError(403);
 
-        if(!($current_step instanceof ISurveyDynamicEntityStep)) throw new LogicException();
-
-        $entity_survey_id     = intval($this->request->param('ENTITY_SURVEY_ID'));
-        if($entity_survey_id == 0) $entity_survey_id = intval($this->request->postVar('ENTITY_SURVEY_ID'));
-        $this->current_entity_survey  = $current_step->getEntitySurvey($entity_survey_id);
-
-        if(is_null($this->current_entity_survey))
+        try
         {
-            //check if its a entity survey from a team that i belong
-            $current_member = Member::currentUser();
-            $this->current_entity_survey = $current_member->TeamEntitySurveys()->filter('EntitySurveyID',$entity_survey_id)->first();
-        }
-        if(is_null($this->current_entity_survey)) throw new LogicException();
+            $request  = $this->getRequest();
 
-        $builder        = SurveyStepUIBuilderFactory::getInstance()->build($this->current_entity_survey->currentStep());
-        if(is_null($builder)) return '<p>There is not set any form yet!</p>';
-        $form           = $builder->build($this->current_entity_survey->currentStep(), 'NextDynamicEntityStep', 'SurveyDynamicEntityStepForm');
-        $form->Fields()->add(new HiddenField('ENTITY_SURVEY_ID','ENTITY_SURVEY_ID',$entity_survey_id));
-        return $form;
+            $step     = $request->param('STEP_SLUG');
+            if(is_null($step))
+                $step = $request->requestVar('STEP_SLUG');
+
+            $sub_step = $request->param('SUB_STEP_SLUG');
+            if(is_null($sub_step))
+                $sub_step = $request->requestVar('SUB_STEP_SLUG');
+
+            if(empty($step) || empty($sub_step))
+                throw new LogicException('step/sub_step empty - member_id %s', Member::currentUserID());
+
+            $this->current_survey = $this->getCurrentSurveyInstance();
+            $current_step         = $this->current_survey->currentStep();
+
+            if (!($current_step instanceof ISurveyDynamicEntityStep))
+            {
+                if ($this->current_survey->isAllowedStep($step))
+                {
+                    $current_step = $this->current_survey->getStep($step);
+                    $this->survey_manager->registerCurrentStep($this->current_survey, $step);
+                } else
+                {
+                    throw new LogicException(sprintf('template %s - member_id %s', $current_step->template()->title(), Member::currentUserID()));
+                }
+            }
+
+            // check entity survey id
+            $entity_survey_id = intval($request->param('ENTITY_SURVEY_ID'));
+            if ($entity_survey_id === 0)
+            {
+                $entity_survey_id = intval($request->requestVar('ENTITY_SURVEY_ID'));
+            }
+            if ($entity_survey_id === 0)
+            {
+                throw new LogicException(sprintf('entity survey id is %s - member_id %s', $entity_survey_id, Member::currentUserID()));
+            }
+
+            $this->current_entity_survey = $current_step->getEntitySurvey($entity_survey_id);
+
+            if (is_null($this->current_entity_survey))
+            {
+                //check if its a entity survey from a team that i belong
+                $current_member = Member::currentUser();
+                $this->current_entity_survey = $current_member->TeamEntitySurveys()->filter('EntitySurveyID',
+                    $entity_survey_id)->first();
+            }
+
+            if (is_null($this->current_entity_survey))
+            {
+                throw new LogicException(sprintf('entity survey id is %s - member_id %s', $entity_survey_id, Member::currentUserID()));
+            }
+
+            if($this->current_entity_survey->currentStep()->template()->title() !== $sub_step)
+            {
+                throw new LogicException
+                (
+                    sprintf
+                    (
+                        'current step %s differs from requested one %s - member_id %s',
+                        $this->current_entity_survey->currentStep()->template()->title(),
+                        $sub_step,
+                        Member::currentUserID()
+                    )
+                );
+            }
+
+            $builder = SurveyStepUIBuilderFactory::getInstance()->build($this->current_entity_survey->currentStep());
+
+            if (is_null($builder))
+            {
+                throw new LogicException(sprintf('There is not set any form yet! - member_id %s', Member::currentUserID()));
+            }
+
+            $form = $builder->build
+            (
+                $this->current_entity_survey->currentStep(),
+                'NextDynamicEntityStep',
+                'SurveyDynamicEntityStepForm'
+            );
+
+            $form->Fields()->add(new HiddenField('ENTITY_SURVEY_ID', 'ENTITY_SURVEY_ID', $entity_survey_id));
+            $form->Fields()->add(new HiddenField('STEP_SLUG', 'STEP_SLUG', $step));
+            $form->Fields()->add(new HiddenField('SUB_STEP_SLUG', 'SUB_STEP_SLUG', $sub_step));
+
+            return $form;
+        }
+        catch(Exception $ex)
+        {
+            SS_Log::log($ex->getMessage(), SS_Log::ERR);
+            return $this->httpError(404);
+        }
     }
 
     /**
@@ -461,15 +635,36 @@ class Survey_Controller extends Page_Controller {
      */
     public function NextDynamicEntityStep($data, $form)
     {
-        $entity_survey = $this->getCurrentEntitySurveyInstance(intval($data['survey_id']));
-        $current_step  = $entity_survey->currentStep();
-        $next_step     = $this->survey_manager->completeStep($current_step, $data);
-        if($entity_survey->isLastStep()){
-            $this->survey_manager->resetSteps($entity_survey);
-            return $this->redirect('/surveys/current/'.$this->current_survey->currentStep()->template()->title());
+        try
+        {
+
+            $step     = $this->request->param('STEP_SLUG');
+            if(is_null($step))
+                $step = $this->request->requestVar('STEP_SLUG');
+
+            $sub_step = $this->request->param('SUB_STEP_SLUG');
+            if(is_null($sub_step))
+                $sub_step = $this->request->requestVar('SUB_STEP_SLUG');
+
+            $entity_survey = $this->getCurrentEntitySurveyInstance(intval($data['survey_id']));
+
+            if(is_null($entity_survey))
+                throw new LogicException('entity survey not found!');
+
+            $current_step  = $entity_survey->currentStep();
+            $next_step     = $this->survey_manager->completeStep($current_step, $data);
+            if($entity_survey->isLastStep())
+            {
+                return $this->redirect('/surveys/current/'.$this->current_survey->currentStep()->template()->title());
+            }
+            else{
+                return $this->go2DynEntityStep($entity_survey, $next_step);
+            }
         }
-        else{
-            return $this->go2DynEntityStep($entity_survey, $next_step);
+        catch(Exception $ex)
+        {
+            SS_Log::log($ex->getMessage(), SS_Log::ERR);
+            return $this->httpError(404);
         }
     }
 
@@ -522,7 +717,6 @@ HTML;
         }
         return $res;
     }
-
 
     public function getLoginPageSlide2Content()
     {
@@ -578,12 +772,19 @@ HTML;
         $full_name_condition = " FirstName LIKE '%{$term}%' OR Surname LIKE '%{$term}%' ";
         if(count($split_term) == 2)
         {
-            $full_name_condition = " (FirstName LIKE '%{$split_term[0]}%' AND Surname LIKE '%{$split_term[1]}%') ";
+            $full_name_condition = " (FirstName LIKE '%{$split_term[0]}%' OR Surname LIKE '%{$split_term[1]}%') ";
         }
 
         $members = Member::get()
-            ->where("ID <> {$current_user_id} AND Email <> '' AND (Email LIKE '%{$term}%' OR {$full_name_condition} )")
-            ->sort('Email')
+            ->where("ID <> {$current_user_id} AND Email <> '' AND ( {$full_name_condition} )")
+            ->sort
+            (
+                array
+                (
+                    'Surname' => 'ASC',
+                    'FirstName' => 'ASC',
+                )
+            )
             ->limit(100);
 
         $items = array();
@@ -592,8 +793,8 @@ HTML;
         {
             $items[] = array(
                 'id'    => $member->ID,
-                'label' => sprintf('%s, %s (%s)',$member->FirstName, $member->Surname, $member->Email) ,
-                'value' => sprintf('%s, %s (%s)',$member->FirstName, $member->Surname, $member->Email)
+                'label' => sprintf('%s, %s (%s)',$member->Surname, $member->FirstName,($member->getCurrentAffiliation())? $member->getCurrentAffiliation()->Organization()->Name:'N/A') ,
+                'value' => sprintf('%s, %s (%s)',$member->Surname, $member->FirstName,($member->getCurrentAffiliation())? $member->getCurrentAffiliation()->Organization()->Name:'N/A')
             );
         }
 
@@ -688,11 +889,12 @@ HTML;
             $items = array();
             foreach($entity_survey->getTeamMembers() as $member)
             {
-                $items[] = array(
-                    'id'    => $member->ID,
-                    'fname' => $member->FirstName ,
-                    'lname' => $member->Surname ,
-                    'email' => $member->Email ,
+                $items[] = array
+                (
+                    'id'      => $member->ID,
+                    'fname'   => $member->FirstName ,
+                    'lname'   => $member->Surname ,
+                    'pic_url' => $member->ProfilePhotoUrl(100)
                 );
             }
             $response = new SS_HTTPResponse();
