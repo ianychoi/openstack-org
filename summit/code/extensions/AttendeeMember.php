@@ -12,32 +12,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-class SummitAttendeeMemberExtension extends DataExtension
+final class AttendeeMember extends DataExtension implements IAttendeeMember
 {
-    private static $has_many = array
+    private static $has_many =  array
     (
         'SummitAttendance' => 'SummitAttendee'
     );
 
+    /**
+     * @param int $summit_id
+     * @return bool
+     */
+    public function isAttendee($summit_id)
+    {
+        $attendee = $this->SummitAttendance($summit_id);
 
+        return ($attendee ? true : false);
+    }
+
+    /**
+     * @param int $summit_id
+     * @return ISummitAttendee
+     */
+    public function getSummitAttendee($summit_id)
+    {
+        $attendee = $this->owner->SummitAttendance()->filter(array
+        (
+            'SummitID' => $summit_id
+        ))->first();
+
+        return $attendee;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIdentifier()
+    {
+        return (int)$this->owner->getField('ID');
+    }
+
+    /**
+     * @return ISummitAttendee|null
+     */
     public function getCurrentSummitAttendee()
     {
         $current_summit = Summit::CurrentSummit();
         if($current_summit)
         {
-            return $this->owner->SummitAttendance()->filter('SummitID', $current_summit->ID)->first();
+            $this->getSummitAttendee($current_summit->ID);
         }
         return $this->getUpcomingSummitAttendee();
     }
 
+    /**
+     * @return ISummitAttendee|null
+     */
     public function getUpcomingSummitAttendee()
     {
         $upcoming_summit = Summit::GetUpcoming();
         if($upcoming_summit)
         {
-            return $this->owner->SummitAttendance()->filter('SummitID', $upcoming_summit->ID)->first();
+            $this->getSummitAttendee($upcoming_summit->ID);
         }
         return null;
     }
-
 }
