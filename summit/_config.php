@@ -12,32 +12,35 @@
  * limitations under the License.
  **/
 
-PublisherSubscriberManager::getInstance()->subscribe('updated_summit_entity', function($entity_id, $class_name){
+PublisherSubscriberManager::getInstance()->subscribe('updated_summit_entity', function($summit_id, $entity_id, $class_name){
 
-    $event = new SummitEntityEvent();
+    $event                  = new SummitEntityEvent();
     $event->EntityClassName = $class_name;
-    $event->EntityID = $entity_id;
-    $event->Type = 'UPDATE';
-    $event->OwnerID = Member::currentUserID();
+    $event->EntityID        = $entity_id;
+    $event->Type            = 'UPDATE';
+    $event->OwnerID         = Member::currentUserID();
+    $event->SummitID        = $summit_id();
     $event->write();
 });
 
-PublisherSubscriberManager::getInstance()->subscribe('inserted_summit_entity', function($entity_id, $class_name){
+PublisherSubscriberManager::getInstance()->subscribe('inserted_summit_entity', function($summit_id, $entity_id, $class_name){
 
-    $event = new SummitEntityEvent();
+    $event                  = new SummitEntityEvent();
     $event->EntityClassName = $class_name;
-    $event->EntityID = $entity_id;
-    $event->Type = 'INSERT';
-    $event->OwnerID = Member::currentUserID();
+    $event->EntityID        = $entity_id;
+    $event->Type            = 'INSERT';
+    $event->OwnerID         = Member::currentUserID();
+    $event->SummitID        = $summit_id();
     $event->write();
 });
 
-PublisherSubscriberManager::getInstance()->subscribe('deleted_summit_entity', function($entity_id, $class_name){
+PublisherSubscriberManager::getInstance()->subscribe('deleted_summit_entity', function($summit_id, $entity_id, $class_name){
 
-    $event = new SummitEntityEvent();
+    $event                  = new SummitEntityEvent();
     $event->EntityClassName = $class_name;
-    $event->EntityID = $entity_id;
-    $event->Type = 'DELETE';
-    $event->OwnerID = Member::currentUserID();
+    $event->EntityID        = $entity_id;
+    $event->Type            = 'DELETE';
+    $event->OwnerID         = Member::currentUserID();
+    $event->SummitID        = $summit_id();
     $event->write();
 });

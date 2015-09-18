@@ -23,7 +23,8 @@ final class SummitEntityEvent extends DataObject
 
     private static $has_one = array
     (
-        'Owner' => 'Member',
+        'Summit' => 'Summit',
+        'Owner'  => 'Member',
     );
 
 }
