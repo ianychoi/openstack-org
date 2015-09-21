@@ -15,8 +15,8 @@
 final class SummitEntity extends DataExtension
 {
 
-    private $updating  = false;
-    private $inserting = false;
+    private $updating   = false;
+    private $inserting  = false;
 
     public function onBeforeWrite()
     {
@@ -41,7 +41,7 @@ final class SummitEntity extends DataExtension
 
             PublisherSubscriberManager::getInstance()->publish
             (
-                'inserted_summit_entity',
+                ISummitEntityEvent::InsertedEntity,
                 array
                 (
                     $this->owner
@@ -52,7 +52,7 @@ final class SummitEntity extends DataExtension
         {
             PublisherSubscriberManager::getInstance()->publish
             (
-                'updated_summit_entity',
+                ISummitEntityEvent::UpdatedEntity,
                 array
                 (
                     $this->owner
@@ -66,15 +66,11 @@ final class SummitEntity extends DataExtension
 
         PublisherSubscriberManager::getInstance()->publish
         (
-            'deleted_summit_entity',
+            ISummitEntityEvent::DeletedEntity,
             array
             (
                 $this->owner
             )
         );
     }
-
-    public function onAfterDelete() {
-    }
-
 }

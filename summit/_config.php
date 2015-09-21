@@ -12,10 +12,21 @@
  * limitations under the License.
  **/
 
-PublisherSubscriberManager::getInstance()->subscribe('updated_summit_entity', function($entity){
+PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::UpdatedEntity, function($entity){
 
-    $summit_id = $this->owner->SummitID;
+    $summit_id = $entity->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
+
+    $metadata = '';
+    if($entity instanceof SummitEvent)
+    {
+        $fields = $entity->getChangedFields(true);
+        if(isset($fields['Published']))
+        {
+            $pub_old = intval($fields['Published']['before']);
+            $pub_new = intval($fields['Published']['after']);
+        }
+    }
 
     $event                  = new SummitEntityEvent();
     $event->EntityClassName = $entity->ClassName;
@@ -23,33 +34,36 @@ PublisherSubscriberManager::getInstance()->subscribe('updated_summit_entity', fu
     $event->Type            = 'UPDATE';
     $event->OwnerID         = Member::currentUserID();
     $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
     $event->write();
 });
 
-PublisherSubscriberManager::getInstance()->subscribe('inserted_summit_entity', function($entity){
+PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::InsertedEntity, function($entity){
 
-    $summit_id = $this->owner->SummitID;
+    $summit_id = $entity->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
-
+    $metadata = '';
     $event                  = new SummitEntityEvent();
     $event->EntityClassName = $entity->ClassName;
     $event->EntityID        = $entity->ID;
     $event->Type            = 'INSERT';
     $event->OwnerID         = Member::currentUserID();
     $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
     $event->write();
 });
 
-PublisherSubscriberManager::getInstance()->subscribe('deleted_summit_entity', function($entity){
+PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::DeletedEntity, function($entity){
 
-    $summit_id = $this->owner->SummitID;
+    $summit_id = $entity->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
-    
+    $metadata = '';
     $event                  = new SummitEntityEvent();
     $event->EntityClassName = $entity->ClassName;
     $event->EntityID        = $entity->ID;
     $event->Type            = 'DELETE';
     $event->OwnerID         = Member::currentUserID();
     $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
     $event->write();
 });

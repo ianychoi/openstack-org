@@ -303,11 +303,16 @@ final class Summit extends DataObject implements ISummit
         return $this->getField('SelectionEndDate');
     }
 
-    public function getSchedule() {
+    /**
+     * @return SummitEvent[]
+     * @throws Exception
+     */
+    public function getSchedule()
+    {
         $query = new QueryObject();
         $query->addAndCondition(QueryCriteria::equal('Published',1));
         $query->addOrder(QueryOrder::asc('StartDate'));
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query);
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query)->toArray();
     }
 
     /**
@@ -675,7 +680,7 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         return $valid;
     }
 
-    /**
+     /**
      * @param SummitMainInfo $info
      * @return void
      */

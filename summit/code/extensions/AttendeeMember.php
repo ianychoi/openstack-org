@@ -25,7 +25,7 @@ final class AttendeeMember extends DataExtension implements IAttendeeMember
      */
     public function isAttendee($summit_id)
     {
-        $attendee = $this->SummitAttendance($summit_id);
+        $attendee = $this->getSummitAttendee($summit_id);
 
         return ($attendee ? true : false);
     }

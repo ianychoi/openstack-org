@@ -119,8 +119,6 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
             $filtered_events = $events;
         }
 
-
-
         $sched_page = new SummitAppSchedPage();
 
         return $sched_page->renderSchedule($filtered_events);
@@ -128,8 +126,11 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
 
     public function addToSchedule() {
         try{
+            $member = Member::currentUser();
+            if(is_null($member)) return $this->permissionFailure();
+
             $event_id = (int)$this->request->param('EventID');
-            $this->schedule_manager->addEventToSchedule($event_id);
+            $this->schedule_manager->addEventToSchedule(Member::currentUserID(), $event_id);
         }
         catch(NotFoundEntityException $ex1){
             SS_Log::log($ex1,SS_Log::WARN);
@@ -143,8 +144,11 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
 
     public function removeFromSchedule() {
         try{
+            $member = Member::currentUser();
+            if(is_null($member)) return $this->permissionFailure();
+
             $event_id = (int)$this->request->param('EventID');
-            $this->schedule_manager->removeEventFromSchedule($event_id);
+            $this->schedule_manager->removeEventFromSchedule(Member::currentUserID(), $event_id);
         }
         catch(NotFoundEntityException $ex1){
             SS_Log::log($ex1,SS_Log::WARN);

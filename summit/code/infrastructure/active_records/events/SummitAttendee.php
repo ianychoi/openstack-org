@@ -234,8 +234,10 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
             // schedule
             $config = GridFieldConfig_RelationEditor::create();
             $config->removeComponentsByType('GridFieldAddNewButton');
+            $config->getComponentByType('GridFieldAddExistingAutocompleter')->setSearchList($this->getAllowedSchedule());
+
             $detailFormFields = new FieldList();
-            $detailFormFields->push( new CheckBoxField(
+            $detailFormFields->push(new CheckBoxField(
                 'ManyMany[IsCheckedIn]',
                 'Is Checked In?'
             ));
@@ -244,5 +246,12 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
             $f->addFieldToTab('Root.Schedule', $gridField);
         }
         return $f;
+    }
+
+    public function getAllowedSchedule()
+    {
+        $summit = $this->Summit();
+        if(is_null($summit)) $summit = Summit::get()->byID(intval($_REQUEST['SummitID']));
+        return SummitEvent::get()->filter(array('Published'=> true, 'SummitID' => $summit->ID));
     }
 }

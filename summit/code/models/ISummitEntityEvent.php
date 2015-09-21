@@ -12,19 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SummitEntityEvent extends DataObject
+interface ISummitEntityEvent
 {
-    private static $db = array
-    (
-        'EntityID'        => 'Int',
-        'EntityClassName' => 'Text',
-        'Type'            => 'Enum(array("UPDATE","INSERT","DELETE"))',
-        'Metadata'        => 'Text',
-    );
-
-    private static $has_one = array
-    (
-        'Summit' => 'Summit',
-        'Owner'  => 'Member',
-    );
+    const UpdatedEntity     = 'updated_summit_entity';
+    const InsertedEntity    = 'inserted_summit_entity';
+    const DeletedEntity     = 'deleted_summit_entity';
+    const AddedToSchedule   = 'added_to_schedule';
+    const RemovedToSchedule = 'removed_to_schedule';
 }
