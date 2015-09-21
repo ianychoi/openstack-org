@@ -235,7 +235,7 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
             $config = GridFieldConfig_RelationEditor::create();
             $config->removeComponentsByType('GridFieldAddNewButton');
             $config->getComponentByType('GridFieldAddExistingAutocompleter')->setSearchList($this->getAllowedSchedule());
-
+            $config->addComponent(new GridFieldAjaxRefresh(1000,false));
             $detailFormFields = new FieldList();
             $detailFormFields->push(new CheckBoxField(
                 'ManyMany[IsCheckedIn]',

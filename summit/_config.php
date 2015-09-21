@@ -67,3 +67,78 @@ PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::Deleted
     $event->Metadata        = $metadata;
     $event->write();
 });
+
+
+PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::AddedToSchedule, function($member_id, $entity){
+
+    $summit_id = $entity->getField("SummitID");
+    if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
+    $metadata = '';
+    $event                  = new SummitEntityEvent();
+    $event->EntityClassName = 'MySchedule';
+    $event->EntityID        = $entity->ID;
+    $event->Type            = 'INSERT';
+    $event->OwnerID         = $member_id;
+    $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
+    $event->write();
+});
+
+PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::RemovedToSchedule, function($member_id, $entity){
+
+    $summit_id = $entity->getField("SummitID");
+    if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
+    $metadata = '';
+    $event                  = new SummitEntityEvent();
+    $event->EntityClassName = 'MySchedule';
+    $event->EntityID        = $entity->ID;
+    $event->Type            = 'DELETE';
+    $event->OwnerID         = $member_id;
+    $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
+    $event->write();
+});
+
+
+PublisherSubscriberManager::getInstance()->subscribe('manymanylist_added_item', function($list, $item){
+
+    $summit_id = $item->getField("SummitID");
+    if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
+
+    $join_table = $list->getJoinTable();
+    if($join_table !== 'SummitAttendee_Schedule') return;
+    $attendee_id   = $list->getForeignID();
+    $attendee = SummitAttendee::get()->byID($attendee_id);
+
+    $metadata = '';
+    $event                  = new SummitEntityEvent();
+    $event->EntityClassName = 'MySchedule';
+    $event->EntityID        = $item->ID;
+    $event->Type            = 'INSERT';
+    $event->OwnerID         = $attendee->MemberID;
+    $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
+    $event->write();
+});
+
+
+PublisherSubscriberManager::getInstance()->subscribe('manymanylist_removed_item', function($list, $item){
+
+    $summit_id = $item->getField("SummitID");
+    if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
+    $metadata = '';
+
+    $join_table = $list->getJoinTable();
+    if($join_table !== 'SummitAttendee_Schedule') return;
+    $attendee_id   = $list->getForeignID();
+    $attendee = SummitAttendee::get()->byID($attendee_id);
+
+    $event                  = new SummitEntityEvent();
+    $event->EntityClassName = 'MySchedule';
+    $event->EntityID        = $item->ID;
+    $event->Type            = 'DELETE';
+    $event->OwnerID         = $attendee->MemberID;
+    $event->SummitID        = $summit_id;
+    $event->Metadata        = $metadata;
+    $event->write();
+});
