@@ -40,6 +40,11 @@ class SummitEvent extends DataObject implements ISummitEvent
         'Sponsors'           => 'Company',
     );
 
+    private static $belongs_many_many = array
+    (
+        'Attendees'   => 'SummitAttendee',
+    );
+
     private static $has_one = array
     (
         'Location' => 'SummitAbstractLocation',
@@ -73,6 +78,16 @@ class SummitEvent extends DataObject implements ISummitEvent
         return (int)$this->getField('ID');
     }
 
+    public function getLink() {
+        return $this->Summit()->Link.'schedule/event/'.$this->getIdentifier().'/'.$this->getTitleForUrl();
+    }
+
+    public function getTitleForUrl() {
+        $lcase_title = strtolower(trim($this->Title));
+        $title_for_url = str_replace(' ','-',$lcase_title);
+        return $title_for_url;
+    }
+
     public function getLocationName()
     {
         if($this->Location()->ID > 0)
@@ -104,7 +119,6 @@ class SummitEvent extends DataObject implements ISummitEvent
         if(empty($start_date)) return 'TBD';
         return $start_date;
     }
-
 
     /**
      * @return DateTime
@@ -423,4 +437,8 @@ class SummitEvent extends DataObject implements ISummitEvent
     public function getSpeakers() {
         return new ArrayList();
     }
+
+    /*public function getAtendees() {
+        return AssociationFactory::getInstance()->getMany2ManyAssociation($this , 'Attendees');
+    }*/
 }

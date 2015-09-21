@@ -8,7 +8,7 @@
             <% end_if %>
                     <div class="event {$SummitTypes} event_type_{$Type.ID}" style="background-color:{$Type.Color}">
                         <div>
-                            $Title
+                            <a href="$getLink()">$Title</a>
                             <div class="time">$StartDate.Format('g:ia') - $EndDate.Format('g:ia')</div>
                             <div class="time">$getLocationName()</div>
                         </div>

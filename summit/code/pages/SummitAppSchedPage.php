@@ -45,19 +45,39 @@ class SummitAppSchedPage extends SummitPage {
 
         return $attendee->isScheduled($event_id);
     }
-    
 }
 
 
 class SummitAppSchedPage_Controller extends SummitPage_Controller {
 
+    static $allowed_actions = array(
+        'ViewEvent',
+    );
+
+    static $url_handlers = array(
+        'event/$EVENT_ID/$EVENT_TITLE'   => 'ViewEvent',
+    );
+
     public function init() {
         
         $this->top_section = 'full';
+        $this->event_repository = new SapphireSummitEventRepository();
         parent::init();
 
         Requirements::javascript("summit/javascript/summitapp-schedule.js");
         Requirements::css("summit/css/summitapp-schedule.css");
 	}
+
+    function ViewEvent() {
+        $event_id = intval($this->request->param('EVENT_ID'));
+        $event = $this->event_repository->getById($event_id);
+
+        if (!isset($event)) {
+            return $this->httpError(404, 'Sorry that article could not be found');
+        }
+
+        return $this->renderWith(array('SummitAppEventPage','SummitPage','Page'), array('Event' => $event) );
+    }
+
 	
 }

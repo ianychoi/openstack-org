@@ -50,7 +50,9 @@ $(document).ready(function(){
 
     var summit_type_ids = getSummitTypeFilters();
     var filters = {summit_types: summit_type_ids};
-    getSchedule(filters);
+    if (summit_type_ids) {
+        getSchedule(filters);
+    }
 
 });
 
