@@ -10,7 +10,7 @@
                         <div>
                             <a href="$getLink()">$Title</a>
                             <div class="time">$StartDate.Format('g:ia') - $EndDate.Format('g:ia')</div>
-                            <div class="time">$getLocationName()</div>
+                            <div class="time">$Location.getFullName()</div>
                         </div>
                         <div>
                             <% if getSpeakers().toArray() %>
@@ -35,7 +35,7 @@
                             </div>
                             <hr>
                             Date: $StartDate.Format('F j') ($StartDate.Format('g:ia') - $EndDate.Format('g:ia')) <br>
-                            Location: $getLocationName() <br>
+                            Location: $Location.getFullName() <br>
                             Summary:
                             <div class="description">
                                 $Description
