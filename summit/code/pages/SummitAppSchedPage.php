@@ -37,7 +37,8 @@ class SummitAppSchedPage extends SummitPage {
     }
 
     public function isAttendee($summit_id) {
-        return Member::currentUser()->isAttendee($summit_id);
+        $current_user = Member::currentUser();
+        return ($current_user) ? $current_user->isAttendee($summit_id) : false;
     }
 
     public function isScheduled($summit_id,$event_id) {
