@@ -12,9 +12,11 @@
             <option value="$ID">$Type</option>
         <% end_loop %>
     </select>
-    <button type="button" class="btn btn-info pull-right switch_schedule full">
-        Switch to My Schedule
-    </button>
+    <% if isAttendee($Summit.ID) %>
+        <button type="button" class="btn btn-info pull-right switch_schedule full">
+            Switch to My Schedule
+        </button>
+    <% end_if %>
     <hr>
     <input id="summit_id" type="hidden" value="$Summit.ID" />
     <div id="schedule_container"></div>
