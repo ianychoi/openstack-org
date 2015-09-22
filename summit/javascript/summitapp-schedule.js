@@ -48,8 +48,27 @@ $(document).ready(function(){
 
     });
 
+    $('.switch_schedule').mouseup(function(){
+        $(this).blur();
+        if ($(this).hasClass('full')) {
+            $(this).html('Switch to Full Schedule');
+            $('.schedule_title').html('My Schedule');
+            $(this).removeClass('full');
+            var summit_type_ids = getSummitTypeFilters();
+            var filters = {summit_types: summit_type_ids, summit_source: 'private'};
+        } else {
+            $(this).html('Switch to My Schedule');
+            $('.schedule_title').html('Schedule');
+            $(this).addClass('full');
+            var summit_type_ids = getSummitTypeFilters();
+            var filters = {summit_types: summit_type_ids, summit_source: 'public'};
+        }
+
+        getSchedule(filters);
+    });
+
     var summit_type_ids = getSummitTypeFilters();
-    var filters = {summit_types: summit_type_ids};
+    var filters = {summit_types: summit_type_ids, summit_source: 'public'};
     if (summit_type_ids) {
         getSchedule(filters);
     }

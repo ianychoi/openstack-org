@@ -95,9 +95,18 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     public function getSchedule() {
         $filters = $this->getJsonRequest();
         $summit_types_filter = explode(',',$filters['summit_types']);
+        $source = $filters['summit_source'];
         $summit_id = (int)$this->request->param('SummitID');
-        $summit = $this->summit_repository->getById($summit_id);
-        $events = $summit->getSchedule();
+
+        if ($source == 'public') {
+            $summit = $this->summit_repository->getById($summit_id);
+            $events = $summit->getSchedule();
+        } else {
+            $attendee = Member::currentUser()->getSummitAttendee($summit_id);
+            $events = $attendee->getSchedule();
+        }
+
+
         $filtered_events = new ArrayList();
 
         if (count($summit_types_filter)) {

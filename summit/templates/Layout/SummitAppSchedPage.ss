@@ -1,5 +1,5 @@
 <div class="container">
-    <h1>Schedule</h1>
+    <h1 class="schedule_title">Schedule</h1>
     <hr>
     <% loop $Summit.getTypes() %>
         <button type="button" data-summit_type_id="$ID" class="btn btn-primary summit_type_filter active checked" data-toggle="button">
@@ -12,6 +12,9 @@
             <option value="$ID">$Type</option>
         <% end_loop %>
     </select>
+    <button type="button" class="btn btn-info pull-right switch_schedule full">
+        Switch to My Schedule
+    </button>
     <hr>
     <input id="summit_id" type="hidden" value="$Summit.ID" />
     <div id="schedule_container"></div>
