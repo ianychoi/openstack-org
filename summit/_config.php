@@ -18,13 +18,15 @@ PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::Updated
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
 
     $metadata = '';
+
     if($entity instanceof SummitEvent)
     {
         $fields = $entity->getChangedFields(true);
         if(isset($fields['Published']))
         {
-            $pub_old = intval($fields['Published']['before']);
-            $pub_new = intval($fields['Published']['after']);
+            $pub_old  = intval($fields['Published']['before']);
+            $pub_new  = intval($fields['Published']['after']);
+            $metadata = json_encode( array ( 'pub_old' => $pub_old, 'pub_new' => $pub_new));
         }
     }
 
@@ -43,6 +45,13 @@ PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::Inserte
     $summit_id = $entity->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
     $metadata = '';
+
+    if($entity instanceof SummitEvent)
+    {
+        $pub_new  = intval($entity->Published);
+        $metadata = json_encode( array ('pub_new' => $pub_new));
+    }
+
     $event                  = new SummitEntityEvent();
     $event->EntityClassName = $entity->ClassName;
     $event->EntityID        = $entity->ID;
