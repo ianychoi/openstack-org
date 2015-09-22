@@ -14,6 +14,10 @@
  **/
 class SummitEvent extends DataObject implements ISummitEvent
 {
+
+
+    protected $already_converted_date = false;
+
     private static $db = array
     (
         'Title'         => 'Text',
@@ -108,14 +112,33 @@ class SummitEvent extends DataObject implements ISummitEvent
     /**
      * @return DateTime
      */
-    public function getStartDate()
+    public function getStartDateOnTimeZone()
     {
-        return $this->getField('StartDate');
+        $start_date =  $this->getField('StartDate');
+        if(empty($start_date)) return null;
+
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+
+        $time_zone_id   = $summit->TimeZone;
+        $time_zone_list = timezone_identifiers_list();
+
+        if(isset($time_zone_list[$time_zone_id]))
+        {
+            $utc_timezone      = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $start_date    = new \DateTime($start_date, $utc_timezone);
+            $start_date->setTimezone($time_zone);
+            return $start_date->format("Y-m-d H:i:s");
+        }
+
+        return null;
     }
 
     public function getStartDateNice()
     {
-        $start_date =  $this->getField('StartDate');
+        $start_date =  $this->getStartDateOnTimeZone();
         if(empty($start_date)) return 'TBD';
         return $start_date;
     }
@@ -123,14 +146,35 @@ class SummitEvent extends DataObject implements ISummitEvent
     /**
      * @return DateTime
      */
-    public function getEndDate()
+    public function getEndDateOnTimeZone()
     {
-        return $this->getField('EndDate');
+        $end_date =  $this->getField('EndDate');
+        if(empty($end_date)) return null;
+
+
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+
+        $time_zone_id   = $summit->TimeZone;
+        $time_zone_list = timezone_identifiers_list();
+
+        if(isset($time_zone_list[$time_zone_id]))
+        {
+            $utc_timezone      = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $end_date    = new \DateTime($end_date, $utc_timezone);
+
+            $end_date->setTimezone($time_zone);
+            return $end_date->format("Y-m-d H:i:s");
+        }
+
+        return null;
     }
 
     public function getEndDateNice()
     {
-        $end_date  = $this->getField('EndDate');
+        $end_date  = $this->getEndDateOnTimeZone();
         if(empty($end_date)) return 'TBD';
         return $end_date;
     }
@@ -362,7 +406,10 @@ class SummitEvent extends DataObject implements ISummitEvent
         if($this->Published)
             throw new Exception('Already published Summit Event');
 
-        if($this->getStartDate() === 'TBD' || $this->getEndDate() === 'TBD')
+        $start_date = $this->getStartDate();
+        $end_date   = $this->getEndDate();
+
+        if(empty($start_date) || empty($end_date))
             throw new Exception('You must define a start/end datetime before publish it');
 
         $this->Published = true;
@@ -378,6 +425,31 @@ class SummitEvent extends DataObject implements ISummitEvent
         {
             $this->unPublish();
             $this->publish();
+        }
+
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+
+        $time_zone_id   = $summit->TimeZone;
+        $start_date     = $this->getField('StartDate');
+        $end_date       = $this->getField('EndDate');
+        $time_zone_list = timezone_identifiers_list();
+
+        if(isset($time_zone_list[$time_zone_id]) && !empty($start_date) && !empty($end_date) && !$this->already_converted_date)
+        {
+            $utc_timezone      = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $start_date  = new \DateTime($start_date, $time_zone);
+            $end_date    = new \DateTime($end_date, $time_zone);
+
+            $start_date->setTimezone($utc_timezone);
+            $this->setField('StartDate', $start_date->format("Y-m-d H:i:s"));
+
+            $end_date->setTimezone($utc_timezone);
+            $this->setField('EndDate', $end_date->format("Y-m-d H:i:s"));
+
+            $this->already_converted_date = true;
         }
     }
 
@@ -418,6 +490,13 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         if(!empty($start_date) && !empty($end_date))
         {
+
+            $timezone = $summit->TimeZone;
+
+            if(empty($timezone)){
+                return $valid->error('Invalid Summit TimeZone!');
+            }
+
             $start_date = new DateTime($start_date);
             $end_date = new DateTime($end_date);
             if($end_date < $start_date)
@@ -441,4 +520,19 @@ class SummitEvent extends DataObject implements ISummitEvent
     /*public function getAtendees() {
         return AssociationFactory::getInstance()->getMany2ManyAssociation($this , 'Attendees');
     }*/
+    /**
+     * @return DateTime
+     */
+    public function getStartDate()
+    {
+        return $this->getStartDateOnTimeZone();
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getEndDate()
+    {
+        return $this->getEndDateOnTimeZone();
+    }
 }
