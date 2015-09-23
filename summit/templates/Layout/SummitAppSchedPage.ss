@@ -13,7 +13,7 @@
         <% end_loop %>
     </select>
     <% if isAttendee($Summit.ID) %>
-        <button type="button" class="btn btn-info pull-right switch_schedule full">
+        <button type="button" class="btn btn-info pull-right switch_schedule public">
             Switch to My Schedule
         </button>
     <% end_if %>

@@ -50,16 +50,16 @@ $(document).ready(function(){
 
     $('.switch_schedule').mouseup(function(){
         $(this).blur();
-        if ($(this).hasClass('full')) {
+        if ($(this).hasClass('public')) {
             $(this).html('Switch to Full Schedule');
             $('.schedule_title').html('My Schedule');
-            $(this).removeClass('full');
+            $(this).removeClass('public');
             var summit_type_ids = getSummitTypeFilters();
             var filters = {summit_types: summit_type_ids, summit_source: 'private'};
         } else {
             $(this).html('Switch to My Schedule');
             $('.schedule_title').html('Schedule');
-            $(this).addClass('full');
+            $(this).addClass('public');
             var summit_type_ids = getSummitTypeFilters();
             var filters = {summit_types: summit_type_ids, summit_source: 'public'};
         }
@@ -186,10 +186,6 @@ function addToSchedule(event_id) {
         success: function (data) {
             var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
             $('.add_to_schedule',event_wrapper).replaceWith('<button onclick="removeFromSchedule('+event_id+')" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>');
-
-            /*var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
-             $('.event',event_wrapper).popover("show");
-             $('.popover',event_wrapper).css('left', $('.event',event_wrapper).position().left+'px');*/
         }
     });
 }
@@ -203,9 +199,11 @@ function removeFromSchedule(event_id) {
         success: function (data) {
             var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
             $('.remove_from_schedule',event_wrapper).replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
-            /*var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
-            $('.event',event_wrapper).popover("show");
-            $('.popover',event_wrapper).css('left', $('.event',event_wrapper).position().left+'px');*/
+            if (!$('.switch_schedule').hasClass('public')) {
+                var summit_type_ids = getSummitTypeFilters();
+                var filters = {summit_types: summit_type_ids, summit_source: 'private'};
+                getSchedule(filters);
+            }
         }
     });
 }

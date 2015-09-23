@@ -6,7 +6,7 @@
                 <div class="day">$StartDate.Format('F j')</div>
                 <div class="event_wrapper">
             <% end_if %>
-                    <div class="event {$SummitTypes} event_type_{$Type.ID}" style="background-color:{$Type.Color}">
+                    <div id="event_{$ID}" class="event {$SummitTypes} event_type_{$Type.ID}" style="background-color:{$Type.Color}">
                         <div>
                             <a href="$getLink()">$Title</a>
                             <div class="time">$StartDate.Format('g:ia') - $EndDate.Format('g:ia')</div>
