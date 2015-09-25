@@ -14,8 +14,6 @@
  **/
 class SummitEvent extends DataObject implements ISummitEvent
 {
-
-
     protected $already_converted_date = false;
 
     private static $db = array
