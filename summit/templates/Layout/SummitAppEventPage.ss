@@ -16,7 +16,7 @@
                 <div class="item">
                     <% if ClassName = 'PresentationSlide' %>
                         <div class="slide" title="$Name">
-                            <a href="$Slide.URL" target="_blank">$Name</a>
+                            <a href="$getSlideUrl()" target="_blank">$Name</a>
                         </div>
                     <% else %>
                         <div class="video">

@@ -55,4 +55,12 @@ class PresentationSlide extends PresentationMaterial
         $upload->setAllowedMaxFileNumber(1);
         return $f;
     }
+
+    public function getSlideUrl() {
+        if ($this->Link) {
+            return $this->Link;
+        } else {
+            return $this->Slide()->URL;
+        }
+    }
 }
