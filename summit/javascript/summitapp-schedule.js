@@ -15,8 +15,16 @@ $(document).ready(function(){
     $('.summit_type_filter').click(function(){
         toggleCheckboxButton($(this));
 
-        // hide using classes
-        $('.summit_type_'+$(this).data('summit_type_id')).toggle();
+        // hide all events with summit type
+        $('.summit_type_filter').each(function(){
+            $('.summit_type_'+$(this).data('summit_type_id')).hide();
+        });
+        //show events for summit type checked
+        $('.summit_type_filter').each(function(){
+            if ($(this).hasClass('checked')) {
+                $('.summit_type_'+$(this).data('summit_type_id')).show();
+            }
+        });
 
         // apply event type filter
         var event_type_id = $('.summit_event_type_filter').val();

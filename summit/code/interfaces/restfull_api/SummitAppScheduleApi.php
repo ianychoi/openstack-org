@@ -113,10 +113,12 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
             foreach ($events as $event) {
                 $allowed_summit_types = $event->getAllowedSummitTypes();
                 if (count($allowed_summit_types)) {
+                    $added = false;
                     foreach ($allowed_summit_types as $type) {
                         $event->SummitTypes .= ' summit_type_'.$type->ID;
-                        if (in_array($type->ID,$summit_types_filter)) {
+                        if (in_array($type->ID,$summit_types_filter) && !$added) {
                             $filtered_events->push($event);
+                            $added = true;
                         }
                     }
                 } else {
