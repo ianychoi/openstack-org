@@ -16,9 +16,9 @@ class SummitAbstractLocation extends DataObject implements ISummitLocation
 {
     private static $db = array
     (
-        'Name'        => 'Varchar(255)',
-        'Description' => 'HTMLText',
-        'Order'       => 'Int',
+        'Name'         => 'Varchar(255)',
+        'Description'  => 'HTMLText',
+        'Order'        => 'Int',
         'LocationType' => 'Enum(array("External","Internal", "None"), "None")',
     );
 

@@ -14,8 +14,6 @@
  **/
 class SummitEvent extends DataObject implements ISummitEvent
 {
-    protected $already_converted_date = false;
-
     private static $db = array
     (
         'Title'         => 'Text',
@@ -424,30 +422,43 @@ class SummitEvent extends DataObject implements ISummitEvent
             $this->unPublish();
             $this->publish();
         }
+    }
 
+    public function setStartDate($value)
+    {
         $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
         $summit     = Summit::get()->byID($summit_id);
 
         $time_zone_id   = $summit->TimeZone;
-        $start_date     = $this->getField('StartDate');
-        $end_date       = $this->getField('EndDate');
         $time_zone_list = timezone_identifiers_list();
 
-        if(isset($time_zone_list[$time_zone_id]) && !empty($start_date) && !empty($end_date) && !$this->already_converted_date)
+        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
         {
             $utc_timezone      = new DateTimeZone("UTC");
             $time_zone_name = $time_zone_list[$time_zone_id];
             $time_zone   = new \DateTimeZone($time_zone_name);
-            $start_date  = new \DateTime($start_date, $time_zone);
-            $end_date    = new \DateTime($end_date, $time_zone);
+            $date  = new \DateTime($value, $time_zone);
+            $date->setTimezone($utc_timezone);
+            $this->setField('StartDate', $date->format("Y-m-d H:i:s"));
+        }
+    }
 
-            $start_date->setTimezone($utc_timezone);
-            $this->setField('StartDate', $start_date->format("Y-m-d H:i:s"));
+    public function setEndDate($value)
+    {
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
 
-            $end_date->setTimezone($utc_timezone);
-            $this->setField('EndDate', $end_date->format("Y-m-d H:i:s"));
+        $time_zone_id   = $summit->TimeZone;
+        $time_zone_list = timezone_identifiers_list();
 
-            $this->already_converted_date = true;
+        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
+        {
+            $utc_timezone      = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $date  = new \DateTime($value, $time_zone);
+            $date->setTimezone($utc_timezone);
+            $this->setField('EndDate', $date->format("Y-m-d H:i:s"));
         }
     }
 

@@ -111,6 +111,7 @@ PublisherSubscriberManager::getInstance()->subscribe(ISummitEntityEvent::Removed
 
 PublisherSubscriberManager::getInstance()->subscribe('manymanylist_added_item', function($list, $item){
 
+    if(!$item instanceof ISummitEvent) return;
     $summit_id = $item->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
 
@@ -133,6 +134,7 @@ PublisherSubscriberManager::getInstance()->subscribe('manymanylist_added_item', 
 
 PublisherSubscriberManager::getInstance()->subscribe('manymanylist_removed_item', function($list, $item){
 
+    if(!$item instanceof ISummitEvent) return;
     $summit_id = $item->getField("SummitID");
     if(is_null($summit_id) || $summit_id == 0) $summit_id = Summit::ActiveSummitID();
     $metadata = '';

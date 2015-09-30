@@ -734,12 +734,16 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
      */
     public static function seedSummitTypes($summit_id)
     {
+        $summit = Summit::get()->byID($summit_id);
+
         if(!SummitType::get()->filter(array('Title'=>'Main Conference', 'SummitID'=>$summit_id))->first()) {
-            $main_type = new SummitType();
-            $main_type->Title = 'Main Conference';
+            $main_type              = new SummitType();
+            $main_type->Title       = 'Main Conference';
             $main_type->Description = 'This Schedule is for general attendees. Its includes breakout tracks, hand-ons labs, keynotes and sponsored sessions';
-            $main_type->Audience = 'General Attendees';
-            $main_type->SummitID = $summit_id;
+            $main_type->Audience    = 'General Attendees';
+            $main_type->SummitID    = $summit_id;
+            $main_type->StartDate   = $summit->BeginDate;
+            $main_type->EndDate     = $summit->EndDate;
             $main_type->write();
         }
 
@@ -749,6 +753,8 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
             $design_type->Description = 'This Schedule is specifically for developers and operators who contribute to the roadmap for the N release cycle. The Design Summit is not a classic track with speakers and presentations and its not the right place to get started or learn the basics of OpenStack. This schedule also Includes the Main Conference Sessions';
             $design_type->Audience = 'Developers And Operators';
             $design_type->SummitID = $summit_id;
+            $design_type->StartDate   = $summit->BeginDate;
+            $design_type->EndDate     = $summit->EndDate;
             $design_type->write();
         }
 
@@ -768,18 +774,33 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
             $presentation->write();
         }
 
-        if(!SummitEventType::get()->filter(array('Type'=>'Keynote', 'SummitID'=>$summit_id))->first()) {
+        if(!SummitEventType::get()->filter(array('Type'=>'Keynotes', 'SummitID'=>$summit_id))->first()) {
             $key_note = new SummitEventType();
-            $key_note->Type = 'Keynote';
+            $key_note->Type = 'Keynotes';
             $key_note->SummitID = $summit_id;
             $key_note->write();
         }
 
-        if(!SummitEventType::get()->filter(array('Type'=>'Hand-on Lab', 'SummitID'=>$summit_id))->first()) {
+        if(!SummitEventType::get()->filter(array('Type'=>'Hand-on Labs', 'SummitID'=>$summit_id))->first()) {
             $hand_on = new SummitEventType();
-            $hand_on->Type = 'Hand-on Lab';
+            $hand_on->Type = 'Hand-on Labs';
             $hand_on->SummitID = $summit_id;
             $hand_on->write();
         }
+
+        if(!SummitEventType::get()->filter(array('Type'=>'Lunch & Breaks', 'SummitID'=>$summit_id))->first()) {
+            $key_note = new SummitEventType();
+            $key_note->Type = 'Lunch & Breaks';
+            $key_note->SummitID = $summit_id;
+            $key_note->write();
+        }
+
+        if(!SummitEventType::get()->filter(array('Type'=>'Evening Events', 'SummitID'=>$summit_id))->first()) {
+            $key_note = new SummitEventType();
+            $key_note->Type = 'Evening Events';
+            $key_note->SummitID = $summit_id;
+            $key_note->write();
+        }
+
     }
 }
