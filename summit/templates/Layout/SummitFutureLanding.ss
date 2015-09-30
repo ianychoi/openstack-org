@@ -19,7 +19,7 @@
                        <span>Get Excited!</span>
                     </div>
                 <div class="row">
-                  <a href="/summit/" class="btn register-btn-lrg">Go To Main Summit Site</a>
+                  <a href="//openstack.org/assets/austin-summit/Austin-Prospectus-April-2016.pdf" class="btn register-btn-lrg">Download The Austin Prospectus</a>
                 </div>
                 <div>
                   <a href="/summit/tokyo-2015/" class="white-link current-summit-link">View The Current Summit</a>

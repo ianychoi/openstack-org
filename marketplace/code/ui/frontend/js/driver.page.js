@@ -1,6 +1,5 @@
-<?php
 /**
- * Copyright 2015 OpenStack Foundation
+ * Copyright 2014 Openstack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,27 +10,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+jQuery(document).ready(function($){
+    $('#drivers','.marketplace-nav').addClass('current');
 
-interface ISurveyAnswer extends IEntity
-{
+    $('#project_filter').change(function(){
+        var project = $(this).val();
+        $('.driver_table').hide();
+        $('.project_'+project).show();
 
-    /**
-     * @return string
-     */
-    public function value();
+    });
 
-    /**
-     * @return ISurveyQuestionTemplate
-     */
-    public function question();
 
-    /**
-     * @return ISurveyStep
-     */
-    public function step();
-
-    /**
-     * @return string
-     */
-    public function getFormattedAnswer();
-}
+});

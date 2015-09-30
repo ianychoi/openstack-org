@@ -28,12 +28,41 @@ class SurveyDoubleEntryTableQuestionTemplate extends SurveyMultiValueQuestionTem
     );
 
 
+    /**
+     * @param int $id
+     * @return IQuestionValueTemplate
+     */
+    public function getRowById($id)
+    {
+        foreach($this->Rows() as $v){
+            if( $v->ID === $id)
+                return $v;
+        }
+        return null;
+    }
+
+    /**
+     * @param int $id
+     * @return IQuestionValueTemplate
+     */
+    public function getColumnById($id)
+    {
+        foreach($this->Columns() as $v){
+            if( $v->ID === $id)
+                return $v;
+        }
+        return null;
+    }
+
+
     public function getCMSFields() {
 
         $fields = parent::getCMSFields();
         $fields->add(new TextField('RowsLabel', 'Rows Label', '', 255));
         $fields->add(new TextField('AdditionalRowsLabel', 'Additional Rows Label', '', 255));
         $fields->add(new HtmlEditorField('AdditionalRowsDescription', 'Additional Rows Description'));
+        $fields->removeByName('ShowOnSangriaStatistics');
+        $fields->removeByName('ShowOnPublicStatistics');
 
         if($this->ID > 0 )
         {

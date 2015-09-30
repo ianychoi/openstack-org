@@ -22,7 +22,9 @@ final class SangriaPageDeploymentExtension extends Extension
     {
         Config::inst()->update(get_class($this), 'allowed_actions', array(
             'ViewDeploymentStatistics',
+            'ViewDeploymentStatisticsSurveyBuilder',
             'ViewDeploymentSurveyStatistics',
+            'ViewSurveysStatisticsSurveyBuilder',
             'ViewDeploymentDetails',
             'DeploymentDetails',
             'SurveyDetails',
@@ -35,7 +37,9 @@ final class SangriaPageDeploymentExtension extends Extension
 
         Config::inst()->update(get_class($this->owner), 'allowed_actions', array(
             'ViewDeploymentStatistics',
+            'ViewDeploymentStatisticsSurveyBuilder',
             'ViewDeploymentSurveyStatistics',
+            'ViewSurveysStatisticsSurveyBuilder',
             'ViewDeploymentDetails',
             'DeploymentDetails',
             'SurveyDetails',
@@ -47,20 +51,56 @@ final class SangriaPageDeploymentExtension extends Extension
             'exportUsersPerRegion'));
     }
 
+
+    function onBeforeIndex($controller)
+    {
+        Session::clear("ViewDeploymentSurveyStatistics_survey_range");
+        Session::clear("ViewDeploymentStatistics_survey_range");
+        Session::clear("ViewDeploymentsPerRegion_survey_range");
+        Session::clear("global_survey_range");
+    }
+
     function DeploymentDetails()
     {
         $params = $this->owner->request->allParams();
         $deployment_id = intval(Convert::raw2sql($params["ID"]));
-        $deployment = Deployment::get()->byID($deployment_id);
+
+        $range         = Session::get("global_survey_range");
+        //get survey version
+        if(!empty($range) && $range === SurveyType::FALL_2015)
+        {
+            $deployment = Survey::get()->byID($deployment_id);
+            if($deployment->ClassName === 'EntitySurvey')
+                $deployment = EntitySurvey::get()->byID($deployment_id);
+        }
+        else
+            $deployment = Deployment::get()->byID($deployment_id);
+
         if ($deployment) {
             $back_url = $this->owner->request->getVar('BackUrl');
             if (empty($back_url))
                 $back_url = $this->owner->Link("ViewDeploymentDetails");
-            $details_template = $deployment->getSurveyType() == SurveyType::OLD ? "SangriaPage_DeploymentDetailsOld" : "SangriaPage_DeploymentDetails";
-            return $this->owner->Customise(
-                array("Deployment" => $deployment,
+            if($deployment instanceof Survey)
+            {
+                $details_template = 'SangriaPage_SurveyBuilderSurveyDetails';
+                $data = array
+                (
+                    "Survey" => $deployment,
                     "BackUrl" => $back_url
-                )
+                );
+            }
+            else
+            {
+                $details_template = $deployment->getSurveyType() == SurveyType::OLD ? "SangriaPage_DeploymentDetailsOld" : "SangriaPage_DeploymentDetails";
+                $data = array
+                (
+                    "Deployment" => $deployment,
+                    "BackUrl" => $back_url
+                );
+            }
+            return $this->owner->Customise
+            (
+                $data
             )->renderWith(array($details_template, 'SangriaPage', 'SangriaPage'));
         }
         return $this->owner->httpError(404, 'Sorry that Deployment could not be found!.');
@@ -68,18 +108,45 @@ final class SangriaPageDeploymentExtension extends Extension
 
     function SurveyDetails()
     {
-        $params = $this->owner->request->allParams();
+        $params        = $this->owner->request->allParams();
         $deployment_id = intval(Convert::raw2sql($params["ID"]));;
-        $survey = DeploymentSurvey::get()->byID($deployment_id);
-        if ($survey) {
-            $back_url = $this->owner->request->getVar('BackUrl');
-            $details_template = $survey->getSurveyType() == SurveyType::OLD ? "SangriaPage_SurveyDetailsOld" : "SangriaPage_SurveyDetails";
+        $range         = Session::get("global_survey_range");
+        //get survey version
+        if(!empty($range) && $range === SurveyType::FALL_2015)
+        {
+            $survey = Survey::get()->byID($deployment_id);
+            if($survey->ClassName === 'EntitySurvey')
+                $survey = EntitySurvey::get()->byID($deployment_id);
+        }
+        else
+            $survey = DeploymentSurvey::get()->byID($deployment_id);
+
+        if ($survey)
+        {
+            $back_url         = $this->owner->request->getVar('BackUrl');
+            if($survey instanceof Survey)
+            {
+                $details_template = 'SangriaPage_SurveyBuilderSurveyDetails';
+                $data = array
+                (
+                    "Survey" => $survey,
+                    "BackUrl" => $back_url
+                );
+            }
+            else
+            {
+                $details_template = $survey->getSurveyType() == SurveyType::OLD ? "SangriaPage_SurveyDetailsOld" : "SangriaPage_SurveyDetails";
+                $data = array
+                (
+                    "Survey" => $survey,
+                    "BackUrl" => $back_url
+                );
+            }
             if (empty($back_url))
                 $back_url = "#";
-            return $this->owner->Customise(
-                array("Survey" => $survey,
-                    "BackUrl" => $back_url
-                )
+            return $this->owner->Customise
+            (
+                $data
             )->renderWith(array($details_template, 'SangriaPage', 'SangriaPage'));
         }
         return $this->owner->httpError(404, 'Sorry that Survey could not be found!.');
@@ -89,6 +156,12 @@ final class SangriaPageDeploymentExtension extends Extension
 
     public function ViewDeploymentSurveyStatistics() 
     {
+
+        $range = self::getSurveyRange('ViewDeploymentSurveyStatistics');
+        if($range === SurveyType::FALL_2015)
+        {
+            return Controller::curr()->redirect(Controller::curr()->Link("ViewSurveysStatisticsSurveyBuilder"));
+        }
         SangriaPage_Controller::generateDateFilters('DS');
         Requirements::css("themes/openstack/javascript/datetimepicker/jquery.datetimepicker.css");
         Requirements::javascript("themes/openstack/javascript/datetimepicker/jquery.datetimepicker.js");
@@ -113,21 +186,6 @@ final class SangriaPageDeploymentExtension extends Extension
         }
     }
 
-    function DeploymentSurveysCount($page, $useDateFilter = true)
-    {
-        $useDateFilter = self::boolval($useDateFilter);
-        $range = self::getSurveyRange($page);
-        if ($range == SurveyType::MARCH_2015)
-            $range_filter = " DS.Created >= '" . SURVEY_START_DATE . "'";
-        else
-            $range_filter = " DS.Created < '" . SURVEY_START_DATE . "'";
-        $date_filter = '';
-        if ($useDateFilter)
-            $date_filter = " AND " . SangriaPage_Controller::$date_filter_query;
-
-        $query = "SELECT COUNT(*) FROM DeploymentSurvey DS INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry WHERE " . $range_filter . $date_filter;
-        return DB::query($query)->value();
-    }
 
     public static function getSurveyRange($page)
     {
@@ -135,11 +193,13 @@ final class SangriaPageDeploymentExtension extends Extension
         if (isset($params["survey_range"])) {
             $range = Convert::raw2sql($params["survey_range"]);
             Session::set($page . "_survey_range", $range);
+            Session::set("global_survey_range", $range);
             return $range;
         }
         $range = Session::get($page . "_survey_range");
         return is_null($range) ? SurveyType::OLD : $range;
     }
+
 
     private static function generateDeploymentSurveysSummaryOptions($options, $field)
     {
@@ -242,6 +302,11 @@ final class SangriaPageDeploymentExtension extends Extension
 
     function ViewDeploymentStatistics()
     {
+        $range = self::getSurveyRange('ViewDeploymentStatistics');
+        if($range === SurveyType::FALL_2015)
+        {
+            return Controller::curr()->redirect(Controller::curr()->Link("ViewDeploymentStatisticsSurveyBuilder"));
+        }
         SangriaPage_Controller::generateDateFilters('D');
         Requirements::css("themes/openstack/javascript/datetimepicker/jquery.datetimepicker.css");
         Requirements::javascript("themes/openstack/javascript/datetimepicker/jquery.datetimepicker.js");
@@ -262,7 +327,7 @@ final class SangriaPageDeploymentExtension extends Extension
     {
         $list = new ArrayList();
 
-        $urlString = $_SERVER["REDIRECT_URL"] . "?";
+        $urlString = isset($_SERVER["REDIRECT_URL"])?$_SERVER["REDIRECT_URL"]:Controller::curr()->Link('ViewDeploymentStatistics') . "?";
         $keyUrlString = "";
         $keyValue = "";
 
@@ -277,7 +342,7 @@ final class SangriaPageDeploymentExtension extends Extension
             }
         }
 
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
         if ($range == SurveyType::MARCH_2015)
             $range_filter = " AND D.Created >= '" . SURVEY_START_DATE . "'";
@@ -604,7 +669,7 @@ final class SangriaPageDeploymentExtension extends Extension
     {
         $filterWhereClause = SangriaPage_Controller::generateFilterWhereClause();
 
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "AND D.Created >= '" . SURVEY_START_DATE . "'";
@@ -647,7 +712,7 @@ final class SangriaPageDeploymentExtension extends Extension
         }
 
         if (!empty($country)) {
-            $range = self::getSurveyRange('DeploymentsPerRegion');
+            $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
             if ($range == SurveyType::MARCH_2015)
                 $range_filter = "AND D.Created >= '" . SURVEY_START_DATE . "'";
@@ -655,12 +720,41 @@ final class SangriaPageDeploymentExtension extends Extension
                 $range_filter = "AND D.Created < '" . SURVEY_START_DATE . "'";
 
             $continent = DB::query("SELECT ContinentID from Continent_Countries where CountryCode = '{$country}';")->value();
-            $count = DB::query("SELECT COUNT(*) FROM Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID WHERE DS.PrimaryCountry = '{$country}' {$range_filter};")->value();
-            $result = array(
-                'country' => $country,
+
+            $old_query = <<<SQL
+            SELECT COUNT(*) FROM Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID WHERE DS.PrimaryCountry = '{$country}' {$range_filter};
+SQL;
+
+            $new_query = <<<SQL
+            SELECT COUNT(EntityID)
+FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.CountryCode = '{$country}';
+SQL;
+
+
+            $query  = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+            $count  = DB::query($query)->value();
+            $result = array
+            (
+                'country'      => $country,
                 'country_name' => CountryCodes::$iso_3166_countryCodes[$country],
-                'continent' => $continent,
-                'count' => $count
+                'continent'    => $continent,
+                'count'        => $count
             );
             Requirements::javascript('themes/openstack/javascript/sangria/sangria.page.viewdeploymentscountry.js');
             return $this->owner->getViewer('ViewDeploymentsPerCountry')->process($this->owner->customise($result));
@@ -707,7 +801,7 @@ final class SangriaPageDeploymentExtension extends Extension
     {
         $list = new ArrayList();
 
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "WHERE D.Created >= '" . SURVEY_START_DATE . "'";
@@ -715,12 +809,41 @@ final class SangriaPageDeploymentExtension extends Extension
             $range_filter = "WHERE D.Created < '" . SURVEY_START_DATE . "'";
 
 
-        $records = DB::query("SELECT COUNT(D.ID) AS DeploymentsQty, C.ID AS ContinentID, C.Name AS Continent FROM Deployment D
+$old_query = <<<SQL
+SELECT COUNT(D.ID) AS DeploymentsQty, C.ID AS ContinentID, C.Name AS Continent FROM Deployment D
 INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID
 INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry
 INNER JOIN Continent C ON C.ID = CC.ContinentID {$range_filter}
-GROUP BY C.Name, C.ID;");
-        foreach ($records as $record) {
+GROUP BY C.Name, C.ID;
+SQL;
+
+$new_query = <<<SQL
+SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) AS DeploymentsQty , C.ID AS ContinentID, C.Name AS Continent FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+INNER JOIN Continent C ON C.ID = CC.ContinentID
+GROUP BY C.Name, C.ID;
+SQL;
+
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+
+        $records = DB::query($query);
+
+        foreach ($records as $record)
+        {
             $count = $record['DeploymentsQty'];
             $continent = $record['Continent'];
             $continent_id = $record['ContinentID'];
@@ -736,15 +859,55 @@ GROUP BY C.Name, C.ID;");
     function DeploymentsPerCountry($country)
     {
         $list = new ArrayList();
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "AND D.Created >= '" . SURVEY_START_DATE . "'";
         else
             $range_filter = "AND D.Created < '" . SURVEY_START_DATE . "'";
-        $deployments = DB::query("SELECT D.* from Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID WHERE DS.PrimaryCountry = '{$country}' {$range_filter}; ");
-        foreach ($deployments as $deployment) {
+
+$old_query = <<<SQL
+SELECT D.* from Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID WHERE DS.PrimaryCountry = '{$country}' {$range_filter};
+SQL;
+
+$new_query = <<<SQL
+SELECT EntityID AS ID, 'EntitySurvey' AS ClassName, CC.CountryCode AS Country
+FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.CountryCode = '{$country}';
+SQL;
+
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+
+        $res = DB::query($query);
+
+        foreach ($res as $row) {
             // concept: new Deployment($deployment)
-            $list->push(new $deployment['ClassName']($deployment));
+            $entity = new $row['ClassName']($row);
+            $list->push(
+                new ArrayData
+                (
+                    array
+                    (
+                        'ID'             => $entity->ID,
+                        'Country'        => $entity->ClassName === 'Deployment'? $entity->Country : $row['Country'],
+                        'Label'          => $entity->ClassName === 'Deployment'? sprintf("%s - %s",$entity->Label,$entity->DeploymentType) :$entity->getFriendlyName(),
+                    )
+                )
+            );
         }
         return $list;
     }
@@ -753,16 +916,43 @@ GROUP BY C.Name, C.ID;");
     {
 
         $list = new ArrayList();
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "AND D.Created >= '" . SURVEY_START_DATE . "'";
         else
             $range_filter = "AND D.Created < '" . SURVEY_START_DATE . "'";
 
-        $countries = DB::query("SELECT COUNT(D.ID) AS Qty, DS.PrimaryCountry FROM Deployment D
+$old_query = <<<SQL
+SELECT COUNT(D.ID) AS Qty, DS.PrimaryCountry FROM Deployment D
 INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID
 WHERE PrimaryCountry
-IN (SELECT CountryCode from Continent_Countries where ContinentID = {$continent_id}) {$range_filter} group BY PrimaryCountry;");
+IN (SELECT CountryCode from Continent_Countries where ContinentID = {$continent_id}) {$range_filter} group BY PrimaryCountry;
+SQL;
+
+$new_query = <<<SQL
+SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) AS Qty, CC.CountryCode AS PrimaryCountry FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.ContinentID = {$continent_id}
+GROUP BY CC.CountryCode ;
+SQL;
+
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+
+        $countries = DB::query($query);
         foreach ($countries as $country) {
             $count = $country['Qty'];
             $country = $country['PrimaryCountry'];
@@ -780,16 +970,43 @@ IN (SELECT CountryCode from Continent_Countries where ContinentID = {$continent_
     function CountriesWithDeployments($continent_id)
     {
         $list = new ArrayList();
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "AND D.Created >= '" . SURVEY_START_DATE . "'";
         else
             $range_filter = "AND D.Created < '" . SURVEY_START_DATE . "'";
-
-        $countries = DB::query("SELECT  CC.CountryCode, COUNT(CC.CountryCode) AS Qty from Continent_Countries CC INNER JOIN DeploymentSurvey DS ON DS.PrimaryCountry = CC.CountryCode
+$old_query = <<<SQL
+SELECT  CC.CountryCode, COUNT(CC.CountryCode) AS Qty from Continent_Countries CC INNER JOIN DeploymentSurvey DS ON DS.PrimaryCountry = CC.CountryCode
 INNER JOIN  Deployment D ON DS.ID = D.DeploymentSurveyID
-WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode; ");
+WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode;
+SQL;
+
+$new_query = <<<SQL
+SELECT CC.CountryCode, COUNT(CC.CountryCode) AS Qty
+FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.ContinentID = {$continent_id}
+GROUP BY CC.CountryCode
+SQL;
+
+        $query     = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+        $countries = DB::query($query);
+
         foreach ($countries as $country) {
             // concept: new Deployment($deployment)
             $do = new DataObject();
@@ -825,7 +1042,64 @@ WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode;
         $date_filter = '';
         if ($useDateFilter)
             $date_filter = " AND " . SangriaPage_Controller::$date_filter_query;
-        $query = "SELECT COUNT(*) from Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry " . $range_filter . $filterWhereClause . $date_filter;
+        $old_query = "SELECT COUNT(*) from Deployment D INNER JOIN DeploymentSurvey DS ON DS.ID = D.DeploymentSurveyID INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry " . $range_filter . $filterWhereClause . $date_filter;
+
+        $new_query = <<<SQL
+      SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN EntitySurveyTemplate EST ON EST.ID = ST.ID
+	INNER JOIN EntitySurvey ES ON ES.ID = S.ID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1 AND EST.EntityName = 'Deployment'
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0;
+SQL;
+
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+
+        return DB::query($query)->value();
+    }
+
+    function DeploymentSurveysCount($page, $useDateFilter = true)
+    {
+        $useDateFilter = self::boolval($useDateFilter);
+        $range = self::getSurveyRange($page);
+        if ($range == SurveyType::MARCH_2015)
+            $range_filter = " DS.Created >= '" . SURVEY_START_DATE . "'";
+        else
+            $range_filter = " DS.Created < '" . SURVEY_START_DATE . "'";
+        $date_filter = '';
+        if ($useDateFilter)
+            $date_filter = " AND " . SangriaPage_Controller::$date_filter_query;
+
+        $old_query = "SELECT COUNT(*) FROM DeploymentSurvey DS INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry WHERE " . $range_filter . $date_filter;
+
+        $new_query = <<<SQL
+      SELECT COUNT(SURVEYS_COUNTRIES.SurveyID) FROM
+(
+	SELECT
+    S.ID AS SurveyID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) SURVEYS_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, SURVEYS_COUNTRIES.Countries) > 0;
+SQL;
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+
         return DB::query($query)->value();
     }
 
@@ -842,29 +1116,57 @@ WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode;
         Requirements::javascript("marketplace/code/ui/frontend/js/google.maps.jquery.js");
 
         $range = self::getSurveyRange('ViewDeploymentSurveysPerRegion');
+
         if ($range == SurveyType::MARCH_2015)
             $range_filter = " AND DS.Created >= '" . SURVEY_START_DATE . "'";
         else
             $range_filter = " AND DS.Created < '" . SURVEY_START_DATE . "'";
 
-        if (!empty($continent)) {
+        if (!empty($continent))
+        {
             $continent_name = DB::query("SELECT Name from Continent where ID = {$continent}")->value();
-            $result = array(
-                'continent' => $continent,
+            $result = array
+            (
+                'continent'      => $continent,
                 'continent_name' => $continent_name
             );
             Requirements::javascript('themes/openstack/javascript/sangria/sangria.page.viewdeploymentscontinent.js');
             return $this->owner->getViewer('ViewDeploymentSurveysPerContinent')->process($this->owner->customise($result));
         }
 
-        if (!empty($country)) {
+        if (!empty($country))
+        {
+            $old_query = <<<SQL
+            SELECT COUNT(*) FROM DeploymentSurvey DS WHERE DS.PrimaryCountry = '{$country}' {$range_filter};
+SQL;
+
+            $new_query = <<<SQL
+            SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) DEPLOYMENT_COUNTRIES
+WHERE FIND_IN_SET('{$country}', DEPLOYMENT_COUNTRIES.Countries) > 0;
+SQL;
+            $query = $range === SurveyType::FALL_2015 ? $new_query :$old_query;
+
+
             $continent = DB::query("SELECT ContinentID from Continent_Countries where CountryCode = '{$country}';")->value();
-            $count = DB::query("SELECT COUNT(*) FROM DeploymentSurvey DS WHERE DS.PrimaryCountry = '{$country}' {$range_filter};")->value();
-            $result = array(
-                'country' => $country,
+            $count     = DB::query($query)->value();
+            $result    = array
+            (
+                'country'      => $country,
                 'country_name' => CountryCodes::$iso_3166_countryCodes[$country],
-                'continent' => $continent,
-                'count' => $count
+                'continent'    => $continent,
+                'count'        => $count
             );
             Requirements::javascript('themes/openstack/javascript/sangria/sangria.page.viewdeploymentscountry.js');
             return $this->owner->getViewer('ViewDeploymentSurveysPerCountry')->process($this->owner->customise($result));
@@ -883,12 +1185,38 @@ WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode;
         else
             $range_filter = " WHERE DS.Created < '" . SURVEY_START_DATE . "'";
 
-        $list = new ArrayList();
-        $records = DB::query("SELECT COUNT(DS.ID) AS DeploymentsQty, C.ID AS ContinentID, C.Name AS Continent FROM DeploymentSurvey DS
+        $old_query = <<< SQL
+      SELECT COUNT(DS.ID) AS DeploymentsQty, C.ID AS ContinentID, C.Name AS Continent FROM DeploymentSurvey DS
 INNER JOIN Continent_Countries CC ON CC.CountryCode = DS.PrimaryCountry
 INNER JOIN Continent C ON C.ID = CC.ContinentID {$range_filter}
-GROUP BY C.Name, C.ID;");
-        foreach ($records as $record) {
+GROUP BY C.Name, C.ID;
+SQL;
+
+
+        $new_query = <<<SQL
+    SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) AS DeploymentsQty , C.ID AS ContinentID, C.Name AS Continent  FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+INNER JOIN Continent C ON C.ID = CC.ContinentID
+GROUP BY C.Name, C.ID;
+SQL;
+
+        $list    = new ArrayList();
+        $query   = $range === SurveyType::FALL_2015 ?$new_query : $old_query;
+        $records = DB::query($query);
+
+        foreach ($records as $record)
+        {
             $count = $record['DeploymentsQty'];
             $continent = $record['Continent'];
             $continent_id = $record['ContinentID'];
@@ -909,11 +1237,47 @@ GROUP BY C.Name, C.ID;");
         else
             $range_filter = " AND DS.Created < '" . SURVEY_START_DATE . "'";
 
+        $old_query = <<<SQL
+    SELECT DS.* from DeploymentSurvey DS WHERE DS.PrimaryCountry = '{$country}' {$range_filter};
+SQL;
+
+        $new_query = <<<SQL
+SELECT EntityID AS ID, 'Survey' AS ClassName, CC.CountryCode AS Country
+FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.CountryCode = '{$country}';
+SQL;
+
         $list = new ArrayList();
-        $deployments = DB::query("SELECT DS.* from DeploymentSurvey DS WHERE DS.PrimaryCountry = '{$country}' {$range_filter}; ");
-        foreach ($deployments as $deployment) {
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
+        $res = DB::query($query);
+        foreach ($res as $row)
+        {
             // concept: new DeploymentSurvey($deployment)
-            $list->push(new $deployment['ClassName']($deployment));
+            $entity = new $row['ClassName']($row);
+            $list->push(
+                new ArrayData
+                (
+                    array
+                    (
+                        'ID'             => $entity->ID,
+                        'Country'        => $entity->ClassName === 'DeploymentSurvey'? $entity->Country : $row['Country'],
+                        'Label'          => $entity->ClassName === 'DeploymentSurvey'? sprintf("%s - %s",$entity->Email,$entity->Industry) :$entity->getFriendlyName(),
+                    )
+                )
+            );
         }
         return $list;
     }
@@ -926,10 +1290,34 @@ GROUP BY C.Name, C.ID;");
         else
             $range_filter = " AND DS.Created < '" . SURVEY_START_DATE . "'";
 
+        $old_query = <<<SQL
+      SELECT COUNT(DS.ID) AS Qty, DS.PrimaryCountry FROM DeploymentSurvey DS WHERE PrimaryCountry
+IN (SELECT CountryCode FROM Continent_Countries WHERE ContinentID = {$continent_id}) {$range_filter} GROUP BY PrimaryCountry;
+SQL;
 
+        $new_query  = <<< SQL
+SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) AS Qty, CC.CountryCode AS PrimaryCountry FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyTemplate ST ON ST.ID = S.TemplateID
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.ContinentID = {$continent_id}
+GROUP BY CC.CountryCode ;
+SQL;
+
+
+        $query = $range === SurveyType::FALL_2015 ? $new_query : $old_query;
         $list = new ArrayList();
-        $countries = DB::query("SELECT COUNT(DS.ID) AS Qty, DS.PrimaryCountry FROM DeploymentSurvey DS WHERE PrimaryCountry
-IN (SELECT CountryCode FROM Continent_Countries WHERE ContinentID = {$continent_id}) {$range_filter} GROUP BY PrimaryCountry;");
+        $countries = DB::query($query);
         foreach ($countries as $country) {
             $count = $country['Qty'];
             $country = $country['PrimaryCountry'];
@@ -963,8 +1351,33 @@ IN (SELECT CountryCode FROM Continent_Countries WHERE ContinentID = {$continent_
             $range_filter = " AND DS.Created < '" . SURVEY_START_DATE . "'";
 
         $list = new ArrayList();
-        $countries = DB::query("SELECT  CC.CountryCode, COUNT(CC.CountryCode) AS Qty from Continent_Countries CC INNER JOIN DeploymentSurvey DS ON DS.PrimaryCountry = CC.CountryCode
-        WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode; ");
+
+$old_query = <<<SQL
+SELECT  CC.CountryCode, COUNT(CC.CountryCode) AS Qty from Continent_Countries CC INNER JOIN DeploymentSurvey DS ON DS.PrimaryCountry = CC.CountryCode
+        WHERE CC.ContinentID =  {$continent_id} {$range_filter} GROUP BY CC.CountryCode;
+SQL;
+
+        $new_query = <<<SQL
+SELECT COUNT(DEPLOYMENT_COUNTRIES.EntityID) AS Qty, CC.CountryCode FROM
+(
+	SELECT
+    S.ID AS EntityID,
+    A.Value AS Countries FROM
+	Survey S
+    INNER JOIN SurveyStep STP ON STP.SurveyID = S.ID
+	INNER JOIN SurveyAnswer A ON A.StepID = STP.ID
+	INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+	INNER JOIN SurveyDropDownQuestionTemplate DDL ON DDL.ID = Q.ID
+	WHERE DDL.IsCountrySelector = 1
+) DEPLOYMENT_COUNTRIES
+INNER JOIN Continent_Countries CC ON FIND_IN_SET(CC.CountryCode, DEPLOYMENT_COUNTRIES.Countries) > 0
+WHERE CC.ContinentID = {$continent_id}
+GROUP BY CC.CountryCode ;
+SQL;
+
+
+        $query =$range === SurveyType::FALL_2015 ? $new_query : $old_query;
+        $countries = DB::query($query);
         foreach ($countries as $country) {
             // concept: new Deployment($deployment)
             $do = new DataObject();
@@ -1105,7 +1518,7 @@ WHERE CC.ContinentID = {$continent_id} GROUP BY CC.CountryCode; ");
     {
         $filterWhereClause = SangriaPage_Controller::generateFilterWhereClause();
 
-        $range = self::getSurveyRange('DeploymentsPerRegion');
+        $range = self::getSurveyRange('ViewDeploymentsPerRegion');
 
         if ($range == SurveyType::MARCH_2015)
             $range_filter = "D.Created >= '" . SURVEY_START_DATE . "'";
@@ -1189,5 +1602,386 @@ WHERE CC.ContinentID = {$continent_id} GROUP BY CC.CountryCode; ");
         $filename = "UsersPerCountry" . date('Ymd') . ".csv";
 
         return CSVExporter::getInstance()->export($filename, $data, ',');
+    }
+
+    // survey builder statistics
+
+    public function SurveyBuilderSurveyTemplates($class_name = 'EntitySurveyTemplate')
+    {
+        Session::set('SurveyBuilder.Statistics.ClassName', $class_name);
+        if($class_name === 'SurveyTemplate')
+        return SurveyTemplate::get()->filter('ClassName', 'SurveyTemplate');
+        return EntitySurveyTemplate::get();
+    }
+
+    public function getSurveyQuestions2Show()
+    {
+        $template = $this->getCurrentSelectedSurveyTemplate();
+        if(is_null($template)) return new ArrayList();
+        $res = array();
+        foreach($template->Steps()->sort('Order') as $step)
+        {
+            if(!$step instanceof ISurveyRegularStepTemplate) continue;
+
+            foreach($step->Questions()->sort('Order') as $q)
+            {
+                if($q->ShowOnSangriaStatistics)
+                {
+                    array_push($res, $q);
+                }
+            }
+        }
+        return new ArrayList($res);
+    }
+
+    /**
+     * @return SurveyTemplate|null
+     */
+    private function getCurrentSelectedSurveyTemplate()
+    {
+
+        $template_id = Session::get(sprintf("SurveyBuilder.%sStatistics.TemplateId", Session::get('SurveyBuilder.Statistics.ClassName')));
+        $template    = null;
+        if(!empty($template_id))
+        {
+            $template = SurveyTemplate::get()->byID(intval($template_id));
+            if(!is_null($template) && $template->ClassName === 'EntitySurveyTemplate')
+            {
+                $template = EntitySurveyTemplate::get()->byID(intval($template_id));
+            }
+        }
+        return  $template;
+    }
+
+    /**
+     * @return null|string
+     */
+    private function getCurrentSelectedSurveyClassName()
+    {
+       $template = $this->getCurrentSelectedSurveyTemplate();
+       if(is_null($template)) return null;
+       if($template instanceof EntitySurveyTemplate) return 'EntitySurvey';
+       return "Survey";
+    }
+
+    public function SurveyBuilderCountAnswers($question_id, $value_id)
+    {
+
+        $request     = Controller::curr()->getRequest();
+        $from        = $request->getVar('From');
+        $to          = $request->getVar('To');
+        $question_id = intval($question_id);
+        $value_id    = is_int($value_id) ? intval($value_id) : $value_id;
+        $template    = $this->getCurrentSelectedSurveyTemplate();
+        if(is_null($template)) return;
+        $filters     = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters', Session::get('SurveyBuilder.Statistics.ClassName')));
+        $class_name  = $this->getCurrentSelectedSurveyClassName();
+
+$filter_query_tpl_int = <<<SQL
+    AND EXISTS
+    (
+		SELECT * FROM SurveyAnswer A2
+        INNER JOIN SurveyQuestionTemplate Q2 ON Q2.ID = A2.QuestionID
+		INNER JOIN SurveyStepTemplate STPL2 ON STPL2.ID = Q2.StepID
+		INNER JOIN SurveyTemplate SSTPL2 ON SSTPL2.ID = STPL2.SurveyTemplateID
+		INNER JOIN SurveyQuestionValueTemplate V2 ON V2.OwnerID = Q2.ID
+		INNER JOIN SurveyStep S2 ON S2.ID = A2.StepID
+		INNER JOIN Survey I2 ON I2.ID = S2.SurveyID
+        WHERE
+        I2.ClassName = '{$class_name}'
+		AND FIND_IN_SET(V2.ID, A2.Value) > 0
+		AND SSTPL2.ID = %s
+		AND Q2.ID = %s
+		AND V2.ID = %s
+        AND I2.ID = I.ID
+	)
+SQL;
+
+$filter_query_tpl_str = <<<SQL
+    AND EXISTS
+    (
+		SELECT * FROM SurveyAnswer A2
+        INNER JOIN SurveyQuestionTemplate Q2 ON Q2.ID = A2.QuestionID
+		INNER JOIN SurveyStepTemplate STPL2 ON STPL2.ID = Q2.StepID
+		INNER JOIN SurveyTemplate SSTPL2 ON SSTPL2.ID = STPL2.SurveyTemplateID
+		INNER JOIN SurveyStep S2 ON S2.ID = A2.StepID
+		INNER JOIN Survey I2 ON I2.ID = S2.SurveyID
+        WHERE
+        I2.ClassName = '{$class_name}'
+	    AND SSTPL2.ID = %s
+		AND Q2.ID = %s
+        AND I2.ID = I.ID
+        AND FIND_IN_SET('%s', A2.Value) > 0
+	)
+SQL;
+
+        $filters_where = '';
+
+        if(!empty($from) && !empty($to))
+        {
+            $filters_where = " AND ".SangriaPage_Controller::generateDateFilters("I", "LastEdited");
+        }
+
+        if(!empty($filters))
+        {
+            $filters = trim($filters, ',');
+            $filters = explode(',', $filters);
+            foreach($filters as $t)
+            {
+                $t = explode(':', $t);
+                $qid = intval($t[0]);
+                $vid = is_int($t[1])?intval($t[1]):$t[1];
+                $filter_query_tpl = is_int($vid) ? $filter_query_tpl_int: $filter_query_tpl_str;
+                $filters_where.= sprintf($filter_query_tpl, $template->ID, $qid, $vid);
+            }
+        }
+
+$query_str = <<<SQL
+SELECT COUNT(A.Value) FROM SurveyAnswer A
+    INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+    INNER JOIN SurveyStepTemplate STPL ON STPL.ID = Q.StepID
+    INNER JOIN SurveyTemplate SSTPL ON SSTPL.ID = STPL.SurveyTemplateID
+    INNER JOIN SurveyStep S ON S.ID = A.StepID
+    INNER JOIN Survey I ON I.ID = S.SurveyID
+    WHERE
+    I.ClassName = '{$class_name}'
+    AND FIND_IN_SET('{$value_id}', A.Value) > 0
+    AND SSTPL.ID = $template->ID
+    AND Q.ID = {$question_id}
+    {$filters_where};
+SQL;
+
+$query_int = <<<SQL
+    SELECT COUNT(A.Value) FROM SurveyAnswer A
+    INNER JOIN SurveyQuestionTemplate Q ON Q.ID = A.QuestionID
+    INNER JOIN SurveyStepTemplate STPL ON STPL.ID = Q.StepID
+    INNER JOIN SurveyTemplate SSTPL ON SSTPL.ID = STPL.SurveyTemplateID
+    INNER JOIN SurveyQuestionValueTemplate V ON V.OwnerID = Q.ID
+    INNER JOIN SurveyStep S ON S.ID = A.StepID
+    INNER JOIN Survey I ON I.ID = S.SurveyID
+    WHERE
+    I.ClassName = '{$class_name}'
+    AND FIND_IN_SET(V.ID, A.Value) > 0
+    AND SSTPL.ID = $template->ID
+    AND Q.ID = {$question_id}
+    AND V.ID = {$value_id} {$filters_where};
+SQL;
+        $query = is_int($value_id) ? $query_int : $query_str;
+        return DB::query($query)->value();
+    }
+
+    public function RenderCurrentFilters()
+    {
+        $questions_filters = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters_Questions', Session::get('SurveyBuilder.Statistics.ClassName')));
+        if(!empty($questions_filters))
+        {
+            $template = $this->getCurrentSelectedSurveyTemplate();
+            if(is_null($template)) return;
+
+            $questions_filters = explode(',', $questions_filters);
+            $output = '';
+            foreach($questions_filters as $qid)
+            {
+                if(empty($qid)) continue;
+                $q = $template->getQuestionById($qid);
+                if(is_null($q)) continue;
+                $output .= $q->Name. ',';
+            }
+            return trim($output,',');
+        }
+        return '';
+    }
+
+    public function IsSurveyTemplateSelected($current_template_id)
+    {
+        $template_id =  Session::get(sprintf("SurveyBuilder.%sStatistics.TemplateId", Session::get('SurveyBuilder.Statistics.ClassName')));
+        return (!empty($template_id) && !empty($current_template_id) && intval($current_template_id) === intval($template_id));
+    }
+
+    public function SurveyBuilderDateFilterQueryString()
+    {
+        $request       = Controller::curr()->getRequest();
+        $from          = $request->getVar('From');
+        $to            = $request->getVar('To');
+        $query_str = '';
+        if(!empty($from) && !empty($to))
+            $query_str = sprintf("&From=%s&To=%s", $from, $to);
+        return $query_str;
+    }
+
+    public function IsQuestionOnFiltering($qid)
+    {
+        $questions_filters = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters_Questions', Session::get('SurveyBuilder.Statistics.ClassName')));
+        if(!empty($questions_filters))
+        {
+            $questions_filters = explode(',', $questions_filters);
+            return in_array($qid, $questions_filters);
+        }
+        return false;
+    }
+
+    public function SurveyBuilderSurveyCount()
+    {
+        $request     = Controller::curr()->getRequest();
+        $from        = $request->getVar('From');
+        $to          = $request->getVar('To');
+        $template    = $this->getCurrentSelectedSurveyTemplate();
+        if(is_null($template)) return 0;
+        $class_name  = $this->getCurrentSelectedSurveyClassName();
+        $filters     = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters', Session::get('SurveyBuilder.Statistics.ClassName')));
+
+        $filter_query_tpl_int = <<<SQL
+    AND EXISTS
+    (
+		SELECT * FROM SurveyAnswer A2
+        INNER JOIN SurveyQuestionTemplate Q2 ON Q2.ID = A2.QuestionID
+		INNER JOIN SurveyStepTemplate STPL2 ON STPL2.ID = Q2.StepID
+		INNER JOIN SurveyTemplate SSTPL2 ON SSTPL2.ID = STPL2.SurveyTemplateID
+		INNER JOIN SurveyQuestionValueTemplate V2 ON V2.OwnerID = Q2.ID
+		INNER JOIN SurveyStep S2 ON S2.ID = A2.StepID
+		INNER JOIN Survey I2 ON I2.ID = S2.SurveyID
+        WHERE
+        I2.ClassName = '{$class_name}'
+		AND FIND_IN_SET(V2.ID, A2.Value) > 0
+		AND SSTPL2.ID = %s
+		AND Q2.ID = %s
+		AND V2.ID = %s
+        AND I2.ID = I.ID
+	)
+SQL;
+
+
+
+        $filter_query_tpl_str = <<<SQL
+    AND EXISTS
+    (
+		SELECT * FROM SurveyAnswer A2
+        INNER JOIN SurveyQuestionTemplate Q2 ON Q2.ID = A2.QuestionID
+		INNER JOIN SurveyStepTemplate STPL2 ON STPL2.ID = Q2.StepID
+		INNER JOIN SurveyTemplate SSTPL2 ON SSTPL2.ID = STPL2.SurveyTemplateID
+		INNER JOIN SurveyStep S2 ON S2.ID = A2.StepID
+		INNER JOIN Survey I2 ON I2.ID = S2.SurveyID
+        WHERE
+        I2.ClassName = '{$class_name}'
+
+		AND SSTPL2.ID = %s
+		AND Q2.ID = %s
+        AND I2.ID = I.ID
+       	AND FIND_IN_SET('%s', A2.Value) > 0
+	)
+SQL;
+        $filters_where = '';
+
+        if(!empty($from) && !empty($to))
+        {
+            $filters_where = " AND ".SangriaPage_Controller::generateDateFilters("I", "LastEdited");
+        }
+
+        if(!empty($filters))
+        {
+            $filters = trim($filters, ',');
+            $filters = explode(',', $filters);
+            foreach($filters as $t)
+            {
+                $t = explode(':', $t);
+                $qid = intval($t[0]);
+                $vid = is_int($t[1])? intval($t[1]):$t[1];
+                $filter_query_tpl = is_int($vid) ? $filter_query_tpl_int : $filter_query_tpl_str;
+                $filters_where.= sprintf($filter_query_tpl, $template->ID, $qid, $vid);
+            }
+        }
+
+        $query = <<<SQL
+    SELECT COUNT(I.ID) FROM Survey I
+    WHERE
+    I.TemplateID = $template->ID AND I.ClassName = '{$class_name}' {$filters_where};
+SQL;
+
+        return DB::query($query)->value();
+    }
+
+    public function SurveyBuilderLabelSubmitted()
+    {
+        $class_name = Session::get('SurveyBuilder.Statistics.ClassName');
+        if(empty($class_name)) return;
+        if($class_name === 'SurveyTemplate')
+            return "Surveys Submitted";
+        else
+            return "Deployments Submitted";
+    }
+
+    private function ViewStatisticsSurveyBuilder(SS_HTTPRequest $request, $action, $class_name)
+    {
+        Requirements::javascript('themes/openstack/javascript/sangria/sangria.page.view.statistics.surveybuilder.js');
+
+        $qid           = $request->requestVar('qid');
+        $vid           = $request->requestVar('vid');
+        $clear_filters = $request->requestVar('clear_filters');
+        $from          = $request->requestVar('From');
+        $to            = $request->requestVar('To');
+        $template_id   = intval($request->requestVar('survey_template_id'));
+
+        if($template_id != 0)
+        {
+            Session::set(sprintf("SurveyBuilder.%sStatistics.TemplateId", $class_name), $template_id);
+            Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters",$class_name ));
+            Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters_Questions",$class_name));
+        }
+
+        if(!empty($clear_filters))
+        {
+            Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters",$class_name ));
+            Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters_Questions",$class_name));
+            return Controller::curr()->redirect(Controller::curr()->Link($action));
+        }
+        else if(!empty($qid) && !empty($vid))
+        {
+            $qid     = intval($qid);
+            $vid     = is_int($vid) ? intval($vid):$vid;
+            $filters = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters', $class_name));
+            $questions_filters = Session::get(sprintf('SurveyBuilder.%sStatistics.Filters_Questions', $class_name));
+            $filters .= sprintf("%s:%s,",$qid,$vid);
+            $questions_filters .= sprintf("%s,",$qid);
+
+            Session::set(sprintf("SurveyBuilder.%sStatistics.Filters", $class_name), $filters);
+            Session::set(sprintf("SurveyBuilder.%sStatistics.Filters_Questions", $class_name), $questions_filters);
+
+            $query_str = '';
+            if(!empty($from) && !empty($to))
+                $query_str = sprintf("?From=%s&To=%s", $from, $to);
+            return Controller::curr()->redirect(Controller::curr()->Link($action).$query_str);
+        }
+        return $this->owner->Customise
+        (
+            array
+            (
+                'ClassName' => $class_name,
+                'Action'    => $action
+            )
+        )->renderWith(array('SangriaPage_ViewStatisticsSurveyBuilder', 'SangriaPage', 'SangriaPage'));
+    }
+
+    public function ViewDeploymentStatisticsSurveyBuilder(SS_HTTPRequest $request)
+    {
+        $this->clearStatisticsSurveyBuilderSessionData('SurveyTemplate');
+        return $this->ViewStatisticsSurveyBuilder($request, 'ViewDeploymentStatisticsSurveyBuilder', 'EntitySurveyTemplate');
+    }
+
+    public function ViewSurveysStatisticsSurveyBuilder(SS_HTTPRequest $request)
+    {
+       $this->clearStatisticsSurveyBuilderSessionData('EntitySurveyTemplate');
+       return $this->ViewStatisticsSurveyBuilder($request, 'ViewSurveysStatisticsSurveyBuilder', 'SurveyTemplate');
+    }
+
+    private function clearStatisticsSurveyBuilderSessionData($class_name)
+    {
+        Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters",$class_name ));
+        Session::clear(sprintf("SurveyBuilder.%sStatistics.Filters_Questions",$class_name));
+        Session::clear(sprintf("SurveyBuilder.%sStatistics.TemplateId", $class_name));
+    }
+
+    public function IsRegularStep($template)
+    {
+        return true;
     }
 }

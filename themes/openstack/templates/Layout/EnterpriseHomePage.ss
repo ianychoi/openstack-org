@@ -11,27 +11,21 @@
 
 
     <!-- Begin Page Content -->
-        <div class="intro-header crowd">
+        <div class="intro-header enterprise-booklet">
         <div class="container">
             <div class="row">
-                <div class="col-sm-6 col-md-7">
+                <div class="col-md-8 col-md-push-2">
                     <div class="intro-message">
-                        <h1>We’re In a Software Defined Economy</h1>
-                        <h3>OpenStack is a driving force in Enterprise software</h3>
+                        <h5>FEATURED</h5>
+                        <h1>Recommendations from the enterprise community</h1>
+                        <!-- <h3>OpenStack is a driving force in Enterprise software</h3> -->
                         <p>
-                            Today’s software-defined economy requires businesses to move faster than their competitors. Many enterprise organizations and their software developers are turning to OpenStack for its open APIs, flexible architecture and large commercial ecosystem to compete in a completely new paradigm of software development and deployment.
+                            Current OpenStack users—from small startups to global enterprise—built a booklet of use cases and planning tips with the IT executive in mind. Their experience can help you get started with OpenStack. 
+                        </p>
+                        <p>
+                            <a href="#" class="lrg-btn" data-toggle="modal" data-target="#downloadModal">Get their insights now</a>
                         </p>
                     </div>
-                </div>
-                <div class="col-sm-6 col-md-4">
-                        <a href="#" data-toggle="modal" data-target="#VideoModalHero">
-                        <div class="video-wrapper hero">
-                            <div class="play-button">
-                                <img src="//openstack.org/themes/openstack/images/enterprise/play-button-dark.png"> 
-                            </div>
-                            <img class="video-image" src="//openstack.org/themes/openstack/images/enterprise/software-defined-video-summit2.jpg" alt="Jonathan Bryce talking about Software Defined Economy">
-                        </div>
-                        </a>
                 </div>
             </div>
 
@@ -318,6 +312,30 @@
 
 
     <!-- End Marketplace and Events -->
+
+    <!-- Download Modal -->
+    <div class="modal fade" id="downloadModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title">OpenStack: A Business Perspective</h4>
+          </div>
+          <div class="modal-body">
+            <p class="download-text">
+                <i class="fa fa-file-pdf-o fa-4x"></i>
+                Page through a booklet prepared <em>for</em> IT executives, <em>by</em> current OpenStack users. It offers planning tips and use cases with real business results from cloud computing with OpenStack.
+            </p>
+                <a href="//openstack.org/assets/pdf-downloads/business-perspectives.pdf" class="download-btn"><i class="fa fa-desktop fa-2x"></i> View The Booklet <sup>*</sup></a>
+                <a href="//openstack.org/assets/pdf-downloads/business-perspectives-print.pdf" class="download-btn"><i class="fa fa-print fa-2x"></i> Print The Booklet</a>
+                <span class="lrg-btn-note">*Best viewed with Page Display set to single page and Zoom set to page level</span>
+          </div>
+          <div class="modal-footer">
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- End Download Modal -->
 
 
       <!-- Hero Video Modal -->
