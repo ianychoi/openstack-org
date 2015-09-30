@@ -56,4 +56,8 @@
             <div class="attendee_pic col-md-2"> $Member.ProfilePhoto(50) </div>
         <% end_loop %>
     <% end_if %>
+
+    <% if Top.isAttendee(Event.Summit().ID) %>
+        $getFeedbackForm()
+    <% end_if %>
 </div>

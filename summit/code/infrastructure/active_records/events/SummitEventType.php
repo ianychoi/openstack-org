@@ -59,6 +59,18 @@ class SummitEventType extends DataObject implements ISummitEventType
         return $this->getField('Type');
     }
 
+    /**
+     * @return string
+     */
+    public function getColor()
+    {
+        $color = $this->getField('Color');
+        if (strpos($color,'#') === false) {
+            $color = '#'.$color;
+        }
+        return $color;
+    }
+
     public function canDelete($member=null) {
         if ($this->getType() == 'Presentation') {
             return false;

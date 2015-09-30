@@ -6,7 +6,7 @@
                 <div class="day">$StartDate.Format('F j')</div>
                 <div class="event_wrapper">
             <% end_if %>
-                    <div id="event_{$ID}" class="event {$SummitTypes} event_type_{$Type.ID}" style="background-color:{$Type.Color}">
+                    <div id="event_{$ID}" class="event {$SummitTypes} event_type_{$Type.ID}" style="background-color:{$Type.getColor()}">
                         <div>
                             $Type.Type: <a href="$getLink()">$Title</a>
                             <% if $Type.Type = 'Presentation' %>
