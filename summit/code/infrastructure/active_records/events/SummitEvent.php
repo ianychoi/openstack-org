@@ -105,72 +105,17 @@ class SummitEvent extends DataObject implements ISummitEvent
         }
         return 'TBD';
     }
-    /**
-     * @return DateTime
-     */
-    public function getStartDateOnTimeZone()
-    {
-        $start_date =  $this->getField('StartDate');
-        if(empty($start_date)) return null;
-
-        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
-        $summit     = Summit::get()->byID($summit_id);
-
-        $time_zone_id   = $summit->TimeZone;
-        $time_zone_list = timezone_identifiers_list();
-
-        if(isset($time_zone_list[$time_zone_id]))
-        {
-            $utc_timezone      = new DateTimeZone("UTC");
-            $time_zone_name = $time_zone_list[$time_zone_id];
-            $time_zone   = new \DateTimeZone($time_zone_name);
-            $start_date    = new \DateTime($start_date, $utc_timezone);
-            $start_date->setTimezone($time_zone);
-            return $start_date->format("Y-m-d H:i:s");
-        }
-
-        return null;
-    }
 
     public function getStartDateNice()
     {
-        $start_date =  $this->getStartDateOnTimeZone();
+        $start_date =  $this->getStartDate();
         if(empty($start_date)) return 'TBD';
         return $start_date;
     }
 
-    /**
-     * @return DateTime
-     */
-    public function getEndDateOnTimeZone()
-    {
-        $end_date =  $this->getField('EndDate');
-        if(empty($end_date)) return null;
-
-
-        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
-        $summit     = Summit::get()->byID($summit_id);
-
-        $time_zone_id   = $summit->TimeZone;
-        $time_zone_list = timezone_identifiers_list();
-
-        if(isset($time_zone_list[$time_zone_id]))
-        {
-            $utc_timezone      = new DateTimeZone("UTC");
-            $time_zone_name = $time_zone_list[$time_zone_id];
-            $time_zone   = new \DateTimeZone($time_zone_name);
-            $end_date    = new \DateTime($end_date, $utc_timezone);
-
-            $end_date->setTimezone($time_zone);
-            return $end_date->format("Y-m-d H:i:s");
-        }
-
-        return null;
-    }
-
     public function getEndDateNice()
     {
-        $end_date  = $this->getEndDateOnTimeZone();
+        $end_date  = $this->getEndDate();
         if(empty($end_date)) return 'TBD';
         return $end_date;
     }
@@ -428,18 +373,11 @@ class SummitEvent extends DataObject implements ISummitEvent
     {
         $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
         $summit     = Summit::get()->byID($summit_id);
-
-        $time_zone_id   = $summit->TimeZone;
-        $time_zone_list = timezone_identifiers_list();
-
-        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        if(!empty($value))
         {
-            $utc_timezone      = new DateTimeZone("UTC");
-            $time_zone_name = $time_zone_list[$time_zone_id];
-            $time_zone   = new \DateTimeZone($time_zone_name);
-            $date  = new \DateTime($value, $time_zone);
-            $date->setTimezone($utc_timezone);
-            $this->setField('StartDate', $date->format("Y-m-d H:i:s"));
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+            $this->setField('StartDate', $value);
         }
     }
 
@@ -447,18 +385,11 @@ class SummitEvent extends DataObject implements ISummitEvent
     {
         $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
         $summit     = Summit::get()->byID($summit_id);
-
-        $time_zone_id   = $summit->TimeZone;
-        $time_zone_list = timezone_identifiers_list();
-
-        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        if(!empty($value))
         {
-            $utc_timezone      = new DateTimeZone("UTC");
-            $time_zone_name = $time_zone_list[$time_zone_id];
-            $time_zone   = new \DateTimeZone($time_zone_name);
-            $date  = new \DateTime($value, $time_zone);
-            $date->setTimezone($utc_timezone);
-            $this->setField('EndDate', $date->format("Y-m-d H:i:s"));
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+            $this->setField('EndDate', $value);
         }
     }
 
@@ -529,12 +460,17 @@ class SummitEvent extends DataObject implements ISummitEvent
     /*public function getAtendees() {
         return AssociationFactory::getInstance()->getMany2ManyAssociation($this , 'Attendees');
     }*/
+
     /**
      * @return DateTime
      */
     public function getStartDate()
     {
-        return $this->getStartDateOnTimeZone();
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        $value = $this->getField('StartDate');
+        return $summit->convertDateFromUTC2TimeZone($value);
     }
 
     /**
@@ -542,6 +478,10 @@ class SummitEvent extends DataObject implements ISummitEvent
      */
     public function getEndDate()
     {
-        return $this->getEndDateOnTimeZone();
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        $value = $this->getField('EndDate');
+        return $summit->convertDateFromUTC2TimeZone($value);
     }
 }

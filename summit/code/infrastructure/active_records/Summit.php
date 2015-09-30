@@ -39,6 +39,157 @@ final class Summit extends DataObject implements ISummit
         'TimeZone'                    => 'Text',
     );
 
+    public function setSummitBeginDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SummitBeginDate', $value);
+        }
+    }
+
+    public function getSummitBeginDate()
+    {
+        $value = $this->getField('SummitBeginDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setSummitEndDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SummitEndDate', $value);
+        }
+    }
+
+    public function getSummitEndDate()
+    {
+        $value = $this->getField('SummitEndDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setSubmissionBeginDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SubmissionBeginDate', $value);
+        }
+    }
+
+    public function getSubmissionBeginDate()
+    {
+        $value = $this->getField('SubmissionBeginDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setSubmissionEndDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SubmissionEndDate', $value);
+        }
+    }
+
+    public function getSubmissionEndDate()
+    {
+        $value = $this->getField('SubmissionEndDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setVotingBeginDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('VotingBeginDate', $value);
+        }
+    }
+
+    public function getVotingBeginDate()
+    {
+        $value = $this->getField('VotingBeginDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setVotingEndDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('VotingEndDate', $value);
+        }
+    }
+
+    public function getVotingEndDate()
+    {
+        $value = $this->getField('VotingEndDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setSelectionBeginDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SelectionBeginDate', $value);
+        }
+    }
+
+    public function getSelectionBeginDate()
+    {
+        $value = $this->getField('SelectionBeginDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setSelectionEndDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('SelectionEndDate', $value);
+        }
+    }
+
+    public function getSelectionEndDate()
+    {
+        $value = $this->getField('SelectionEndDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setRegistrationBeginDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('RegistrationBeginDate', $value);
+        }
+    }
+
+    public function getRegistrationBeginDate()
+    {
+        $value = $this->getField('RegistrationBeginDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function setRegistrationEndDate($value)
+    {
+        if(!empty($value))
+        {
+            $value = $this->convertDateFromTimeZone2UTC($value);
+            $this->setField('RegistrationEndDate', $value);
+        }
+    }
+
+    public function getRegistrationEndDate()
+    {
+        $value = $this->getField('RegistrationEndDate');
+        return $this->convertDateFromUTC2TimeZone($value);
+    }
+
+
     private static $has_one = array
     (
 
@@ -170,8 +321,6 @@ final class Summit extends DataObject implements ISummit
     }
 
 
-
-
     /**
      * @return bool
      */
@@ -244,7 +393,7 @@ final class Summit extends DataObject implements ISummit
      */
     public function getBeginDate()
     {
-        return $this->getField('SummitBeginDate');
+        return $this->getSummitBeginDate();
     }
 
     /**
@@ -252,55 +401,7 @@ final class Summit extends DataObject implements ISummit
      */
     public function getEndDate()
     {
-        return $this->getField('SummitEndDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getSubmissionBeginDate()
-    {
-        return $this->getField('SubmissionBeginDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getSubmissionEndDate()
-    {
-        return $this->getField('SubmissionEndDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getVotingBeginDate()
-    {
-        return $this->getField('VotingBeginDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getVotingEndDate()
-    {
-        return $this->getField('VotingEndDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getSelectionBeginDate()
-    {
-        return $this->getField('SelectionBeginDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getSelectionEndDate()
-    {
-        return $this->getField('SelectionEndDate');
+        return $this->getSummitEndDate();
     }
 
     /**
@@ -313,6 +414,50 @@ final class Summit extends DataObject implements ISummit
         $query->addAndCondition(QueryCriteria::equal('Published',1));
         $query->addOrder(QueryOrder::asc('StartDate'));
         return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query)->toArray();
+    }
+
+    /**
+     * @param $value
+     * @return null|string
+     */
+    public function convertDateFromTimeZone2UTC($value)
+    {
+        $time_zone_id   = $this->TimeZone;
+        if(empty($time_zone_id)) return $value;
+        $time_zone_list = timezone_identifiers_list();
+
+        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
+        {
+            $utc_timezone      = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $date  = new \DateTime($value, $time_zone);
+            $date->setTimezone($utc_timezone);
+            return $date->format("Y-m-d H:i:s");
+        }
+        return null;
+    }
+
+    /**
+     * @param $value
+     * @return null|string
+     */
+    public function convertDateFromUTC2TimeZone($value)
+    {
+        $time_zone_id   = $this->TimeZone;
+        if(empty($time_zone_id)) return $value;
+        $time_zone_list = timezone_identifiers_list();
+
+        if(isset($time_zone_list[$time_zone_id]) && !empty($value))
+        {
+            $utc_timezone   = new DateTimeZone("UTC");
+            $time_zone_name = $time_zone_list[$time_zone_id];
+            $time_zone   = new \DateTimeZone($time_zone_name);
+            $date  = new \DateTime($value, $utc_timezone);
+            $date->setTimezone($time_zone);
+            return $date->format("Y-m-d H:i:s");
+        }
+        return null;
     }
 
     /**
