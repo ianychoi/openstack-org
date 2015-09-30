@@ -23,6 +23,56 @@ class SummitType extends DataObject implements ISummitType
         'EndDate'     => 'SS_Datetime',
     );
 
+
+    public function setStartDate($value)
+    {
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        if(!empty($value))
+        {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+            $this->setField('StartDate', $value);
+        }
+    }
+
+    public function setEndDate($value)
+    {
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        if(!empty($value))
+        {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+            $this->setField('EndDate', $value);
+        }
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getStartDate()
+    {
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        $value = $this->getField('StartDate');
+        return $summit->convertDateFromUTC2TimeZone($value);
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getEndDate()
+    {
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+        if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
+        $value = $this->getField('EndDate');
+        return $summit->convertDateFromUTC2TimeZone($value);
+    }
+
+
     private static $has_many = array
     (
     );
@@ -77,21 +127,6 @@ class SummitType extends DataObject implements ISummitType
         return $this->getField('Audience');
     }
 
-    /**
-     * @return DateTime
-     */
-    public function getStartDate()
-    {
-        return $this->getField('StartDate');
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getEndDate()
-    {
-        return $this->getField('EndDate');
-    }
 
     /**
      * @return int
@@ -113,15 +148,8 @@ class SummitType extends DataObject implements ISummitType
         $this->setField('Audience',$audience);
     }
 
-    public function setStartDate($start_date) {
-        $this->setField('StartDate',$start_date);
-    }
-
-    public function setEndDate($end_date) {
-        $this->setField('EndDate',$end_date);
-    }
-
-    public function setSummitId($summit_id) {
+    public function setSummitId($summit_id)
+    {
         $this->setField('SummitID',$summit_id);
     }
 
