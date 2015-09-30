@@ -117,9 +117,9 @@ function getSchedule(filters) {
             setEventHandlers();
 
             //facebook
-            facebookScript();
+            //facebookScript();
             //twitter
-            twitterScript();
+            //twitterScript();
 
         },
         error: function (jqXHR, textStatus, errorThrown) {

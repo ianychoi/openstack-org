@@ -32,10 +32,12 @@
                                 <% end_if %>
                             <% end_if %>
                             <button type="button" data-event_id="$ID" class="btn btn-xs btn-info" data-toggle="button">Go to Event</button>
+                            <%--
                             <div class="socials">
                                 <div class="fb-like" data-href="http://openstack.org" data-layout="button" data-action="like" data-show-faces="false" data-share="false"></div>
                                 <a href="https://twitter.com/share" class="twitter-share-button" data-via="tipit" data-count="none">Tweet</a>
                             </div>
+                            --%>
                             <hr>
                             Date: $StartDate.Format('F j') ($StartDate.Format('g:ia') - $EndDate.Format('g:ia')) <br>
                             Location: $Location.getFullName() <br>
