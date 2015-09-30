@@ -193,7 +193,9 @@ function addToSchedule(event_id) {
         contentType: "application/json; charset=utf-8",
         success: function (data) {
             var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
-            $('.add_to_schedule',event_wrapper).replaceWith('<button onclick="removeFromSchedule('+event_id+')" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>');
+            var event_box = $('#event_details_'+event_id).parents('.event');
+            $('.add_to_schedule',event_box).replaceWith('<button onclick="removeFromSchedule('+event_id+')" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>');
+            $('.add_to_schedule','.popover').replaceWith('<button onclick="removeFromSchedule('+event_id+')" class="btn btn-xs btn-danger remove_from_schedule">Remove From My Schedule</button>');
         }
     });
 }
@@ -205,8 +207,9 @@ function removeFromSchedule(event_id) {
         url: 'api/v1/summitschedule/'+event_id+'/remove-from-schedule',
         contentType: "application/json; charset=utf-8",
         success: function (data) {
-            var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
-            $('.remove_from_schedule',event_wrapper).replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
+            var event_box = $('#event_details_'+event_id).parents('.event');
+            $('.remove_from_schedule',event_box).replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
+            $('.remove_from_schedule','.popover').replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
             if (!$('.switch_schedule').hasClass('public')) {
                 var summit_type_ids = getSummitTypeFilters();
                 var filters = {summit_types: summit_type_ids, summit_source: 'private'};
