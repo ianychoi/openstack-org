@@ -178,7 +178,9 @@ class SummitEvent extends DataObject implements ISummitEvent
      */
     public function getFeedback()
     {
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Feedback');
+        $query = new QueryObject();
+        $query->addAndCondition(QueryCriteria::equal('ClassName','SummitEventFeedback'));
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Feedback',$query);
     }
 
     /**
