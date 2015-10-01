@@ -34,4 +34,9 @@ class PresentationSpeakerFeedback extends SummitEventFeedback
         $f->add(new HiddenField('SpeakerID','SpeakerID'));
         return $f;
     }
+
+    public function setSpeaker(IPresentationSpeaker $speaker)
+    {
+        AssociationFactory::getInstance()->getMany2OneAssociation($this, 'Speaker')->setTarget($speaker);
+    }
 }

@@ -11,21 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 /**
- * Class SapphireSummitEventRepository
+ * Interface IEventFeedbackFactory
  */
-class SapphireSummitEventRepository extends SapphireRepository implements ISummitEventRepository
-{
+interface IEventFeedbackFactory {
 
-    public function __construct()
-    {
-        parent::__construct(new SummitEvent());
-    }
+	/**
+	 * @param array $data
+	 * @return ISummitEventFeedback
+	 */
+	public function buildEventFeedback(array $data);
 
-    public function getPresentationById($event_id)
-    {
-        return Presentation::get_by_id('Presentation',$event_id);
-    }
+    /**
+     * @param array $data
+     * @param IPresentationSpeaker $speaker
+     * @return ISummitEventFeedback
+     */
+    public function buildSpeakerFeedback(array $data, IPresentationSpeaker $speaker);
 
-}
+} 

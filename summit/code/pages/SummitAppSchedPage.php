@@ -71,6 +71,7 @@ class SummitAppSchedPage_Controller extends SummitPage_Controller {
 
     public function ViewEvent() {
         $event_id = intval($this->request->param('EVENT_ID'));
+        $this->event_id = $event_id;
         $event = $this->event_repository->getById($event_id);
 
         if (!isset($event)) {
@@ -95,9 +96,7 @@ class SummitAppSchedPage_Controller extends SummitPage_Controller {
 
         Requirements::css("marketplace/code/ui/frontend/css/star-rating.min.css");
 
-        $form = new SummitAppFeedbackForm($this, 'SummitAppFeedbackForm');
+        $form = new SummitEventFeedbackForm($this, 'SummitEventFeedbackForm');
         return $form;
     }
-
-	
 }

@@ -58,6 +58,20 @@
     <% end_if %>
 
     <% if Top.isAttendee(Event.Summit().ID) %>
+        <input type="hidden" id="event_id" value="$Event.ID" />
         $getFeedbackForm()
     <% end_if %>
+
+    <hr>
+    <% loop Event.getFeedback() %>
+        <div class="row">
+            <div class="feedback_pic col-md-2"> $Owner.ProfilePhoto(50) </div>
+            <div class="rating-container rating-gly-star" data-content="">
+                <div class="rating-stars" data-content="" style="width: {$getRateAsWidth()}%;"></div>
+            </div>
+            <div class="col-md-4"> $Note </div>
+        </div>
+
+    <% end_loop %>
+
 </div>

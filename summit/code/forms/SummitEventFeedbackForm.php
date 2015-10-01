@@ -12,9 +12,9 @@
  * limitations under the License.
  **/
 /**
- * Class SummitAppFeedbackForm
+ * Class SummitEventFeedbackForm
  */
-final class SummitAppFeedbackForm extends BootstrapForm {
+final class SummitEventFeedbackForm extends BootstrapForm {
 
 	function __construct($controller, $name, $use_actions = true) {
 
@@ -22,19 +22,29 @@ final class SummitAppFeedbackForm extends BootstrapForm {
         $RatingField->setValue(0);
         $CommentField = new HtmlEditorField('comment','Comment');
         $CommentField->setRows(8);
-
+        $sec_field = new TextField('field_98438688','field_98438688');
+        $sec_field->addExtraClass('honey');
 
         $fields = new FieldList (
             $RatingField,
-            $CommentField
+            $CommentField,
+            $sec_field
         );
 
 		// Create action
 		$actions = new FieldList();
 		if($use_actions)
-			$actions->push(new FormAction('saveFeedback', 'Submit'));
+			$actions->push(new FormAction('submit', 'Submit'));
 
 		$this->addExtraClass('review-form');
+
+        $css =<<<CSS
+.honey {
+	position: absolute; left: -9999px
+}
+CSS;
+        Requirements::customCSS($css, 'honey_css');
+
 		parent::__construct($controller, $name, $fields, $actions);
 	}
 
@@ -44,8 +54,4 @@ final class SummitAppFeedbackForm extends BootstrapForm {
 			'Form'
 		));
 	}
-
-	function submit($data, $form) {	}
-
-    function saveFeedback() { }
 }

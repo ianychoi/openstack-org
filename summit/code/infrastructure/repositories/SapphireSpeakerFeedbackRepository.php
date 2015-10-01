@@ -13,19 +13,21 @@
  **/
 
 /**
- * Class SapphireSummitEventRepository
+ * Class SapphireSpeakerFeedbackRepository
  */
-class SapphireSummitEventRepository extends SapphireRepository implements ISummitEventRepository
+final class SapphireSpeakerFeedbackRepository extends SapphireRepository implements ISpeakerFeedbackRepository
 {
 
     public function __construct()
     {
-        parent::__construct(new SummitEvent());
+        parent::__construct(new PresentationSpeakerFeedback());
     }
 
-    public function getPresentationById($event_id)
-    {
-        return Presentation::get_by_id('Presentation',$event_id);
+    public function getFeedback($speaker_id,$event_id,$member_id) {
+        $query = new QueryObject(new PresentationSpeakerFeedback());
+        $query->addAndCondition(QueryCriteria::equal('OwnerID',$member_id));
+        $query->addAndCondition(QueryCriteria::equal('EventID',$event_id));
+        $query->addAndCondition(QueryCriteria::equal('SpeakerID',$speaker_id));
+        return  $this->getBy($query);
     }
-
 }

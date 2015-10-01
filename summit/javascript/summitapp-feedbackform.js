@@ -15,14 +15,11 @@ var form_validator = null;
 
 jQuery(document).ready(function($){
 
-    var valid_review = false;
-    var form_id  = 'SummitAppFeedbackForm_SummitAppFeedbackForm';
+    var form_id  = 'SummitEventFeedbackForm_SummitEventFeedbackForm';
     var form     = $('#'+form_id);
 
-    var form_id = form.attr('id');
-
     //validation
-    form_validator = form.validate({
+    /*form_validator = form.validate({
         onfocusout: false,
         focusCleanup: true,
         ignore: [],
@@ -45,9 +42,9 @@ jQuery(document).ready(function($){
             }
             error.insertAfter(element);
         }
-    });
+    });*/
 
-    $("#SummitAppFeedbackForm_SummitAppFeedbackForm_rating").rating({size:'xs',showCaption:false,showClear:false});
+    $("#SummitEventFeedbackForm_SummitEventFeedbackForm_rating").rating({size:'xs',showCaption:false,showClear:false});
 
 
     // SAVE REVIEW
@@ -55,18 +52,19 @@ jQuery(document).ready(function($){
     form.submit(function( event ) {
         event.preventDefault();
 
-        if(!form.valid()) return false;
+        //if(!form.valid()) return false;
+        var event_id = $('#event_id').val();
         var security_id = $('#'+form_id+'_SecurityID',form).val();
-        var url     = 'api/v1/marketplace/reviews?SecurityID='+security_id;
+        var url     = 'api/v1/summitschedule/'+event_id+'/add-feedback?SecurityID='+security_id;
+
         var request = {
-            company_service_ID : $('#'+form_id+'_company_service_ID',form).val(),
             rating  :  $('#'+form_id+'_rating',form).val(),
             comment : $('#'+form_id+'_comment',form).val(),
             field_98438688 : $('#'+form_id+'_field_98438688',form).val()
         };
 
         $.ajax({
-            type: 'POST',
+            type: 'PUT',
             url: url,
             data: JSON.stringify(request),
             contentType: "application/json; charset=utf-8",
@@ -78,6 +76,8 @@ jQuery(document).ready(function($){
                 ajaxError(jqXHR, textStatus, errorThrown);
             }
         });
+
+        return false;
     });
 
 

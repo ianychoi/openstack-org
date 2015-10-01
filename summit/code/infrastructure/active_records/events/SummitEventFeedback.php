@@ -16,7 +16,7 @@ class SummitEventFeedback extends DataObject implements ISummitEventFeedBack
 {
     private static $db = array
     (
-        'Rate'         => 'Int',
+        'Rate'         => 'Float',
         'Note'         => 'HTMLText',
         'Approved'     => 'Boolean',
         'ApprovedDate' => 'SS_DateTime',
@@ -63,7 +63,15 @@ class SummitEventFeedback extends DataObject implements ISummitEventFeedBack
      */
     public function getRate()
     {
-        return (int)$this->getField('Rate');
+        return (float)$this->getField('Rate');
+    }
+
+    /**
+     * @return int
+     */
+    public function getRateAsWidth()
+    {
+        return (float)$this->getField('Rate')*20;
     }
 
     /**

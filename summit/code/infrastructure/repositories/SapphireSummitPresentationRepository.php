@@ -13,19 +13,14 @@
  **/
 
 /**
- * Class SapphireSummitEventRepository
+ * Class SapphireSummitPresentationRepository
  */
-class SapphireSummitEventRepository extends SapphireRepository implements ISummitEventRepository
+final class SapphireSummitPresentationRepository extends SapphireSummitEventRepository implements ISummitPresentationRepository
 {
 
     public function __construct()
     {
-        parent::__construct(new SummitEvent());
-    }
-
-    public function getPresentationById($event_id)
-    {
-        return Presentation::get_by_id('Presentation',$event_id);
+        parent::__construct(new Presentation());
     }
 
 }
