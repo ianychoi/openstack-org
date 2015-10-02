@@ -8,31 +8,33 @@
     Description: $Event.Description<br>
     <hr>
     <% if $Event.Type.Type = 'Presentation' %>
-        <div class="item-list row">
-            <% loop Event.Materials() %>
-                <% if First %>
-                    <div class="col-sm-6">
-                <% end_if %>
-                <div class="item">
-                    <% if ClassName = 'PresentationSlide' %>
-                        <div class="slide" title="$Name">
-                            <a href="$getSlideUrl()" target="_blank">$Name</a>
-                        </div>
-                    <% else %>
-                        <div class="video">
-                            <a href="https://youtube.googleapis.com/v/$YouTubeID" rel="shadowbox">$Name</a>
+        <% if Event.Materials() %>
+            <div class="item-list row">
+                <% loop Event.Materials() %>
+                    <% if First %>
+                        <div class="col-sm-6">
+                    <% end_if %>
+                    <div class="item">
+                        <% if ClassName = 'PresentationSlide' %>
+                            <div class="slide" title="$Name">
+                                <a href="$getSlideUrl()" target="_blank">$Name</a>
+                            </div>
+                        <% else %>
+                            <div class="video">
+                                <a href="https://youtube.googleapis.com/v/$YouTubeID" rel="shadowbox">$Name</a>
+                            </div>
+                        <% end_if %>
+                    </div>
+                    <% if Mid %>
+                        </div><div class="col-sm-6">
+                    <% end_if %>
+                    <% if Last %>
                         </div>
                     <% end_if %>
-                </div>
-                <% if Mid %>
-                    </div><div class="col-sm-6">
-                <% end_if %>
-                <% if Last %>
-                    </div>
-                <% end_if %>
-            <% end_loop %>
-        </div>
-        <hr>
+                <% end_loop %>
+            </div>
+            <hr>
+        <% end_if %>
     <% end_if %>
     <% if Event.getSpeakers().toArray() %>
         Speakers: <br>
@@ -55,14 +57,15 @@
         <% loop Event.Attendees() %>
             <div class="attendee_pic col-md-2"> $Member.ProfilePhoto(50) </div>
         <% end_loop %>
+        <hr>
     <% end_if %>
 
     <% if Top.isAttendee(Event.Summit().ID) %>
         <input type="hidden" id="event_id" value="$Event.ID" />
         $getFeedbackForm()
+        <hr>
     <% end_if %>
 
-    <hr>
     <% loop Event.getFeedback() %>
         <div class="row">
             <div class="feedback_pic col-md-2"> $Owner.ProfilePhoto(50) </div>
