@@ -78,6 +78,10 @@ class SummitEvent extends DataObject implements ISummitEvent
         return (int)$this->getField('ID');
     }
 
+    public function isPresentation() {
+        return ($this->getTypeName() == 'Presentation');
+    }
+
     public function getLink() {
         return $this->Summit()->Link.'schedule/event/'.$this->getIdentifier().'/'.$this->getTitleForUrl();
     }
@@ -101,7 +105,7 @@ class SummitEvent extends DataObject implements ISummitEvent
     {
         if($this->Location()->ID > 0)
         {
-            return $this->Location()->Name;
+            return $this->Location()->getFullName();
         }
         return 'TBD';
     }
@@ -485,5 +489,14 @@ class SummitEvent extends DataObject implements ISummitEvent
         if(is_null($summit)) throw new InvalidArgumentException('summit not found!');
         $value = $this->getField('EndDate');
         return $summit->convertDateFromUTC2TimeZone($value);
+    }
+
+    public function isScheduled() {
+        $current_user = Member::currentUser();
+        if (!$current_user) return false;
+
+        $attendee = $current_user->getSummitAttendee($this->Summit->getIdentifier());
+
+        return $attendee->isScheduled($this->getIdentifier());
     }
 }

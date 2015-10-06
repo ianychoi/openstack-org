@@ -14,45 +14,11 @@
 $(document).ready(function(){
     $('.summit_type_filter').click(function(){
         toggleCheckboxButton($(this));
-
-        // hide all events with summit type
-        $('.summit_type_filter').each(function(){
-            $('.summit_type_'+$(this).data('summit_type_id')).hide();
-        });
-        //show events for summit type checked
-        $('.summit_type_filter').each(function(){
-            if ($(this).hasClass('checked')) {
-                $('.summit_type_'+$(this).data('summit_type_id')).show();
-            }
-        });
-
-        // apply event type filter
-        var event_type_id = $('.summit_event_type_filter').val();
-        if (event_type_id != -1) {
-            $('.event').not('.event_type_'+event_type_id).hide();
-        }
-
-        // hide pulling filtered events
-        /*var summit_type_ids = getSummitTypeFilters();
-        var filters = {summit_types: summit_type_ids};
-        getSchedule(filters);*/
+        applyFilters();
     });
 
     $('.summit_event_type_filter').change(function(){
-        var event_type_id = $(this).val();
-        if (event_type_id != -1) {
-            $('.event').hide();
-            $('.event_type_'+event_type_id).show();
-        } else {
-            $('.event').show();
-        }
-
-        //apply summit type filter
-        $('.summit_type_filter').each(function(){
-            if (!$(this).hasClass('checked')) {
-                $('.summit_type_'+$(this).data('summit_type_id')).hide();
-            }
-        });
+        applyFilters();
 
     });
 
@@ -62,28 +28,28 @@ $(document).ready(function(){
             $(this).html('Switch to Full Schedule');
             $('.schedule_title').html('My Schedule');
             $(this).removeClass('public');
-            var summit_type_ids = getSummitTypeFilters();
-            var filters = {summit_types: summit_type_ids, summit_source: 'private'};
+
+            var filters = getScheduleFilters('private');
         } else {
             $(this).html('Switch to My Schedule');
             $('.schedule_title').html('Schedule');
             $(this).addClass('public');
-            var summit_type_ids = getSummitTypeFilters();
-            var filters = {summit_types: summit_type_ids, summit_source: 'public'};
+
+            var filters = getScheduleFilters('public');
         }
 
         getSchedule(filters);
     });
 
-    var summit_type_ids = getSummitTypeFilters();
-    var filters = {summit_types: summit_type_ids, summit_source: 'public'};
-    if (summit_type_ids) {
+    var filters = getScheduleFilters('public');
+    if (filters.summit_types) {
         getSchedule(filters);
     }
 
 });
 
-function getSummitTypeFilters() {
+// this function arranges the filters to filter the events from the server side
+function getScheduleFilters(source) {
     var summit_type_ids = '';
     $('.summit_type_filter').each(function(){
         if ($(this).hasClass('checked')) {
@@ -92,7 +58,31 @@ function getSummitTypeFilters() {
     });
 
     summit_type_ids = summit_type_ids.slice(0, -1);
-    return summit_type_ids;
+
+    var filters = {summit_types: summit_type_ids, summit_source: source, event_type: $('.summit_event_type_filter').val()};
+    return filters;
+}
+
+function applyFilters() {
+    // first we show all
+    $('.event').show();
+
+    // hide all events with a summit type
+    $('.summit_type_filter').each(function(){
+        $('.summit_type_'+$(this).data('summit_type_id')).hide();
+    });
+    //show events for summit type checked
+    $('.summit_type_filter').each(function(){
+        if ($(this).hasClass('checked')) {
+            $('.summit_type_'+$(this).data('summit_type_id')).show();
+        }
+    });
+
+    // apply event type filter
+    var event_type_id = $('.summit_event_type_filter').val();
+    if (event_type_id != -1) {
+        $('.event').not('.event_type_'+event_type_id).hide();
+    }
 }
 
 function toggleCheckboxButton(button_elem) {
@@ -112,17 +102,109 @@ function toggleCheckboxButton(button_elem) {
     }
 }
 
+function renderEvent(event){
+    var row_template = $(
+        '<div>' +
+            '<div id="event_" class="event" style="">'+
+                '<div>'+
+                    '<span class="event_type"></span>: <a class="event_title" href=""></a>'+
+                    '<div class="presentation_cat"></div>'+
+                    '<div class="event_time"></div>'+
+                    '<div class="event_location"></div>'+
+                '</div>'+
+                '<div class="event_speakers">'+
+                    '<span class="speaker_name"></span>'+
+                '</div>'+
+                '<div class="event_details" id="event_details_">'+
+                    '<button type="button" class="add_button btn btn-xs " data-event_id=""></button>'+
+                    '<a type="button" href="" class="link_button btn btn-xs btn-info">Go to Event</a>'+
+                    /*
+                        <div class="socials">
+                            <div class="fb-like" data-href="http://openstack.org" data-layout="button" data-action="like" data-show-faces="false" data-share="false"></div>
+                            <a href="https://twitter.com/share" class="twitter-share-button" data-via="tipit" data-count="none">Tweet</a>
+                        </div>
+                    */
+                    '<hr>'+
+                    '<div class="event_details_date"></div>'+
+                    '<div class="event_details_loc"></div>'+
+                    'Summary:'+
+                    '<div class="event_details_desc"></div>'+
+                    '<hr>'+
+                    'Topics:<br>'+
+                    '<span class="event_details_topics"></span>'+
+                    '<hr>'+
+                    'Speakers:<br>'+
+                    '<span class="event_details_speakers"></span>'+
+                '</div>'+
+            '</div>'+
+        '</div>'
+    );
+
+    var directives = {
+        'div.event@id+'        : 'ID',
+        'div.event@style'      : function(a){ return (this.EventType.Color) ? 'background-color:#'+this.EventType.Color : '';},
+        'div.event@class+'     : function(a){ return this.SummitTypes+' event_type_'+this.EventType.ID;},
+        'span.event_type'      : 'EventType.Type',
+        'a.event_title'        : 'Title',
+        'a.event_title@href'   : 'EventLink',
+        'div.presentation_cat' : 'EventCategory.Title',
+        'div.event_time'       : function(a){ return this.StartTime+' - '+this.EndTime;},
+        'div.event_location'   : 'EventLocation',
+        '+div.event_speakers'  : function(a){ return (this.EventSpeakers.length) ? '<span class="glyphicon glyphicon-volume-up"></span>' : '';},
+        'span.speaker_name'    : { 'Speaker<-EventSpeakers': { '.': 'Speaker.LastName' } },
+        '.event_details@id+'   : 'ID',
+        '.add_button' : function(a){ return (this.isScheduledEvent) ? 'Remove From My Schedule' : 'Add to My Schedule';},
+        '.add_button@data-event_id' : 'ID',
+        '.add_button@class+' : function(a){
+            if(this.isAttendee) {
+                if (this.isScheduledEvent) {
+                    return 'remove_from_schedule btn-danger';
+                } else {
+                    return 'add_to_schedule btn-success';
+                }
+            } else {
+                return 'hidden';
+            }
+        },
+        '.link_button@href' : 'EventLink',
+        'div.event_details_date'   : function(a){ return 'Date: '+this.Date+' ('+this.StartTime+' - '+this.EndTime+')';},
+        'div.event_details_loc'    : function(a){ return 'Location: '+this.EventLocation;},
+        'div.event_details_desc'   : 'Description',
+        'span.event_details_topics'   : { 'Topic<-EventTopics': { '.': 'Topic.Title' } },
+        'span.event_details_speakers' : { 'Speaker<-EventSpeakers': { '.': 'Speaker.ProfilePic' } }
+    };
+
+    return row_template.render(event, directives);
+}
+
 function getSchedule(filters) {
     var summit_id = $('#summit_id').val();
     $.ajax({
-        type: 'PUT',
-        url: 'api/v1/summitschedule/'+summit_id+'/get-schedule',
-        data: JSON.stringify(filters),
+        type: 'GET',
+        url: 'api/v1/summitschedule/'+summit_id+'/get-schedule?'+$.param(filters),
         contentType: "application/json; charset=utf-8",
-        success: function (schedule_html) {
-            $('#schedule_container').html(schedule_html);
+        dataType: "json",
+        success: function (schedule) {
+            $('#schedule_container').html('');
+            for (var date in schedule) {
+                var date_events = schedule[date];
+
+                $('#schedule_container').append('<div class="day">'+date+'</div>');
+                $('#schedule_container').append('<div class="event_wrapper"></div>');
+
+                $.each(date_events,function(pos,event){
+                    var row = renderEvent(event);
+                    $('.event_wrapper','#schedule_container').last().append(row);
+                });
+
+                $('#schedule_container').append('<div class="clearfix"></div>');
+
+            }
 
             setEventHandlers();
+
+            // we apply filters here, not on server
+            applyFilters();
 
             //facebook
             //facebookScript();
@@ -175,6 +257,17 @@ function setEventHandlers() {
         $(this).siblings(".popover").on("mouseleave", function () {
             $(_this).popover('hide');
         });
+
+        $('.add_to_schedule').click(function(){
+            var event_id = $(this).data('event_id');
+            addToSchedule(event_id);
+        });
+
+        $('.remove_from_schedule').click(function(){
+            var event_id = $(this).data('event_id');
+            removeFromSchedule(event_id);
+        });
+
     }).on("mouseleave", function () {
         var _this = this;
         setTimeout(function () {
@@ -211,8 +304,7 @@ function removeFromSchedule(event_id) {
             $('.remove_from_schedule',event_box).replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
             $('.remove_from_schedule','.popover').replaceWith('<button onclick="addToSchedule('+event_id+')" class="btn btn-xs btn-success add_to_schedule">Add To My Schedule</button>');
             if (!$('.switch_schedule').hasClass('public')) {
-                var summit_type_ids = getSummitTypeFilters();
-                var filters = {summit_types: summit_type_ids, summit_source: 'private'};
+                var filters = getScheduleFilters('private');
                 getSchedule(filters);
             }
         }

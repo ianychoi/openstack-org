@@ -12,7 +12,7 @@
     float: left;
 }
 
-.time {
+.event_time,.event_location {
     color: rgb(153, 153, 153);
     font-size: 12px;
 }
@@ -53,7 +53,7 @@
     max-width: 500px;
 }
 
-.description {
+.event_details_desc {
     max-height: 200px;
     overflow-y: auto;
 }
@@ -71,3 +71,13 @@
 .fb-like {
     top: -4px;
 }
+
+.speaker_name {
+    margin-left: 10px;
+}
+
+.link_button {
+    margin-left: 10px;
+}
+
+.link_button:visited {color:white;}

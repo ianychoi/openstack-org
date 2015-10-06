@@ -413,7 +413,7 @@ final class Summit extends DataObject implements ISummit
         $query = new QueryObject();
         $query->addAndCondition(QueryCriteria::equal('Published',1));
         $query->addOrder(QueryOrder::asc('StartDate'));
-        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query)->toArray();
+        return AssociationFactory::getInstance()->getOne2ManyAssociation($this, 'Events',$query);
     }
 
     /**
@@ -947,5 +947,10 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
             $key_note->write();
         }
 
+    }
+
+    public function isAttendee() {
+        $current_user = Member::currentUser();
+        return ($current_user) ? $current_user->isAttendee($this->getIdentifier()) : false;
     }
 }

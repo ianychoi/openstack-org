@@ -117,7 +117,7 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     }
 
     static $url_handlers = array(
-        'PUT $SummitID!/get-schedule' => 'getSchedule',
+        'GET $SummitID!/get-schedule' => 'getSchedule',
         'PUT $EventID!/add-to-schedule' => 'addToSchedule',
         'PUT $EventID!/remove-from-schedule' => 'removeFromSchedule',
         'PUT $EventID!/add-feedback' => 'addFeedback',
@@ -131,9 +131,10 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     );
 
     public function getSchedule() {
-        $filters = $this->getJsonRequest();
-        $summit_types_filter = explode(',',$filters['summit_types']);
-        $source = $filters['summit_source'];
+        $query_string = $this->request->getVars();
+        $summit_types_filter = explode(',',$query_string['summit_types']);
+        $event_type_filter = $query_string['event_type'];
+        $source = $query_string['summit_source'];
         $summit_id = (int)$this->request->param('SummitID');
 
         if ($source == 'public') {
@@ -144,33 +145,63 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
             $events = $attendee->getSchedule();
         }
 
+        $filtered_events = array();
 
-        $filtered_events = new ArrayList();
+        foreach ($events as $event) {
+            $summit_types = $event->getAllowedSummitTypes();
+            $event_type = $event->Type()->ID;
+            $date = date('F j',strtotime($event->StartDate));
 
-        if (count($summit_types_filter)) {
-            foreach ($events as $event) {
-                $allowed_summit_types = $event->getAllowedSummitTypes();
-                if (count($allowed_summit_types)) {
-                    $added = false;
-                    foreach ($allowed_summit_types as $type) {
-                        $event->SummitTypes .= ' summit_type_'.$type->ID;
-                        if (in_array($type->ID,$summit_types_filter) && !$added) {
-                            $filtered_events->push($event);
-                            $added = true;
-                        }
-                    }
-                } else {
-                    $filtered_events->push($event);
+            // filter event - I leave this here in case we need to filter from server side, but for now we filter on client side
+            /*$skip_event = true;
+            if (count($summit_types)) {
+                foreach ($summit_types as $summit_type) {
+                    if (in_array($summit_type->ID,$summit_types_filter)) $skip_event = false;
                 }
-
+            } else {
+                $skip_event = false;
             }
-        } else {
-            $filtered_events = $events;
+
+            if ($event_type != $event_type_filter && $event_type_filter != '-1') $skip_event = true;
+            if ($skip_event) continue;*/
+            // end filter event
+
+            $event->Date = $date;
+            $event->StartTime = date('g:ia',strtotime($event->StartDate));
+            $event->EndTime = date('g:ia',strtotime($event->EndDate));
+            $event->EventLink = $event->getLink();
+            $event->EventType = $event->Type()->toMap();
+            $event->EventCategory = ($event->isPresentation()) ? $event->Category()->toMap() : null;
+            $event->EventLocation = $event->getLocationNameNice();
+            $event->isScheduledEvent = $event->isScheduled();
+            $event->isAttendee = $event->Summit->isAttendee();
+
+            $speakers = array();
+            foreach ($event->getSpeakers() as $speaker) {
+                $speaker->ProfilePic = $speaker->ProfilePhoto(50);
+                $speakers[] = $speaker->toMap();
+            }
+            $event->EventSpeakers = $speakers;
+
+            if ($event->isPresentation()) {
+                $topics = array();
+                foreach ($event->getTopics() as $topic) {
+                    $topics[] = $topic->toMap();
+                }
+                $event->EventTopics = $topics;
+            }
+
+            $event->SummitTypes = '';
+            foreach ($summit_types as $summit_type) {
+                $event->SummitTypes .= ' summit_type_'.$summit_type->ID;
+            }
+
+            if (!isset($filtered_events[$date])) $filtered_events[$date] = array();
+
+            $filtered_events[$date][] = $event->toMap();
         }
 
-        $sched_page = new SummitAppSchedPage();
-
-        return $sched_page->renderSchedule($filtered_events);
+        echo json_encode($filtered_events);
     }
 
     public function addToSchedule() {

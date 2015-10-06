@@ -12,14 +12,16 @@
             <option value="$ID">$Type</option>
         <% end_loop %>
     </select>
-    <% if isAttendee($Summit.ID) %>
+    <% if $Summit.isAttendee() %>
         <button type="button" class="btn btn-info pull-right switch_schedule public">
             Switch to My Schedule
         </button>
     <% end_if %>
     <hr>
     <input id="summit_id" type="hidden" value="$Summit.ID" />
-    <div id="schedule_container"></div>
+    <div id="schedule_container">
+
+    </div>
     <div id="schedule_sidebar"></div>
 </div>
 <div id="fb-root"></div>
