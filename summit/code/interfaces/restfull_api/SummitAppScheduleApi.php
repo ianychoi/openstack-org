@@ -215,10 +215,26 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     public function addToSchedule() {
         try{
             $summit_id = (int)$this->request->param('SUMMIT_ID');
+            $event_id = (int)$this->request->param('EventID');
             $member = Member::currentUser();
             if(is_null($member)) return $this->permissionFailure();
 
-            $event_id = (int)$this->request->param('EventID');
+            if(intval($summit_id) > 0)
+                $summit = $this->summit_repository->getById(intval($summit_id));
+            if(strtolower($summit_id) === 'current')
+                $summit = Summit::ActiveSummit();
+
+            if(is_null($summit))
+                return $this->notFound('summit not found!');
+
+            if(intval($event_id) > 0)
+                $event = $this->summitevent_repository->getById(intval($event_id));
+
+            if(is_null($event))
+                return $this->notFound('event not found!');
+            else if($event->getSummit()->getIdentifier() != intval($summit_id))
+                return $this->notFound('event not found in current summit');
+
             $this->schedule_manager->addEventToSchedule(Member::currentUserID(), $event_id);
         }
         catch(NotFoundEntityException $ex1){
@@ -234,10 +250,26 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     public function removeFromSchedule() {
         try{
             $summit_id = (int)$this->request->param('SUMMIT_ID');
+            $event_id = (int)$this->request->param('EventID');
             $member = Member::currentUser();
             if(is_null($member)) return $this->permissionFailure();
 
-            $event_id = (int)$this->request->param('EventID');
+            if(intval($summit_id) > 0)
+                $summit = $this->summit_repository->getById(intval($summit_id));
+            if(strtolower($summit_id) === 'current')
+                $summit = Summit::ActiveSummit();
+
+            if(is_null($summit))
+                return $this->notFound('summit not found!');
+
+            if(intval($event_id) > 0)
+                $event = $this->summitevent_repository->getById(intval($event_id));
+
+            if(is_null($event))
+                return $this->notFound('event not found!');
+            else if($event->getSummit()->getIdentifier() != intval($summit_id))
+                return $this->notFound('event not found in current summit');
+
             $this->schedule_manager->removeEventFromSchedule(Member::currentUserID(), $event_id);
         }
         catch(NotFoundEntityException $ex1){
@@ -261,6 +293,22 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
             $member_id = Member::CurrentUserID();
 
             if (!$data) return $this->serverError();
+
+            if(intval($summit_id) > 0)
+                $summit = $this->summit_repository->getById(intval($summit_id));
+            if(strtolower($summit_id) === 'current')
+                $summit = Summit::ActiveSummit();
+
+            if(is_null($summit))
+                return $this->notFound('summit not found!');
+
+            if(intval($event_id) > 0)
+                $event = $this->summitevent_repository->getById(intval($event_id));
+
+            if(is_null($event))
+                return $this->notFound('event not found!');
+            else if($event->getSummit()->getIdentifier() != intval($summit_id))
+                return $this->notFound('event not found in current summit');
 
             $data['event_id'] = $event_id;
             $data['member_id'] = $member_id;
