@@ -17,8 +17,6 @@
  */
 final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
 
-    const ApiPrefix = 'api/v1/summitschedule';
-
     /**
      * @var IEntityRepository
      */
@@ -59,7 +57,8 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
      */
     private $securityToken;
 
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
 
         $this->securityToken     = new SecurityToken();
@@ -102,7 +101,7 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     protected function isApiCall(){
         $request = $this->getRequest();
         if(is_null($request)) return false;
-        return  strpos(strtolower($request->getURL()),self::ApiPrefix) !== false;
+        return true;
     }
 
     /**
@@ -117,10 +116,10 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
     }
 
     static $url_handlers = array(
-        'GET $SummitID!/get-schedule' => 'getSchedule',
-        'PUT $EventID!/add-to-schedule' => 'addToSchedule',
-        'PUT $EventID!/remove-from-schedule' => 'removeFromSchedule',
-        'PUT $EventID!/add-feedback' => 'addFeedback',
+        'GET '                       => 'getSchedule',
+        'PUT $EventID!'              => 'addToSchedule',
+        'DELETE $EventID!'           => 'removeFromSchedule',
+        'PUT $EventID!/feedbacks'    => 'addFeedback',
     );
 
     static $allowed_actions = array(
@@ -130,18 +129,27 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
         'addFeedback',
     );
 
-    public function getSchedule() {
-        $query_string = $this->request->getVars();
-        $summit_types_filter = explode(',',$query_string['summit_types']);
-        $event_type_filter = $query_string['event_type'];
-        $source = $query_string['summit_source'];
-        $summit_id = (int)$this->request->param('SummitID');
+    public function getSchedule(SS_HTTPRequest $request) {
+        $query_string        = $request->getVars();
+        $summit_types        = isset($query_string['summit_types']) ? Convert::raw2sql($query_string['summit_types']) : '';
+        $event_type_filter   = isset($query_string['event_type']) ? Convert::raw2sql($query_string['event_type']) : null;
+        $summit_types_filter = explode(',', $summit_types);
+        $source              = isset($query_string['summit_source']) ? Convert::raw2sql($query_string['summit_source']) : null;
+        $summit_id           = $request->param('SUMMIT_ID');
+        $summit              = null;
+
+        if(intval($summit_id) > 0)
+            $summit = $this->summit_repository->getById(intval($summit_id));
+        if(strtolower($summit_id) === 'current')
+            $summit = Summit::ActiveSummit();
+
+        if(is_null($summit))
+            return $this->notFound('summit not found!');
 
         if ($source == 'public') {
-            $summit = $this->summit_repository->getById($summit_id);
             $events = $summit->getSchedule();
         } else {
-            $attendee = Member::currentUser()->getSummitAttendee($summit_id);
+            $attendee = Member::currentUser()->getSummitAttendee($summit->ID);
             $events = $attendee->getSchedule();
         }
 
@@ -201,11 +209,12 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
             $filtered_events[$date][] = $event->toMap();
         }
 
-        echo json_encode($filtered_events);
+        return $this->ok($filtered_events);
     }
 
     public function addToSchedule() {
         try{
+            $summit_id = (int)$this->request->param('SUMMIT_ID');
             $member = Member::currentUser();
             if(is_null($member)) return $this->permissionFailure();
 
@@ -224,6 +233,7 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
 
     public function removeFromSchedule() {
         try{
+            $summit_id = (int)$this->request->param('SUMMIT_ID');
             $member = Member::currentUser();
             if(is_null($member)) return $this->permissionFailure();
 
@@ -245,8 +255,9 @@ final class SummitAppScheduleApi extends AbstractRestfulJsonApi {
      */
     public function addFeedback(){
         try {
-            $data = $this->getJsonRequest();
-            $event_id = (int)$this->request->param('EventID');
+            $data      = $this->getJsonRequest();
+            $event_id  = (int)$this->request->param('EventID');
+            $summit_id = (int)$this->request->param('SUMMIT_ID');
             $member_id = Member::CurrentUserID();
 
             if (!$data) return $this->serverError();

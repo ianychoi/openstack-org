@@ -181,7 +181,7 @@ function getSchedule(filters) {
     var summit_id = $('#summit_id').val();
     $.ajax({
         type: 'GET',
-        url: 'api/v1/summitschedule/'+summit_id+'/get-schedule?'+$.param(filters),
+        url: 'api/v1/summits/'+summit_id+'/schedule?'+$.param(filters),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (schedule) {
@@ -279,10 +279,10 @@ function setEventHandlers() {
 }
 
 function addToSchedule(event_id) {
-
+    var summit_id = $('#summit_id').val();
     $.ajax({
         type: 'PUT',
-        url: 'api/v1/summitschedule/'+event_id+'/add-to-schedule',
+        url: 'api/v1/summits/'+summit_id+'/schedule/'+event_id,
         contentType: "application/json; charset=utf-8",
         success: function (data) {
             var event_wrapper = $('#event_details_'+event_id).parents('.event_wrapper');
@@ -294,10 +294,10 @@ function addToSchedule(event_id) {
 }
 
 function removeFromSchedule(event_id) {
-
+    var summit_id = $('#summit_id').val();
     $.ajax({
-        type: 'PUT',
-        url: 'api/v1/summitschedule/'+event_id+'/remove-from-schedule',
+        type: 'DELETE',
+        url: 'api/v1/summits/'+summit_id+'/schedule/'+event_id,
         contentType: "application/json; charset=utf-8",
         success: function (data) {
             var event_box = $('#event_details_'+event_id).parents('.event');
