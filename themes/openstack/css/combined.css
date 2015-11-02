@@ -14,7 +14,9 @@ a, a:visited {
 
 a:hover {
   text-decoration: underline; }
-
+  
+.center {
+  text-align: center; }
 
 @media (max-width: 950px) {.defaultSkin table.mceLayout {width: 100% !important;}}
 
@@ -860,7 +862,11 @@ a, a:visited {
 @media (max-width: 767px), only screen and (max-device-width: 1024px) {
   .search-icon {
     display: none !important; } }
-
+@media (max-width: 1040px) {
+  .header-search-text {
+    display: none;
+  }
+}
 .header-search-form, .gsc-search-box {
   position: absolute;
   z-index: 1000;
@@ -2623,24 +2629,29 @@ ul.resource-links li a:hover {
 
 /* site banner */
 .top-site-banner {
-  background-color: #F0F9FE;
-  color: #4D96C7;
-  padding-top: 10px; }
+  background-color: #248EC7;
+  color: #fff;
+  padding-top: 10px;
+}
 
-.top-site-banner-button {
-  border-radius: 5px;
-  border: 1px solid #C6E5FC;
-  font-size: 90%;
-  padding: 0px 10px;
-  background-color: white;
+a.top-site-banner-button {
+  border-radius: 4px;
+  font-size: 0.85em;
+  padding: 3px 20px;
+  background-color: #30739C;
   display: inline-block;
-  color: #4D96C7;
-  text-transform: uppercase; }
+  color: white;
+  text-transform: uppercase;
+}
 
-.top-site-banner-button:hover {
+a.top-site-banner-button:hover {
   text-decoration: none;
-  background-color: #F0F9FE; }
-
+  background-color: #2A4E68;
+  color: white;
+}
+a.top-site-banner-button:visited {
+  color: white;
+}
 /* end of site banner */
 /*Paris Summit Page*/
 .conference-title#paris {
@@ -2928,3 +2939,111 @@ i.mobile-expand {
 	width: 100%;
 }
 /*End New responsive nav*/
+/*COA Page*/
+.coa-hero {
+  background: #333 url(/themes/openstack/images/coa/COA-bkgd.jpg) no-repeat center center;
+  padding: 60px 0;
+  background-size: cover;
+  color: white;
+  margin-bottom: 40px;
+}
+.coa-hero-content {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px 0;
+}
+.coa-hero i.fa-graduation-cap {
+  padding: 10px 30px 10px 0;
+  border-right: 2px solid white;
+  margin-right: 30px;
+  font-size: 6em;
+  display: inline-block;
+}
+.coa-hero h1 {
+  color: white;
+  display: inline-block;
+  text-align: left;
+  font-size: 3em;
+  font-weight: 400;
+}
+@media (max-width: 767px) {
+  .coa-hero i.fa-graduation-cap {
+    margin-right: 0;
+    padding: 0;
+    border-right: 0;
+  }
+  .coa-hero h1 {
+    display: block;
+    text-align: center;
+    margin-top: 5px;
+  }
+}
+.coa-wrapper p {
+  text-align: left;
+  color: #2A4E68;
+}
+img.coa-hero-img {
+  max-width: 100%;
+  margin: 20px 0 60px;
+}
+.coa-sendgrid {
+  background: #edf2f7;
+  margin: 60px 0;
+  border-radius: 4px;
+  padding: 40px 20px;
+  text-align: center;
+}
+.coa-sendgrid p {
+  color: #2A4E68;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.coa-sendgrid i {
+  color: #C8CDD3;
+  margin: 0 0 10px;
+}
+.sendgrid-subscription-widget.coa-sendgrid input[type="email"] {
+  border: 2px solid #C8CDD3;
+  padding: 10px 20px;
+  border-radius: 4px;
+  color: #2A4E68;
+  font-size: 14px;
+  text-transform: lowercase;
+  font-weight: 400;
+  width: 100%;
+}
+.sendgrid-subscription-widget.coa-sendgrid input[type="email"]:focus {
+  outline: none;
+}
+.sendgrid-subscription-widget.coa-sendgrid label {
+  display: inline-block;
+  margin-right: 10px;
+  width: 40%;
+}
+@media (max-width: 767px) {
+  .sendgrid-subscription-widget.coa-sendgrid label {
+    width: 70%;
+  }
+}
+.sendgrid-subscription-widget.coa-sendgrid label>span {
+  display: none;
+}
+.sendgrid-subscription-widget.coa-sendgrid input[type="submit"] {
+  background: #29abe2;
+  padding: 9px 20px;
+  border-radius: 4px;
+  color: white;
+  text-transform: uppercase;
+  border: 2px solid #29abe2;
+}
+.sendgrid-subscription-widget.coa-sendgrid input[type="submit"]:hover {
+  background: #30739C;
+  border: 2px solid #30739C;
+}
+.sendgrid-subscription-widget.coa-sendgrid input::-webkit-input-placeholder, .sendgrid-subscription-widget.coa-sendgrid input::-webkit-input-placeholder, .sendgrid-subscription-widget.coa-sendgrid input::-webkit-input-placeholder {
+  color: #C8CDD3;
+  font-size: 14px;
+  text-transform: lowercase;
+  font-weight: 400;
+}
+/*End COA Page*/

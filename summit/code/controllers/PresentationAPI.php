@@ -130,6 +130,33 @@ class PresentationAPI extends Controller {
 	}
 
 
+
+	public function handleSchedUpdate(SS_HTTPRequest $r) {		
+
+		if(!Member::currentUser()) {			
+			return $this->httpError(403);
+		}
+
+		$schedID = $r->param('SchedID');
+		$presentation = VideoPresentation::get_by_event_key($schedID);
+
+		if(!$presentation) {
+			$presentation = VideoPresentation::create(array(
+				'event_key' => $schedID
+			));
+
+		}
+
+		// Only allow one writeable property here
+		if($youTube = $r->postVar('youtubeid')) {
+			$presentation->YouTubeID = $youTube;
+			$presentation->write();
+
+			return new SS_HTTPResponse("OK", 200);			
+		}
+
+		return $this->httpError(400, "You must provide a youtubeid parameter in the POST request");
+	}
 }
 
 

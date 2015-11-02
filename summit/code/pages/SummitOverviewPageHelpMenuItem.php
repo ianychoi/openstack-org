@@ -12,13 +12,20 @@
  * limitations under the License.
  **/
 
-class SummitOverviewPageHelpMenuItem extends DataObject {
+class SummitOverviewPageHelpMenuItem extends DataObject
+{
+
+    private static $summary_fields = array
+    (
+        'Label',
+        'Url'
+    );
 
     private static $db = array(
       'Label'  => 'Text',
       'Url'    => 'Text',
       //http://fortawesome.github.io/Font-Awesome/icons/
-      'FAIcon' => "Enum('fa-h-square, fa-comment, fa-tag, fa-question, fa-users, fa-mobile, none','none')",
+      'FAIcon' => "Enum('fa-h-square, fa-comment, fa-tag, fa-question, fa-users, fa-mobile, none, fa-map-signs, fa-map, fa-calendar, fa-bed, fa-beer, fa-cab, fa-compass, fa-cutlery, fa-location-arrow, fa-venus, fa-youtube-play','none')",
       'Order'  => "Int",
     );
 

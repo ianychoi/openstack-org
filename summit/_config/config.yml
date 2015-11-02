@@ -11,7 +11,7 @@ EditProfilePage_Controller:
   extensions:
     - EditProfilePageSummitAttendeeExtension
 MemberTokenProvider:
-  token_expire: 3600
+  token_expire: 500000
 Director:
   rules:
     'presentations/api/v1': 'PresentationAPI'

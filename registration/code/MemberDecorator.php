@@ -15,7 +15,8 @@
 class MemberDecorator extends DataExtension
 {
 
-    private static $db = array(
+    private static $db = array
+    (
         'SecondEmail' => 'Text',
         'ThirdEmail' => 'Text',
         'HasBeenEmailed' => 'Boolean',
@@ -41,11 +42,13 @@ class MemberDecorator extends DataExtension
         'City' => 'Varchar(64)',
         'Gender' => 'Varchar(32)',
         'TypeOfDirector' => 'Text',
+        'Active'         => 'Boolean',
     );
 
     private static $defaults = array(
         'SubscribedToNewsletter' => true,
         'DisplayOnSite' => false,
+        'Active' => true,
     );
 
     private static $has_one = array(
@@ -53,15 +56,36 @@ class MemberDecorator extends DataExtension
         'Org' => 'Org'
     );
 
+
     private static $has_many = array(
         'LegalAgreements' => 'LegalAgreement',
-        'Affiliations' => 'Affiliation',
+        'Affiliations' => 'Affiliation'
     );
 
-    private static $belongs_many_many = array
-    (
+    private static $belongs_many_many = array(
         'ManagedCompanies' => 'Company'
     );
+
+    public function onBeforeDelete()
+    {
+        $current_id = $this->owner-ID;
+
+        $legal_agreements = $this->owner()->LegalAgreements;
+        foreach($legal_agreements as $la)
+        {
+            $la->delete();
+        }
+
+        $affiliations = $this->owner()->Affiliations;
+        foreach($affiliations as $a)
+        {
+            $a->delete();
+        }
+
+        DB::query("DELETE FROM Company_Administrators WHERE MemberID = {$current_id}");
+        DB::query("DELETE FROM Group_Members WHERE MemberID = {$current_id}");
+
+    }
 
     public function setOwner($owner, $ownerBaseClass = null)
     {
@@ -82,6 +106,18 @@ class MemberDecorator extends DataExtension
         if ($ProfilePage = EditProfilePage::get()->first()) {
             return $ProfilePage->Link();
         }
+    }
+
+    /**
+     * Returns true if this user is locked out
+     */
+    public function canLogIn(&$result)
+    {
+        if(!$this->owner->Active)
+        {
+            $result->error('Your account has been disabled');
+        }
+        return $result;
     }
 
     function ProfilePhoto($width = 100)
@@ -117,9 +153,9 @@ class MemberDecorator extends DataExtension
             return $img->getURL();
         } elseif (!empty($twitter_name)) {
             if ($width < 100) {
-                return '<img src="https://twitter.com/' . $twitter_name . '/profile_image?size=normal" />';
+                return 'https://twitter.com/' . $twitter_name . '/profile_image?size=normal';
             } else {
-                return '<img src="https://twitter.com/' . $twitter_name . '/profile_image?size=bigger" />';
+                return 'https://twitter.com/' . $twitter_name . '/profile_image?size=bigger';
             }
         } elseif ($generic_photo_type == 'speaker') {
             return '/summit/images/generic-speaker-icon.png';
@@ -133,6 +169,19 @@ class MemberDecorator extends DataExtension
         return $this->owner->FirstName . ' ' . $this->owner->Surname;
     }
 
+    function getCurrentPosition()
+    {
+        $current = $this->getCurrentAffiliation();
+        if(is_null($current)) return '';
+        $org = $current->Organization();
+        $res = '';
+        if(!is_null($org))
+            $res = $org->Name;
+        $job_title = $current->JobTitle;
+        if(!empty($job_title))
+            $res .= ', '.$job_title;
+        return $res;
+    }
 
     // Used to group members by last name when displaying the member listing
     public function getSurnameFirstLetter()
@@ -358,5 +407,9 @@ class MemberDecorator extends DataExtension
         return $res;
     }
 
+    public function isAdmin()
+    {
+        return Permission::checkMember($this->owner, 'ADMIN');
+    }
 }
 
