@@ -254,4 +254,20 @@ final class SummitAttendee extends DataObject implements ISummitAttendee
         if(is_null($summit)) $summit = Summit::get()->byID(intval($_REQUEST['SummitID']));
         return SummitEvent::get()->filter(array('Published'=> true, 'SummitID' => $summit->ID));
     }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canView($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canEdit($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
 }

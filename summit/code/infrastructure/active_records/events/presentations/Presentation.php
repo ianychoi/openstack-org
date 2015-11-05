@@ -46,16 +46,14 @@ class Presentation extends SummitEvent implements IPresentation
         'TrackChairGivenOrder' => 0
     );
 
-
     private static $has_many = array
     (
-        'Votes'          => 'PresentationVote',
-        'Comments'       => 'SummitPresentationComment',
-        'ChangeRequests' => 'SummitCategoryChange',
-        'Materials'      => 'PresentationMaterial',
+        'Votes'            => 'PresentationVote',
+        'Comments'         => 'SummitPresentationComment',
+        'ChangeRequests'   => 'SummitCategoryChange',
+        'Materials'        => 'PresentationMaterial',
         'SpeakersFeedback' => 'PresentationSpeakerFeedback',
     );
-
 
     private static $many_many = array
     (
@@ -73,8 +71,9 @@ class Presentation extends SummitEvent implements IPresentation
 
     private static $has_one = array
     (
-        'Creator'  => 'Member',
-        'Category' => 'PresentationCategory',
+        'Creator'   => 'Member',
+        'Category'  => 'PresentationCategory',
+        'Moderator' => 'PresentationSpeaker',
         //'Summit'   => 'Summit'
     );
     
@@ -89,24 +88,6 @@ class Presentation extends SummitEvent implements IPresentation
     /* before saving we check that the EventType is Presentation, if that type does not exist for the summit we create it */
     public function onBeforeWrite() {
         parent::onBeforeWrite();
-
-        if ($this->TypeID == 0) {
-            $summit_id = $this->getSummit()->ID;
-            $presentation_type = SummitEventType::get("SummitEventType","Type = 'Presentation' AND SummitID = $summit_id")->first();
-
-            if ($presentation_type) {
-                $presentation_type_id = $presentation_type->getIdentifier();
-            } else {
-                $presentation_type = new SummitEventType();
-                $presentation_type->Type = 'Presentation';
-                $presentation_type->SummitID = $summit_id;
-                $presentation_type->Color = '#D0A9F5';
-                $presentation_type_id = $presentation_type->Write();
-            }
-
-            $this->TypeID = $presentation_type_id;
-        }
-
     }
 
     public function getTypeName()
@@ -182,20 +163,6 @@ class Presentation extends SummitEvent implements IPresentation
         )));
     }
 
-
-    /**
-     * Determines if the user can edit this presentation
-     *
-     * @return  boolean
-     */
-    public function canEdit($member = null)
-    {
-        if(Permission::check('ADMIN')) return true;
-
-        return  
-                (Member::currentUser() && Member::currentUser()->IsSpeaker($this)) ||
-                Member::currentUserID() == $this->CreatorID;
-    }
 
     /**
      * Determines if a track chair can assign this presentation to a seleciton list
@@ -488,6 +455,8 @@ class Presentation extends SummitEvent implements IPresentation
 
     public function getCMSFields()
     {
+        $summit_id = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+
         $f = parent::getCMSFields();
         $f->removeByName('TypeID');
         $f->htmlEditor('ShortDescription')
@@ -514,39 +483,60 @@ class Presentation extends SummitEvent implements IPresentation
                 Director::absoluteBaseURL() . $this->PreviewLink()
             ));
 
-        // speakers
-        $config = new GridFieldConfig_RelationEditor(100);
-        $config->removeComponentsByType('GridFieldAddNewButton');
-        $speakers = new GridField('Speakers', 'Speakers', $this->Speakers(), $config);
-        $f->addFieldToTab('Root.Speakers', $speakers);
-
-        // speakers feedback
-        $config = GridFieldConfig_RecordEditor::create(100);
-        $config->removeComponentsByType('GridFieldAddNewButton');
-        $gridField = new GridField('SpeakersFeedback', 'Speakers Feedback', $this->SpeakersFeedback(), $config);
-        $f->addFieldToTab('Root.SpeakersFeedback', $gridField);
-
-        // materials
-
-        $config = GridFieldConfig_RecordEditor::create(100);
-        $config->removeComponentsByType('GridFieldAddNewButton');
-        $multi_class_selector = new GridFieldAddNewMultiClass();
-        $multi_class_selector->setClasses
+        $f->addFieldToTab('Root.Main', $ddl_type = new DropdownField('TypeID', 'Event Type', SummitEventType::get()->filter
         (
             array
             (
-                'PresentationVideo' => 'Video',
-                'PresentationSlide' => 'Slide',
+                'SummitID' => $summit_id,
             )
-        );
-        $config->addComponent($multi_class_selector);
-        $config->addComponent($sort = new GridFieldSortableRows('Order'));
-        $gridField = new GridField('Materials', 'Materials', $this->Materials(), $config);
-        $f->addFieldToTab('Root.Materials', $gridField);
+        )->where(" Type ='Presentation' OR Type ='Keynote' ")->map('ID','Type')));
 
+        $ddl_type->setEmptyString('-- Select a Presentation Type --');
+
+        if($this->ID > 0) {
+            // speakers
+            $config = new GridFieldConfig_RelationEditor(100);
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $speakers = new GridField('Speakers', 'Speakers', $this->Speakers(), $config);
+            $f->addFieldToTab('Root.Speakers', $speakers);
+            $config->getComponentByType('GridFieldAddExistingAutocompleter')->setSearchList($this->getAllowedSpeakers());
+            // moderator
+
+            $f->addFieldToTab('Root.Speakers',
+                $ddl_moderator = new DropdownField('ModeratorID', 'Moderator', $this->Speakers()->map('ID', 'Name')));
+            $ddl_moderator->setEmptyString('-- Select a Moderator --');
+
+            // speakers feedback
+            $config = GridFieldConfig_RecordEditor::create(100);
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $gridField = new GridField('SpeakersFeedback', 'Speakers Feedback', $this->SpeakersFeedback(), $config);
+            $f->addFieldToTab('Root.SpeakersFeedback', $gridField);
+
+            // materials
+
+            $config = GridFieldConfig_RecordEditor::create(100);
+            $config->removeComponentsByType('GridFieldAddNewButton');
+            $multi_class_selector = new GridFieldAddNewMultiClass();
+            $multi_class_selector->setClasses
+            (
+                array
+                (
+                    'PresentationVideo' => 'Video',
+                    'PresentationSlide' => 'Slide',
+                )
+            );
+            $config->addComponent($multi_class_selector);
+            $config->addComponent($sort = new GridFieldSortableRows('Order'));
+            $gridField = new GridField('Materials', 'Materials', $this->Materials(), $config);
+            $f->addFieldToTab('Root.Materials', $gridField);
+        }
         return $f;
     }
 
+    private function getAllowedSpeakers()
+    {
+        return PresentationSpeaker::get()->filter(array('SummitID' => $this->SummitID));
+    }
     /**
      * Used by the track chair app see if the presentaiton has been selected by the group.
      **/
@@ -619,15 +609,63 @@ class Presentation extends SummitEvent implements IPresentation
         }
     }
 
-    /**
-     * @return void
-     */
-    public function publish()
+    protected function validate()
     {
-        parent::publish();
+        $valid = parent::validate();
 
-        // check SummitSelectedPresentationList to select the TrackChair Status
+        if (!$valid->valid()) {
+            return $valid;
+        }
+
+        $summit_id  = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
+        $summit     = Summit::get()->byID($summit_id);
+
+        // validate that each speakers is assigned one time at one location
+        $start_date      = $summit->convertDateFromTimeZone2UTC( $this->getStartDate());
+        $end_date        = $summit->convertDateFromTimeZone2UTC( $this->getEndDate() );
+
+        $presentation_id = $this->getIdentifier();
+        $location_id     = $this->LocationID;
+        $speakers_id     = array();
+
+        $speakers        = $this->Speakers();
+        foreach($speakers as $speaker)
+        {
+            array_push($speakers_id, $speaker->ID);
+        }
+
+        $speakers_id = implode(', ', $speakers_id);
+
+        if(empty($start_date) || empty($end_date) || empty($speakers_id))
+            return $valid;
+
+        $query = <<<SQL
+SELECT COUNT(P.ID) FROM Presentation P
+INNER JOIN SummitEvent E ON E.ID = P.ID
+WHERE
+E.Published = 1              AND
+E.StartDate <= '{$end_date}'  AND
+'{$start_date}' <= E.EndDate AND
+E.ID <> $presentation_id     AND
+E.LocationID = $location_id  AND
+E.LocationID <> 0            AND
+EXISTS
+(
+	SELECT PS.ID FROM Presentation_Speakers PS WHERE PresentationSpeakerID IN ($speakers_id) AND
+	PresentationID = P.ID
+);
+SQL;
+
+
+        $qty = intval(DB::query($query)->value());
+
+        if($qty > 0)
+        {
+            return $valid->error('There is a speaker assigned to another presentation on that date/time range !');
+        }
+        return $valid;
     }
+
 
     public function getSpeakers() {
         return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Speakers')->toArray();
@@ -635,5 +673,26 @@ class Presentation extends SummitEvent implements IPresentation
 
     public function getTopics() {
         return AssociationFactory::getInstance()->getMany2ManyAssociation($this,'Topics');
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canView($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canEdit($member = null) {
+        $res = Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+        if($res) return $res;
+
+        return
+            (Member::currentUser() && Member::currentUser()->IsSpeaker($this)) ||
+            Member::currentUserID() == $this->CreatorID;
     }
 }

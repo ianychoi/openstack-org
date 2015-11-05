@@ -81,6 +81,11 @@ implements IPresentationSpeaker
         return "{$this->FirstName} {$this->LastName}";
     }
 
+    public function getTitle()
+    {
+        return sprintf('%s (%s)', $this->getName(), $this->Member()->Email);
+    }
+
     /**
      * Helper method to link to this speaker, given an action
      * 
@@ -370,4 +375,19 @@ implements IPresentationSpeaker
         }
     }
 
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canView($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canEdit($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
 }

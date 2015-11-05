@@ -54,11 +54,14 @@ class GridFieldPublishSummitEventAction implements GridField_ColumnProvider, Gri
     }
 
     public function handleAction(GridField $gridField, $actionName, $arguments, $data) {
-        if($actionName == 'publishsummitevent') {
+        if($actionName == 'publishsummitevent')
+        {
+
             $summit_event = $gridField->getList()->byID($arguments['RecordID']);
             $former_state = $summit_event->isPublished();
-            $msg  = 'Summit Event Published!';
-            $code = 200;
+            $msg          = 'Summit Event Published!';
+            $code         = 200;
+
             try {
                 if ($former_state) {
                     $summit_event->unPublish();
@@ -72,8 +75,12 @@ class GridFieldPublishSummitEventAction implements GridField_ColumnProvider, Gri
             }
             catch(Exception $ex)
             {
-                $code = 401;
-                $msg = $ex->getMessage();
+                //SS_Log::log($ex->getMessage(). SS_Log::ERR);
+                //throw new ValidationException($ex->getMessage(),0);
+                //return sprintf('<div>%s</div>', $ex->getMessage());
+                //Controller::curr()->getResponse()->setStatusCode($code,  $ex->getMessage());
+                //Controller::curr()->getResponse()->setBody(sprintf('<div>%s</div>', $ex->getMessage()));
+                throw new ValidationException($ex->getMessage() ,0);
             }
 
             Controller::curr()->getResponse()->setStatusCode($code,$msg);

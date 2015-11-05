@@ -269,7 +269,6 @@ class SummitEvent extends DataObject implements ISummitEvent
         $f->addFieldToTab('Root.Main', new TextField('Title','Title'));
         $f->addFieldToTab('Root.Main', new HtmlEditorField('Description','Description'));
         $f->addFieldToTab('Root.Main', new CheckboxField('AllowFeedBack','Is feedback allowed?'));
-        $f->addFieldToTab('Root.Main', new CheckboxField('Published','Is approved?'));
         $f->addFieldToTab('Root.Main', new HiddenField('SummitID','SummitID'));
 
         $f->addFieldToTab('Root.Main',$date = new DatetimeField('StartDate', 'Start Date'));
@@ -351,28 +350,23 @@ class SummitEvent extends DataObject implements ISummitEvent
     public function publish()
     {
         if($this->Published)
-            throw new Exception('Already published Summit Event');
+            throw new EntityValidationException(array('Already published Summit Event'));
+
+        $validation_result = $this->validate();
+
+        if(!$validation_result->valid())
+        {
+            throw new EntityValidationException($validation_result->messageList());
+        }
 
         $start_date = $this->getStartDate();
         $end_date   = $this->getEndDate();
 
-        if(empty($start_date) || empty($end_date))
-            throw new Exception('You must define a start/end datetime before publish it');
+        if((empty($start_date) || empty($end_date)))
+            throw new EntityValidationException(array('To publish this event you must define a start/end datetime!'));
 
-        $this->Published = true;
+        $this->Published     = true;
         $this->PublishedDate = MySQLDatabase56::nowRfc2822();
-    }
-
-    protected function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-        $publish_date = $this->PublishedDate;
-        //first time published ...
-        if($this->isPublished() && is_null($publish_date))
-        {
-            $this->unPublish();
-            $this->publish();
-        }
     }
 
     public function setStartDate($value)
@@ -416,9 +410,13 @@ class SummitEvent extends DataObject implements ISummitEvent
         $this->PublishedDate = null;
     }
 
+    /**
+     * @return ValidationResult
+     */
     protected function validate()
     {
         $valid = parent::validate();
+
         if(!$valid->valid()) return $valid;
 
         $summit_id = isset($_REQUEST['SummitID']) ?  $_REQUEST['SummitID'] : $this->SummitID;
@@ -431,12 +429,12 @@ class SummitEvent extends DataObject implements ISummitEvent
 
         $start_date = $this->getStartDate();
         $end_date   = $this->getEndDate();
+
         if((empty($start_date) || empty($end_date)) && $this->isPublished())
             return $valid->error('To publish this event you must define a start/end datetime!');
 
         if(!empty($start_date) && !empty($end_date))
         {
-
             $timezone = $summit->TimeZone;
 
             if(empty($timezone)){
@@ -444,16 +442,45 @@ class SummitEvent extends DataObject implements ISummitEvent
             }
 
             $start_date = new DateTime($start_date);
-            $end_date = new DateTime($end_date);
+            $end_date   = new DateTime($end_date);
+
             if($end_date < $start_date)
                 return $valid->error('start datetime must be greather or equal than end datetime!');
+
             if(!$summit->isEventInsideSummitDuration($this))
                 return $valid->error(sprintf('start/end datetime must be between summit start/end datetime! (%s - %s)', $summit->getBeginDate(), $summit->getEndDate()));
 
             // validate start time/end time and location
             if(!empty($this->LocationID))
             {
+                // validate that each speakers is assigned one time at one location
+                $start_date      = $summit->convertDateFromTimeZone2UTC( $this->getStartDate());
+                $end_date        = $summit->convertDateFromTimeZone2UTC( $this->getEndDate() );
 
+                $presentation_id = $this->getIdentifier();
+                $location_id     = $this->LocationID;
+
+                if(empty($start_date) || empty($end_date))
+                    return $valid;
+
+                $query = <<<SQL
+SELECT COUNT(P.ID) FROM Presentation P
+INNER JOIN SummitEvent E ON E.ID = P.ID
+WHERE
+E.Published = 1              AND
+E.StartDate <= '{$end_date}'  AND
+'{$start_date}' <= E.EndDate AND
+E.ID <> $presentation_id     AND
+E.LocationID = $location_id  AND
+E.LocationID <> 0;
+SQL;
+
+                $qty = intval(DB::query($query)->value());
+
+                if($qty > 0)
+                {
+                    return $valid->error('There is another event asigned for current location  on that date/time range !');
+                }
             }
         }
         return $valid;
@@ -468,7 +495,7 @@ class SummitEvent extends DataObject implements ISummitEvent
     }*/
 
     /**
-     * @return DateTime
+     * @return string
      */
     public function getStartDate()
     {
@@ -480,7 +507,7 @@ class SummitEvent extends DataObject implements ISummitEvent
     }
 
     /**
-     * @return DateTime
+     * @return string
      */
     public function getEndDate()
     {
@@ -498,5 +525,21 @@ class SummitEvent extends DataObject implements ISummitEvent
         $attendee = $current_user->getSummitAttendee($this->Summit->getIdentifier());
 
         return $attendee->isScheduled($this->getIdentifier());
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canView($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canEdit($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
     }
 }

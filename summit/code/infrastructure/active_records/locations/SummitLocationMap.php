@@ -17,7 +17,7 @@ class SummitLocationMap extends DataObject
 
     private static $has_one = array
     (
-        'Map' => 'BetterImage',
+        'Map'      => 'BetterImage',
         'Location' => 'SummitGeoLocatedLocation'
     );
 

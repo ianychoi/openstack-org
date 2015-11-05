@@ -17,17 +17,17 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
 
     private static $db = array
     (
-        'Address1'       => 'Text',
-        'Address2'       => 'Text',
-        'ZipCode'       => 'Text',
-        'City'          => 'Text',
-        'State'         => 'Text',
-        'Country'       => 'Text',
-        'WebSiteUrl'    => 'Text',
-        'Lng'           => 'Decimal',
-        'Lat'           => 'Decimal',
-        'DisplayOnSite' => 'Boolean',
-        'DetailsPage' => 'Boolean',
+        'Address1'        => 'Text',
+        'Address2'        => 'Text',
+        'ZipCode'         => 'Text',
+        'City'            => 'Text',
+        'State'           => 'Text',
+        'Country'         => 'Text',
+        'WebSiteUrl'      => 'Text',
+        'Lng'             => 'Decimal',
+        'Lat'             => 'Decimal',
+        'DisplayOnSite'   => 'Boolean',
+        'DetailsPage'     => 'Boolean',
         'LocationMessage' => 'Text',
     );
 

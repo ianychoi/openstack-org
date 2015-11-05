@@ -452,8 +452,9 @@ final class Summit extends DataObject implements ISummit
         {
             $utc_timezone   = new DateTimeZone("UTC");
             $time_zone_name = $time_zone_list[$time_zone_id];
-            $time_zone   = new \DateTimeZone($time_zone_name);
-            $date  = new \DateTime($value, $utc_timezone);
+            $time_zone      = new \DateTimeZone($time_zone_name);
+            $date           = new \DateTime($value, $utc_timezone);
+
             $date->setTimezone($time_zone);
             return $date->format("Y-m-d H:i:s");
         }
@@ -780,10 +781,7 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
         $config = GridFieldConfig_RecordEditor::create();
         $config->addComponent(new GridFieldPublishSummitEventAction);
         $config->addComponent(new GridFieldAjaxRefresh(1000, false));
-        $gridField = new GridField('Presentations', 'Presentations', $this->Presentations()->filter
-        (
-            'Status', 'Received'
-        ), $config);
+        $gridField = new GridField('Presentations', 'Presentations', $this->Presentations()->where(" Title IS NOT NULL AND Title <>'' "), $config);
         $f->addFieldToTab('Root.Presentations', $gridField);
 
         return $f;
@@ -919,9 +917,9 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
             $presentation->write();
         }
 
-        if(!SummitEventType::get()->filter(array('Type'=>'Keynotes', 'SummitID'=>$summit_id))->first()) {
+        if(!SummitEventType::get()->filter(array('Type'=>'Keynote', 'SummitID'=>$summit_id))->first()) {
             $key_note = new SummitEventType();
-            $key_note->Type = 'Keynotes';
+            $key_note->Type = 'Keynote';
             $key_note->SummitID = $summit_id;
             $key_note->write();
         }
@@ -952,5 +950,21 @@ WHERE(ListType = 'Group') AND (SummitEvent.ClassName IN ('Presentation')) AND  (
     public function isAttendee() {
         $current_user = Member::currentUser();
         return ($current_user) ? $current_user->isAttendee($this->getIdentifier()) : false;
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canView($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
+    }
+
+    /**
+     * @param Member $member
+     * @return boolean
+     */
+    public function canEdit($member = null) {
+        return Permission::check("ADMIN") || Permission::check("ADMIN_SUMMIT_APP") || Permission::check("ADMIN_SUMMIT_APP_SCHEDULE");
     }
 }
