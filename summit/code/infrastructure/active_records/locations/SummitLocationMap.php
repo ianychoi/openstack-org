@@ -15,6 +15,18 @@
 class SummitLocationMap extends DataObject
 {
 
+    private static $db = array
+    (
+        'Name'         => 'Varchar(255)',
+        'Description'  => 'HTMLText',
+        'Order'        => 'Int',
+    );
+
+    private static $summary_fields = array
+    (
+        'Name'  => 'Name',
+    );
+
     private static $has_one = array
     (
         'Map'      => 'BetterImage',
@@ -37,6 +49,9 @@ class SummitLocationMap extends DataObject
     public function getCMSFields()
     {
         $f = new FieldList();
+
+        $f->add(new TextField('Name','Name'));
+        $f->add(new HtmlEditorField('Description','Description'));
 
         $map_field = new UploadField('Map','Map');
         $map_field->setAllowedMaxFileNumber(1);

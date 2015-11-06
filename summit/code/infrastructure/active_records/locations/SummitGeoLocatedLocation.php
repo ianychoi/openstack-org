@@ -196,6 +196,7 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation implements ISummit
         {
             $config = GridFieldConfig_RecordEditor::create();
             $gridField = new GridField('Maps', 'Maps', $this->Maps(), $config);
+            $config->addComponent($sort = new GridFieldSortableRows('Order'));
             $f->addFieldToTab('Root.Maps', $gridField);
         }
 
